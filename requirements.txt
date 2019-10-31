@@ -1,0 +1,10 @@
+beautifulsoup4==4.8.0
+bunch==1.0.1
+Flask==1.0.2
+Jinja2==2.10
+lxml==4.3.4
+pyshp==2.1.0
+PyYAML==5.1.2
+requests==2.18.4
+Shapely==1.6.4.post2
+Unidecode==1.1.1

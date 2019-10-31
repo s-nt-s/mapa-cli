@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_blank" />
+  <meta charset="utf-8" />
+  <link rel="apple-touch-icon" sizes="180x180" href="ico/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="ico/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="ico/favicon-16x16.png">
+  <link rel="manifest" href="ico/site.webmanifest">
+  <link rel="mask-icon" href="ico/safari-pinned-tab.svg" color="#5bbad5">
+  <link rel="shortcut icon" href="ico/favicon.ico">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="msapplication-config" content="ico/browserconfig.xml">
+  <meta name="theme-color" content="#ffffff">
+  <title>Incendios - Influencia de datos socioeconómicos en el riesgo de incendios</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link href="rec/loading.css" rel="stylesheet" />
+  <link href="rec/main.css" rel="stylesheet" />
+  <link crossorigin="" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" rel="stylesheet" />
+  <script crossorigin="" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+  <link href="sidebar/leaflet-sidebar.css" rel="stylesheet" />
+  <script src="sidebar/leaflet-sidebar.js"></script>
+  <script src="rec/extend.js"></script>
+  <script src="rec/txt.js"></script>
+  <script src="rec/dwn_html.js"></script>
+  <script src="rec/meta.js"></script>
+  <script src="rec/valor_parametros.js"></script>
+  <script src="geo/provincias.js"></script>
+  <script src="geo/municipios.js"></script>
+  <script defer="defer" src="rec/main.js"></script>
+</head>
+
+<body>
+  <header>
+  	<h1 align="center">Incendios</h1>
+  </header>
+
+	<div id="sidebar" class="sidebar collapsed">
+    <!-- Nav tabs -->
+    <div class="sidebar-tabs">
+      <ul role="tablist">
+        <li title="Información"><a href="#info" role="tab"><i class="fa fa-info-circle"></i></a></li>
+        <li title="Predicción de Incendios a Escala Municipal"><a href="#prediccion" role="tab"><i class="fas fa-fire-extinguisher"></i></a></li>
+        <li title="Análisis de Incendios a Escala Municipal"><a href="#analisis" role="tab"><i class="fas fa-calculator"></i></a></li>
+        <li id="iResultado" class="hide" title="Resultado"><a href="#resultado" id="clear" role="tab" target="_blank"><i class="fas fa-coffee"></i></a></li>
+        <li id="limpiar" class="hide" title="Limpia el mapa"><a href="" id="clear" role="tab" target="_blank"><i class="fas fa-eraser"></i></a></li>
+      </ul>
+    </div>
+    <!-- Tab panes -->
+    <div class="sidebar-content">
+      <div class="sidebar-pane" id="info">
+        <h1 class="sidebar-header">
+          Información
+          <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+          <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+        </h1>
+            <p class="logo">
+              <img src="img/logo.png" alt="Logo MAPA" title="Logo MAPA"/>
+            </p>
+          <h2>Conceptos básicos</h2>
+          <p>
+            Para el correcto aprovechamiento de esta herramienta conviene conocer los siguientes conceptos básicos:
+          </p>
+          <dl class="con_bas">
+            <dt>Baseline (panel-análisis)</dt><dd>Valor de base de la predicción. Se obtiene a partir del cálculo de la distribución de las probabilidades entre los cuatro niveles de riesgo. Es lo que obtendríamos sin emplear ningún parámetro.</dd>
+            <dt>Accuracy (panel-análisis)</dt><dd>Acierto general de la predicción, medido como el número de casos acertados dividido por el número de casos totales.</dd>
+            <dt>Mejora (panel-análisis)</dt><dd>Diferencia entre accuracy y baseline. Da una idea de cuánto hemos mejorado al introducir los parámetros.</dd>
+            <dt>Carga explicativa (panel-análisis)</dt><dd>Porcentaje de influencia en la ocurrencia de incendios que tienen los parámetros seleccionados. Se obtiene como el cociente entre la mejora y el total de la máxima carga explicativa posible. Esta se obtiene como la diferencia entre el 100% de acierto y el porcentaje del baseline.</dd>
+            <dt>Importancia global de un parámetro (panel-predicción y análisis)</dt><dd>Grado de influencia que tiene el parámetro sobre la ocurrencia de incendios sobre el territorio seleccionado y para las características establecidas en el panel. Esta información se obtiene durante el entrenamiento del algoritmo y corresponde a los patrones generales.</dd>
+            <dt>Importancia local de un parámetro (panel-predicción)</dt><dd>Explicación de las causas que hacen que un municipio determinado tenga asignado un determinado riesgo. Los valores mayores corresponden a los parámetros que han tenido una mayor carga en la asignación del nivel de riesgo. Se obtiene en fase de predicción, ya que es específico de cada municipio para los últimos datos recabados.</dd>
+            <dt>Valor real (pop up - predicción)</dt><dd>Valor absoluto de ese parámetro para el municipio seleccionado. Las celdas vacías corresponden a valores que se han inferido internamente.</dd>
+            <dt>Percentil (pop up - predicción)</dt><dd>Percentil que corresponde al municipio seleccionado en cada parámetro, dentro del conjunto de municipios de las provincias seleccionadas para la predicción</dd>
+          </dl>
+          <h2>Predicción de Incendios</h2>
+          <p>Funcionalidad que permite estimar la probabilidad de riesgo de incendio a escala municipal para el conjunto de las provincias seleccionadas (por defecto, toda España) asociada a factores socioeconómicos. Se pueden configurar diferentes parámetros, causas, radios de influencia, rangos de riesgos o rangos temporales de los que obtener los patrones. Además, presenta información adicional valiosa para determinar las causas de la asignación de niveles de riesgo.</p>
+          <dl class="con_bas">
+            <dt>Selección de zonas</dt><dd>Se permite seleccionar múltiples provincias de varias forzas: en el panel lateral izquierdo de la aplicación o, sobre el mapa, pulsando el botón derecho del ratón sobre las diferentes provincias o manteniendo pulsada la tecla "Control".</dd>
+            <dt>Comparativa entre municipios</dt><dd>Se permite crear tablas comparativas de los valores resultantes de la predicción pulsando con el botón derecho del ratón sobre aquellos municipios que se deseen comparar.</dd>
+          </dl>
+          <h2>Análisis de Incendios</h2>
+          <p>Funcionalidad que permite medir la bondad de las predicciones para años pasados y analizar la influencia de los distintos parámetros en diversas zonas y regiones. Se obtienen las métricas explicadas en la sección de "Conceptos básicos".</p>
+          <h2>Leyenda</h2>
+          <p>Niveles de riesgo en el mapa. La cuantificación de dichos niveles es uno de los parámetros que se introducen como entrada de una predicción o un análisis.</p>
+          <ul>
+          <li>Verde: riesgo bajo.</li>
+          <li>Amarillo: riesgo medio.</li>
+          <li>Naranja: riesgo alto.</li>
+          <li>Rojo: riesgo muy alto.</li>
+          </ul>
+          <h2>Fuentes</h2>
+          <ul>
+          <li>Estadística General de Incendios Forestales (EGIF) del MAPA</li>
+          <li>Instituto Nacional de Estadística (INE)</li>
+          <li>Servicio Estatal de Empleo (SEPE)</li>
+          <li>Agencia Tributaria (AEAT)</li>
+          <li>Portal datos abierto del País Vasco</li>
+          <li>Información de límites geográficos del Ministerio de Fomento</li>
+		  </ul>
+      </div>
+      <div class="sidebar-pane" id="prediccion">
+        <form id="fPrediccion" name="prediccion" action="{{API_ENDPOINT}}predecir" method="POST" data-resultado="Resultado Predicción">
+        <h1 class="sidebar-header">
+          Predicción de Incendios
+          <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+          <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+        </h1>
+          {% with pre="pr_" %}
+          {% include 'common_param.html' %}
+          {% endwith %}
+          <fieldset class="fTemporal">
+            <legend>Rango temportal</legend>
+              <label for="yBgn">Año de inicio para el modelo:</label> <input type="number" name="ini" id="yBgn" placeholder="2006" value="2006"><br/>
+              <label for="yEnd">Año de fin para el modelo:</label> <input type="number" name="fin" id="yEnd" placeholder="2015" value="">
+          </fieldset>
+          <fieldset class="fDetalle" id="fDetalle">
+            <legend>Explicación detallada</legend>
+              <input type="checkbox" name="detalle[]" id="importancia" value="importancia"> <label for="importancia" style="display: unset;">Devolver información adicional sobre la importancia de los parámetros en la predicción realizada. Esto puede incrementar el tiempo de calculo en varios minutos.</label><br/>
+          </fieldset>
+           <input type="submit" value="Calcular">
+        </form>
+      </div>
+      <div class="sidebar-pane" id="analisis">
+        <form id="fAnalisis" name="analisis" action="{{API_ENDPOINT}}analisis" method="POST" data-resultado="Resultado Análisis">
+        <h1 class="sidebar-header">
+          Análisis de Incendios
+          <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+          <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+        </h1>
+          {% with pre="an_" %}
+          {% include 'common_param.html' %}
+          {% endwith %}
+          <fieldset class="fEntrenamiento">
+            <legend>Entrenamiento</legend>
+            <label for="tEntrenamiento">Tipo:</label> <select id="tEntrenamiento">
+                <option></option>
+                <option value="dbToda">Toda la base de datos...</option>
+                <option value="dbPersonalizada">Personalizada...</option>
+            </select>
+            <div class="dbToda hide">
+              <label for="ttEnd">hasta</label> <input name="fin" type="number" min="2006" step="1" id="ttEnd" placeholder="2017" value=""><br/>
+              <label for="ttPrc">% entrenamiento</label> <input name="prc" type="number" min="10" max="95" step="1" id="ttPrc" placeholder="70" value="70"><br/>
+              <label for="ttTest">% test</label> <input class="disabled" disabled="disabled" name="test" type="number" min="0" max="100" step="1" id="ttTest" placeholder="30" value="30"><br/>
+              <fieldset>
+                <legend>Validación cruzada</legend>
+                    <label for="folds">Número de iteraciones:</label> <input type="number" min="1" max="100" step="1" id="folds" placeholder="100" value="4">
+              </fieldset>
+            </div>
+            <div class="dbPersonalizada hide">
+                <label for="prBng">de</label> <input name="ini" type="number" min="2006" step="1" id="prBng" placeholder="2006" value="2006"><br/>
+                <label for="prEnd">hasta</label> <input name="fin" type="number" min="2006" step="1"  id="prEnd" placeholder="2010" value="2010"><br/>
+                <label for="prTest">Año para el test</label> <input name="test" type="number" min="2006" step="1" id="prTest" placeholder="2011">
+            </div>
+          </fieldset>
+           <input type="submit" value="Calcular">
+        </form>
+      </div>
+        <div class="sidebar-pane" id="resultado">
+          <h1 class="sidebar-header">
+            <span id="tResultado" data-default="Resultado">Resultado</span>
+            <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+            <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+          </h1>
+          <div id="loading" class="loading-wrapp hide">
+              <div class="plate">
+              <div class="inner">
+                  <div class="fill"></div>
+              </div>
+              </div>
+          </div>
+          <div class="content">
+
+          </div>
+        </div>
+    </div>
+  </div>
+  <div id="popup" class="hide">
+      <div>
+      </div>
+     <button type="button" class="cerrar">Cerrar</button>
+  </div>
+  <div id="map" class="sidebar-map"></div>
+</body>
+
+</html>

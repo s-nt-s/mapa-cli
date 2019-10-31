@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_blank"/>
+<meta charset="utf-8"/>
+<link href="ico/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="ico/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="ico/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="ico/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="ico/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="ico/favicon.ico" rel="shortcut icon"/>
+<meta content="#da532c" name="msapplication-TileColor"/>
+<meta content="ico/browserconfig.xml" name="msapplication-config"/>
+<meta content="#ffffff" name="theme-color"/>
+<title>Incendios - Influencia de datos socioeconómicos en el riesgo de incendios</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link crossorigin="anonymous" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" rel="stylesheet"/>
+<link href="rec/loading.css" rel="stylesheet"/>
+<link href="rec/main.css" rel="stylesheet"/>
+<link crossorigin="" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" rel="stylesheet"/>
+<script crossorigin="" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+<link href="sidebar/leaflet-sidebar.css" rel="stylesheet"/>
+<script src="sidebar/leaflet-sidebar.js"></script>
+<script src="rec/extend.js"></script>
+<script src="rec/txt.js"></script>
+<script src="rec/dwn_html.js"></script>
+<script src="rec/meta.js"></script>
+<script src="rec/valor_parametros.js"></script>
+<script src="geo/provincias.js"></script>
+<script src="geo/municipios.js"></script>
+<script defer="defer" src="rec/main.js"></script>
+</head>
+<body>
+<header>
+<h1 align="center">Incendios</h1>
+</header>
+<div class="sidebar collapsed" id="sidebar">
+<!-- Nav tabs -->
+<div class="sidebar-tabs">
+<ul role="tablist">
+<li title="Información"><a href="#info" role="tab"><i class="fa fa-info-circle"></i></a></li>
+<li title="Predicción de Incendios a Escala Municipal"><a href="#prediccion" role="tab"><i class="fas fa-fire-extinguisher"></i></a></li>
+<li title="Análisis de Incendios a Escala Municipal"><a href="#analisis" role="tab"><i class="fas fa-calculator"></i></a></li>
+<li class="hide" id="iResultado" title="Resultado"><a href="#resultado" id="clear" role="tab" target="_blank"><i class="fas fa-coffee"></i></a></li>
+<li class="hide" id="limpiar" title="Limpia el mapa"><a href="" id="clear" role="tab" target="_blank"><i class="fas fa-eraser"></i></a></li>
+</ul>
+</div>
+<!-- Tab panes -->
+<div class="sidebar-content">
+<div class="sidebar-pane" id="info">
+<h1 class="sidebar-header">
+          Información
+          <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+<span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+<p class="logo">
+<img alt="Logo MAPA" src="img/logo.png" title="Logo MAPA"/>
+</p>
+<h2>Conceptos básicos</h2>
+<p>
+            Para el correcto aprovechamiento de esta herramienta conviene conocer los siguientes conceptos básicos:
+          </p>
+<dl class="con_bas">
+<dt>Baseline (panel-análisis)</dt><dd>Valor de base de la predicción. Se obtiene a partir del cálculo de la distribución de las probabilidades entre los cuatro niveles de riesgo. Es lo que obtendríamos sin emplear ningún parámetro.</dd>
+<dt>Accuracy (panel-análisis)</dt><dd>Acierto general de la predicción, medido como el número de casos acertados dividido por el número de casos totales.</dd>
+<dt>Mejora (panel-análisis)</dt><dd>Diferencia entre accuracy y baseline. Da una idea de cuánto hemos mejorado al introducir los parámetros.</dd>
+<dt>Carga explicativa (panel-análisis)</dt><dd>Porcentaje de influencia en la ocurrencia de incendios que tienen los parámetros seleccionados. Se obtiene como el cociente entre la mejora y el total de la máxima carga explicativa posible. Esta se obtiene como la diferencia entre el 100% de acierto y el porcentaje del baseline.</dd>
+<dt>Importancia global de un parámetro (panel-predicción y análisis)</dt><dd>Grado de influencia que tiene el parámetro sobre la ocurrencia de incendios sobre el territorio seleccionado y para las características establecidas en el panel. Esta información se obtiene durante el entrenamiento del algoritmo y corresponde a los patrones generales.</dd>
+<dt>Importancia local de un parámetro (panel-predicción)</dt><dd>Explicación de las causas que hacen que un municipio determinado tenga asignado un determinado riesgo. Los valores mayores corresponden a los parámetros que han tenido una mayor carga en la asignación del nivel de riesgo. Se obtiene en fase de predicción, ya que es específico de cada municipio para los últimos datos recabados.</dd>
+<dt>Valor real (pop up - predicción)</dt><dd>Valor absoluto de ese parámetro para el municipio seleccionado. Las celdas vacías corresponden a valores que se han inferido internamente.</dd>
+<dt>Percentil (pop up - predicción)</dt><dd>Percentil que corresponde al municipio seleccionado en cada parámetro, dentro del conjunto de municipios de las provincias seleccionadas para la predicción</dd>
+</dl>
+<h2>Predicción de Incendios</h2>
+<p>Funcionalidad que permite estimar la probabilidad de riesgo de incendio a escala municipal para el conjunto de las provincias seleccionadas (por defecto, toda España) asociada a factores socioeconómicos. Se pueden configurar diferentes parámetros, causas, radios de influencia, rangos de riesgos o rangos temporales de los que obtener los patrones. Además, presenta información adicional valiosa para determinar las causas de la asignación de niveles de riesgo.</p>
+<dl class="con_bas">
+<dt>Selección de zonas</dt><dd>Se permite seleccionar múltiples provincias de varias forzas: en el panel lateral izquierdo de la aplicación o, sobre el mapa, pulsando el botón derecho del ratón sobre las diferentes provincias o manteniendo pulsada la tecla "Control".</dd>
+<dt>Comparativa entre municipios</dt><dd>Se permite crear tablas comparativas de los valores resultantes de la predicción pulsando con el botón derecho del ratón sobre aquellos municipios que se deseen comparar.</dd>
+</dl>
+<h2>Análisis de Incendios</h2>
+<p>Funcionalidad que permite medir la bondad de las predicciones para años pasados y analizar la influencia de los distintos parámetros en diversas zonas y regiones. Se obtienen las métricas explicadas en la sección de "Conceptos básicos".</p>
+<h2>Leyenda</h2>
+<p>Niveles de riesgo en el mapa. La cuantificación de dichos niveles es uno de los parámetros que se introducen como entrada de una predicción o un análisis.</p>
+<ul>
+<li>Verde: riesgo bajo.</li>
+<li>Amarillo: riesgo medio.</li>
+<li>Naranja: riesgo alto.</li>
+<li>Rojo: riesgo muy alto.</li>
+</ul>
+<h2>Fuentes</h2>
+<ul>
+<li>Estadística General de Incendios Forestales (EGIF) del MAPA</li>
+<li>Instituto Nacional de Estadística (INE)</li>
+<li>Servicio Estatal de Empleo (SEPE)</li>
+<li>Agencia Tributaria (AEAT)</li>
+<li>Portal datos abierto del País Vasco</li>
+<li>Información de límites geográficos del Ministerio de Fomento</li>
+</ul>
+</div>
+<div class="sidebar-pane" id="prediccion">
+<form action="api/prediccion" data-resultado="Resultado Predicción" id="fPrediccion" method="POST" name="prediccion">
+<h1 class="sidebar-header">
+          Predicción de Incendios
+          <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+<span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+<fieldset>
+<legend>Zona</legend>
+<label class="hide" for="pr_zona">Zona:</label><select class="oneGroup" id="pr_zona" multiple="multiple" name="zona[]" required="required" title="Zona. Manten pulsada la tecla control para seleccionar varias opciones">
+<optgroup label="País">
+<option selected="selected" value="ESP">España</option>
+</optgroup>
+<optgroup id="provES" label="Provincias">
+<option value="15">A Coruña</option>
+<option value="03">Alacant/Alicante</option>
+<option value="02">Albacete</option>
+<option value="04">Almería</option>
+<option value="01">Araba/Álava</option>
+<option value="33">Asturias</option>
+<option value="05">Ávila</option>
+<option value="06">Badajoz</option>
+<option value="08">Barcelona</option>
+<option value="48">Bizkaia</option>
+<option value="09">Burgos</option>
+<option value="10">Cáceres</option>
+<option value="11">Cádiz</option>
+<option value="39">Cantabria</option>
+<option value="12">Castelló/Castellón</option>
+<option value="51">Ceuta</option>
+<option value="13">Ciudad Real</option>
+<option value="14">Córdoba</option>
+<option value="16">Cuenca</option>
+<option value="20">Gipuzkoa</option>
+<option value="17">Girona</option>
+<option value="18">Granada</option>
+<option value="19">Guadalajara</option>
+<option value="21">Huelva</option>
+<option value="22">Huesca</option>
+<option value="07">Illes Balears</option>
+<option value="23">Jaén</option>
+<option value="26">La Rioja</option>
+<option value="35">Las Palmas</option>
+<option value="24">León</option>
+<option value="25">Lleida</option>
+<option value="27">Lugo</option>
+<option value="28">Madrid</option>
+<option value="29">Málaga</option>
+<option value="52">Melilla</option>
+<option value="30">Murcia</option>
+<option value="31">Navarra</option>
+<option value="32">Ourense</option>
+<option value="34">Palencia</option>
+<option value="36">Pontevedra</option>
+<option value="37">Salamanca</option>
+<option value="38">Santa Cruz de Tenerife</option>
+<option value="40">Segovia</option>
+<option value="41">Sevilla</option>
+<option value="42">Soria</option>
+<option value="43">Tarragona</option>
+<option value="44">Teruel</option>
+<option value="45">Toledo</option>
+<option value="46">València/Valencia</option>
+<option value="47">Valladolid</option>
+<option value="49">Zamora</option>
+<option value="50">Zaragoza</option>
+</optgroup>
+</select>
+</fieldset>
+<fieldset>
+<legend>Parámetros</legend>
+<input checked="checked" id="pr_PRenta" name="params[]" title="Renta" type="checkbox" value="renta"/> <label for="pr_PRenta">Renta</label><br/>
+<input checked="checked" id="pr_PHombres" name="params[]" title="Hombres" type="checkbox" value="hombres"/> <label for="pr_PHombres">Hombres</label><br/>
+<input checked="checked" id="pr_PMujeres" name="params[]" title="Mujeres" type="checkbox" value="mujeres"/> <label for="pr_PMujeres">Mujeres</label><br/>
+<input checked="checked" id="pr_P60s" name="params[]" title="Mayores de 60" type="checkbox" value="mayores_de_60"/> <label for="pr_P60s">Mayores de 60</label><br/>
+<input checked="checked" id="pr_P3059" name="params[]" title="De 30 a 59" type="checkbox" value="de_30_a_59"/> <label for="pr_P3059">De 30 a 59</label><br/>
+<input checked="checked" id="pr_P29" name="params[]" title="Hasta 29" type="checkbox" value="hasta_29"/> <label for="pr_P29">Hasta 29</label><br/>
+<input checked="checked" id="pr_PUTA" name="params[]" title="Unidades de trabajo anuales" type="checkbox" value="UTA"/> <label for="pr_PUTA" title="Unidades de trabajo anuales">UTA</label><br/>
+<input checked="checked" id="pr_PExpl" name="params[]" title="Explotaciones agrícolas" type="checkbox" value="explotaciones_agricolas"/> <label for="pr_PExpl">Explotaciones agrícolas</label><br/>
+<input checked="checked" id="pr_PUniGan" name="params[]" title="Unidades Ganaderas" type="checkbox" value="unidades_ganaderas"/> <label for="pr_PUniGan">Unidades Ganaderas</label><br/>
+<input checked="checked" id="pr_PParo" name="params[]" title="Paro" type="checkbox" value="paro"/> <label for="pr_PParo">Paro</label><br/>
+<input checked="checked" id="pr_PSAU" name="params[]" title="Superficie agrícola utilizada" type="checkbox" value="SAU"/> <label for="pr_PSAU" title="Superficie agrícola utilizada">SAU</label><br/>
+<input checked="checked" id="pr_PEmp" name="params[]" title="Empresas" type="checkbox" value="empresas"/> <label for="pr_PEmp">Empresas</label>
+</fieldset>
+<fieldset>
+<legend>Causas de Incendios</legend>
+<input checked="checked" id="pr_PC1" name="causas[]" title="C1 - Causas naturales" type="checkbox" value="C1"/> <label for="pr_PC1">C1 - Causas naturales</label><br/>
+<input checked="checked" id="pr_PC2" name="causas[]" title="C2 - Negligencias humanas" type="checkbox" value="C2"/> <label for="pr_PC2">C2 - Negligencias humanas</label><br/>
+<input checked="checked" id="pr_PC3" name="causas[]" title="C3 - Negligencias industriales" type="checkbox" value="C3"/> <label for="pr_PC3">C3 - Negligencias industriales</label><br/>
+<input checked="checked" id="pr_PC4" name="causas[]" title="C4 - Incendios intencionados" type="checkbox" value="C4"/> <label for="pr_PC4">C4 - Incendios intencionados </label><br/>
+<input checked="checked" id="pr_PC5" name="causas[]" title="C5 - Causas desconocidas" type="checkbox" value="C5"/> <label for="pr_PC5">C5 - Causas desconocidas</label><br/>
+<input checked="checked" id="pr_PC6" name="causas[]" title="C6 - Incendios reproducidos" type="checkbox" value="C6"/> <label for="pr_PC6">C6 - Incendios reproducidos</label>
+</fieldset>
+<fieldset>
+<legend>Radio de influencia</legend>
+<label for="pr_radio">Radio de influencia</label>
+<select class="radio" id="pr_radio" name="radio" required="required" title="Radio de influencia">
+<option value="0"> 0</option>
+<option value="5">5</option>
+<option value="10">10</option>
+<option value="15">15</option>
+<option value="20">20</option>
+</select> <label for="pr_radio">km</label>
+</fieldset>
+<fieldset class="fRangos multirango">
+<legend>Rango de riesgo</legend>
+<label for="pr_rbajo">Riesgo bajo:</label> de 0 a <span class="count pr_rbajo">0</span> incendios
+  <input id="pr_rbajo" max="20" min="0" name="rbajo" required="required" step="1" title="Riesgo bajo" type="range" value="0"/><br/>
+<label for="pr_rmedio">Riesgo medio:</label> de <span class="count pr_rbajo" data-add="1">1</span> a <span class="count pr_rmedio">5</span> incendios
+  <input id="pr_rmedio" max="20" min="0" name="rmedio" required="required" step="1" title="Riesgo medio" type="range" value="5"/><br/>
+<label for="pr_ralto">Riesgo alto:</label> de <span class="count pr_rmedio" data-add="1">6</span> a <span class="count pr_ralto">9</span> incendios
+  <input id="pr_ralto" max="20" min="0" name="ralto" required="required" step="1" title="Riesgo alto" type="range" value="9"/><br/>
+<span class="label">Riesgo muy alto:</span> <span class="count pr_ralto" data-add="1">10</span> incendios o más
+</fieldset> <fieldset class="fTemporal">
+<legend>Rango temportal</legend>
+<label for="yBgn">Año de inicio para el modelo:</label> <input id="yBgn" min="2006" name="ini" placeholder="2006" required="required" title="Año de inicio para el modelo" type="number" value="2006"/><br/>
+<label for="yEnd">Año de fin para el modelo:</label> <input id="yEnd" min="2006" name="fin" placeholder="2015" required="required" title="Año de fin para el modelo" type="number" value=""/>
+</fieldset>
+<fieldset class="fDetalle" id="fDetalle">
+<legend>Explicación detallada</legend>
+<input id="importancia" name="detalle[]" title="Devolver información adicional sobre la importancia de los parámetros en la predicción realizada. Esto puede incrementar el tiempo de calculo en varios minutos." type="checkbox" value="importancia"/> <label for="importancia" style="display: unset;">Devolver información adicional sobre la importancia de los parámetros en la predicción realizada. Esto puede incrementar el tiempo de calculo en varios minutos.</label>
+</fieldset>
+<input data-defval="Calcular" type="submit" value="Calcular"/>
+</form>
+</div>
+<div class="sidebar-pane" id="analisis">
+<form action="api/analisis" data-resultado="Resultado Análisis" id="fAnalisis" method="POST" name="analisis">
+<h1 class="sidebar-header">
+          Análisis de Incendios
+          <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+<span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+<fieldset>
+<legend>Zona</legend>
+<label class="hide" for="an_zona">Zona:</label><select class="oneGroup" id="an_zona" multiple="multiple" name="zona[]" required="required" title="Zona. Manten pulsada la tecla control para seleccionar varias opciones">
+<optgroup label="País">
+<option selected="selected" value="ESP">España</option>
+</optgroup>
+<optgroup id="provES" label="Provincias">
+<option value="15">A Coruña</option>
+<option value="03">Alacant/Alicante</option>
+<option value="02">Albacete</option>
+<option value="04">Almería</option>
+<option value="01">Araba/Álava</option>
+<option value="33">Asturias</option>
+<option value="05">Ávila</option>
+<option value="06">Badajoz</option>
+<option value="08">Barcelona</option>
+<option value="48">Bizkaia</option>
+<option value="09">Burgos</option>
+<option value="10">Cáceres</option>
+<option value="11">Cádiz</option>
+<option value="39">Cantabria</option>
+<option value="12">Castelló/Castellón</option>
+<option value="51">Ceuta</option>
+<option value="13">Ciudad Real</option>
+<option value="14">Córdoba</option>
+<option value="16">Cuenca</option>
+<option value="20">Gipuzkoa</option>
+<option value="17">Girona</option>
+<option value="18">Granada</option>
+<option value="19">Guadalajara</option>
+<option value="21">Huelva</option>
+<option value="22">Huesca</option>
+<option value="07">Illes Balears</option>
+<option value="23">Jaén</option>
+<option value="26">La Rioja</option>
+<option value="35">Las Palmas</option>
+<option value="24">León</option>
+<option value="25">Lleida</option>
+<option value="27">Lugo</option>
+<option value="28">Madrid</option>
+<option value="29">Málaga</option>
+<option value="52">Melilla</option>
+<option value="30">Murcia</option>
+<option value="31">Navarra</option>
+<option value="32">Ourense</option>
+<option value="34">Palencia</option>
+<option value="36">Pontevedra</option>
+<option value="37">Salamanca</option>
+<option value="38">Santa Cruz de Tenerife</option>
+<option value="40">Segovia</option>
+<option value="41">Sevilla</option>
+<option value="42">Soria</option>
+<option value="43">Tarragona</option>
+<option value="44">Teruel</option>
+<option value="45">Toledo</option>
+<option value="46">València/Valencia</option>
+<option value="47">Valladolid</option>
+<option value="49">Zamora</option>
+<option value="50">Zaragoza</option>
+</optgroup>
+</select>
+</fieldset>
+<fieldset>
+<legend>Parámetros</legend>
+<input checked="checked" id="an_PRenta" name="params[]" title="Renta" type="checkbox" value="renta"/> <label for="an_PRenta">Renta</label><br/>
+<input checked="checked" id="an_PHombres" name="params[]" title="Hombres" type="checkbox" value="hombres"/> <label for="an_PHombres">Hombres</label><br/>
+<input checked="checked" id="an_PMujeres" name="params[]" title="Mujeres" type="checkbox" value="mujeres"/> <label for="an_PMujeres">Mujeres</label><br/>
+<input checked="checked" id="an_P60s" name="params[]" title="Mayores de 60" type="checkbox" value="mayores_de_60"/> <label for="an_P60s">Mayores de 60</label><br/>
+<input checked="checked" id="an_P3059" name="params[]" title="De 30 a 59" type="checkbox" value="de_30_a_59"/> <label for="an_P3059">De 30 a 59</label><br/>
+<input checked="checked" id="an_P29" name="params[]" title="Hasta 29" type="checkbox" value="hasta_29"/> <label for="an_P29">Hasta 29</label><br/>
+<input checked="checked" id="an_PUTA" name="params[]" title="Unidades de trabajo anuales" type="checkbox" value="UTA"/> <label for="an_PUTA" title="Unidades de trabajo anuales">UTA</label><br/>
+<input checked="checked" id="an_PExpl" name="params[]" title="Explotaciones agrícolas" type="checkbox" value="explotaciones_agricolas"/> <label for="an_PExpl">Explotaciones agrícolas</label><br/>
+<input checked="checked" id="an_PUniGan" name="params[]" title="Unidades Ganaderas" type="checkbox" value="unidades_ganaderas"/> <label for="an_PUniGan">Unidades Ganaderas</label><br/>
+<input checked="checked" id="an_PParo" name="params[]" title="Paro" type="checkbox" value="paro"/> <label for="an_PParo">Paro</label><br/>
+<input checked="checked" id="an_PSAU" name="params[]" title="Superficie agrícola utilizada" type="checkbox" value="SAU"/> <label for="an_PSAU" title="Superficie agrícola utilizada">SAU</label><br/>
+<input checked="checked" id="an_PEmp" name="params[]" title="Empresas" type="checkbox" value="empresas"/> <label for="an_PEmp">Empresas</label>
+</fieldset>
+<fieldset>
+<legend>Causas de Incendios</legend>
+<input checked="checked" id="an_PC1" name="causas[]" title="C1 - Causas naturales" type="checkbox" value="C1"/> <label for="an_PC1">C1 - Causas naturales</label><br/>
+<input checked="checked" id="an_PC2" name="causas[]" title="C2 - Negligencias humanas" type="checkbox" value="C2"/> <label for="an_PC2">C2 - Negligencias humanas</label><br/>
+<input checked="checked" id="an_PC3" name="causas[]" title="C3 - Negligencias industriales" type="checkbox" value="C3"/> <label for="an_PC3">C3 - Negligencias industriales</label><br/>
+<input checked="checked" id="an_PC4" name="causas[]" title="C4 - Incendios intencionados" type="checkbox" value="C4"/> <label for="an_PC4">C4 - Incendios intencionados </label><br/>
+<input checked="checked" id="an_PC5" name="causas[]" title="C5 - Causas desconocidas" type="checkbox" value="C5"/> <label for="an_PC5">C5 - Causas desconocidas</label><br/>
+<input checked="checked" id="an_PC6" name="causas[]" title="C6 - Incendios reproducidos" type="checkbox" value="C6"/> <label for="an_PC6">C6 - Incendios reproducidos</label>
+</fieldset>
+<fieldset>
+<legend>Radio de influencia</legend>
+<label for="an_radio">Radio de influencia</label>
+<select class="radio" id="an_radio" name="radio" required="required" title="Radio de influencia">
+<option value="0"> 0</option>
+<option value="5">5</option>
+<option value="10">10</option>
+<option value="15">15</option>
+<option value="20">20</option>
+</select> <label for="an_radio">km</label>
+</fieldset>
+<fieldset class="fRangos multirango">
+<legend>Rango de riesgo</legend>
+<label for="an_rbajo">Riesgo bajo:</label> de 0 a <span class="count an_rbajo">0</span> incendios
+  <input id="an_rbajo" max="20" min="0" name="rbajo" required="required" step="1" title="Riesgo bajo" type="range" value="0"/><br/>
+<label for="an_rmedio">Riesgo medio:</label> de <span class="count an_rbajo" data-add="1">1</span> a <span class="count an_rmedio">5</span> incendios
+  <input id="an_rmedio" max="20" min="0" name="rmedio" required="required" step="1" title="Riesgo medio" type="range" value="5"/><br/>
+<label for="an_ralto">Riesgo alto:</label> de <span class="count an_rmedio" data-add="1">6</span> a <span class="count an_ralto">9</span> incendios
+  <input id="an_ralto" max="20" min="0" name="ralto" required="required" step="1" title="Riesgo alto" type="range" value="9"/><br/>
+<span class="label">Riesgo muy alto:</span> <span class="count an_ralto" data-add="1">10</span> incendios o más
+</fieldset> <fieldset class="fEntrenamiento">
+<legend>Entrenamiento</legend>
+<label for="tEntrenamiento">Tipo:</label> <select id="tEntrenamiento" name="tEntrenamiento" required="required" title="Tipo">
+<option></option>
+<option value="dbToda">Toda la base de datos...</option>
+<option value="dbPersonalizada">Personalizada...</option>
+</select>
+<div class="dbToda hide">
+<label for="ttEnd">hasta</label> <input id="ttEnd" min="2006" name="fin" placeholder="2017" required="required" step="1" title="hasta" type="number" value=""/><br/>
+<label for="ttPrc">% entrenamiento</label> <input id="ttPrc" max="95" min="10" name="prc" placeholder="70" required="required" step="1" title="% entrenamiento" type="number" value="70"/><br/>
+<label for="ttTest">% test</label> <input class="disabled" disabled="disabled" id="ttTest" max="100" min="0" name="test" placeholder="30" required="required" step="1" title="% test" type="number" value="30"/><br/>
+<fieldset>
+<legend>Validación cruzada</legend>
+<label for="folds" title="Número de iteraciones">Número de iteraciones:</label> <input id="folds" max="100" min="1" name="folds" placeholder="100" required="required" step="1" title="Número de iteraciones" type="number" value="4"/>
+</fieldset>
+</div>
+<div class="dbPersonalizada hide">
+<label for="prBng">de</label> <input id="prBng" min="2006" name="ini" placeholder="2006" required="required" step="1" title="de" type="number" value="2006"/><br/>
+<label for="prEnd">hasta</label> <input id="prEnd" min="2006" name="fin" placeholder="2010" required="required" step="1" title="hasta" type="number" value="2010"/><br/>
+<label for="prTest">Año para el test</label> <input id="prTest" min="2006" name="test" placeholder="2011" required="required" step="1" title="Año para el test" type="number"/>
+</div>
+</fieldset>
+<input data-defval="Calcular" type="submit" value="Calcular"/>
+</form>
+</div>
+<div class="sidebar-pane" id="resultado">
+<h1 class="sidebar-header">
+<span data-default="Resultado" id="tResultado">Resultado</span>
+<span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+<span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+<div class="loading-wrapp hide" id="loading">
+<div class="plate">
+<div class="inner">
+<div class="fill"></div>
+</div>
+</div>
+</div>
+<div class="content">
+</div>
+</div>
+</div>
+</div>
+<div class="hide" id="popup">
+<div>
+</div>
+<button class="cerrar" type="button">Cerrar</button>
+</div>
+<div class="sidebar-map" id="map"></div>
+</body>
+</html>

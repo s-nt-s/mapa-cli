@@ -1,0 +1,58 @@
+<fieldset>
+  <legend>Zona</legend>
+  <label for="{{pre}}zona" class="hide">Zona:</label><select id="{{pre}}zona" name="zona[]" multiple="multiple" class="oneGroup">
+    <optgroup label="País">
+      <option value="ESP" selected="selected">España</option>
+    </optgroup>
+    <optgroup label="Provincias" id="provES">
+    {% for p in provincias %}
+       <option value="{{p.ID}}">{{p.nombre}}</option>
+    {% endfor %}
+    </optgroup>
+  </select>
+</fieldset>
+<fieldset>
+  <legend>Parámetros</legend>
+    <input type="checkbox" name="params[]" id="{{pre}}PRenta" value="renta"> <label for="{{pre}}PRenta">Renta</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}PHombres" value="hombres"> <label for="{{pre}}PHombres">Hombres</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}PMujeres" value="mujeres"> <label for="{{pre}}PMujeres">Mujeres</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}P60s" value="mayores_de_60"> <label for="{{pre}}P60s">Mayores de 60</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}P3059" value="de_30_a_59"> <label for="{{pre}}P3059">De 30 a 59</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}P29" value="hasta_29"> <label for="{{pre}}P29">Hasta 29</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}PUTA" value="UTA" title="Unidades de trabajo anuales"> <label for="{{pre}}PUTA">UTA</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}PExpl" value="explotaciones_agricolas"> <label for="{{pre}}PExpl">Explotaciones agrícolas</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}PUniGan" value="unidades_ganaderas"> <label for="{{pre}}PUniGan">Unidades Ganaderas</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}PParo" value="paro"> <label for="{{pre}}PParo">Paro</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}PSAU" value="SAU" title="Superficie agrícola utilizada"> <label for="{{pre}}PSAU">SAU</label><br/>
+    <input type="checkbox" name="params[]" id="{{pre}}PEmp" value="empresas"> <label for="{{pre}}PEmp">Empresas</label>
+</fieldset>
+<fieldset>
+  <legend>Causas de Incendios</legend>
+    <input type="checkbox" name="causas[]" id="{{pre}}PC1" value="C1"> <label for="{{pre}}PC1">C1 - Causas naturales</label><br/>
+    <input type="checkbox" name="causas[]" id="{{pre}}PC2" value="C2"> <label for="{{pre}}PC2">C2 - Negligencias humanas</label><br/>
+    <input type="checkbox" name="causas[]" id="{{pre}}PC3" value="C3"> <label for="{{pre}}PC3">C3 - Negligencias industriales</label><br/>
+    <input type="checkbox" name="causas[]" id="{{pre}}PC4" value="C4"> <label for="{{pre}}PC4">C4 - Incendios intencionados </label><br/>
+    <input type="checkbox" name="causas[]" id="{{pre}}PC5" value="C5"> <label for="{{pre}}PC5">C5 - Causas desconocidas</label><br/>
+    <input type="checkbox" name="causas[]" id="{{pre}}PC6" value="C6"> <label for="{{pre}}PC6">C6 - Incendios reproducidos</label>
+</fieldset>
+<fieldset>
+  <legend>Radio de influencia</legend>
+  <label for="{{pre}}radio">Radio de influencia</label>
+  <select class="radio" id="{{pre}}radio" name="radio">
+    <option value="0">&#160;0</option>
+    <option value="5">5</option>
+    <option value="10">10</option>
+    <option value="15">15</option>
+    <option value="20">20</option>
+  </select> <label for="{{pre}}radio">km</label>
+</fieldset>
+<fieldset class="fRangos multirango">
+<legend>Rango de riesgo</legend>
+  <label for="{{pre}}rbajo">Riesgo bajo:</label> de 0 a <span class="count {{pre}}rbajo">0</span> incendios
+  <input type="range" min="0" max="20" step="1" value="0" id="{{pre}}rbajo" name="rbajo"><br/>
+  <label for="{{pre}}rmedio">Riesgo medio:</label> de <span class="count {{pre}}rbajo" data-add="1">1</span> a <span class="count {{pre}}rmedio">5</span> incendios
+  <input type="range" min="0" max="20" step="1" value="5" id="{{pre}}rmedio" name="rmedio"><br/>
+  <label for="{{pre}}ralto">Riesgo alto:</label> de <span class="count {{pre}}rmedio" data-add="1">6</span> a <span class="count {{pre}}ralto">9</span> incendios
+  <input type="range" min="0" max="20" step="1" value="9" id="{{pre}}ralto" name="ralto"><br/>
+  <span class="label">Riesgo muy alto:</span> <span class="count {{pre}}ralto" data-add="1">10</span> incendios o más
+</fieldset>
