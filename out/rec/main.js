@@ -220,7 +220,7 @@ $("#ttPrc").change(function(){
 $("#fPrediccion").data("submitted", function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (textStatus!="success") return false;
-    $(this).find("input[type=submit]").attr("disabled", true).val("Renderizando...");
+    this.form.find("input[type=submit]").attr("disabled", true).val("Renderizando...");
     if (layers.municipios) mymap.removeLayer(layers.municipios);
     layers.municipios={"riesgos":data}
     TXT["municipios"]={}
@@ -613,9 +613,10 @@ $("form").submit(function(e) {
       type: "POST",
       url: url,
       data: form.serialize(), // serializes the form's elements.
-      context: form
+      form: form
     }
     var store_in = form.find("input.store_in");
+    var _url=null;
     if (store_in.length) {
       store_in.val("");
       var ahora = new Date();
@@ -624,28 +625,10 @@ $("form").submit(function(e) {
       ahora = ahora.getFullYear() + "-" + ahora.getMonth().pad(2) + "-" + ahora.getDate().pad(2);
       fn = ahora + "_" + form.attr("id") + "_" + fn + ".json";
       store_in.val(fn);
-      var _url = "/rec/api/"+fn;
-      if (isUrlOnline(_url)) {
-        settings.url = _url;
-        settings.data = null;
-        settings.type = "GET";
-        settings.dataType = "json"
-      }
+      _url = "/rec/api/"+fn;
     }
-    $.ajax(settings).always(function(data, textStatus, jqXHR) {
-        if (this.data("submitted")) {
-            var ok = this.data("submitted").apply(this, arguments);
-            if (ok) return;
-        }
-      var obj = data.status?objForm(this):data;
-      if (typeof obj == "object") {
-        if (obj.hasOwnProperty("html")) obj = obj.html;
-        else obj="<pre>"+JSON.stringify(obj, null, 2)+"</pre>";
-      }
-      $("#popup").find("div:first").html(obj);
-      $("body").addClass("showPopup");
-    }).always(function(data, textStatus, jqXHR) {
-        var btn = this.find("input[type=submit]");
+    my_ajax(_url, settings, form.data("submitted")).always(function(data, textStatus, jqXHR) {
+        var btn = this.form.find("input[type=submit]");
         btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
     });
 });

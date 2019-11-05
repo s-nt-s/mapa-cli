@@ -163,3 +163,54 @@ String.prototype.hashCode = function() {
   }
   return hash;
 };
+
+
+class WhenUrlExist {
+    static _ids = {};
+    constructor(id, url, time, done) {
+        if (time == null) time = 5000;
+        this.id = id;
+        this.url = url;
+        this.time = time;
+        this.done = done;
+        this.opt = null;
+        this.clear();
+    };
+    fire(opt) {
+      if (this.stop && this.stop()) return;
+      if (isUrlOnline(this.url)) {
+        if (opt!=null) this.opt = Object.assign({}, opt, {
+          url: this.url,
+          type: "GET",
+          dataType: "json".
+          when_url_exist: this
+        });
+        return $.ajax(this.opt).done(this.done).always(function(){
+          this.when_url_exist.clear();
+        });
+      } else {
+         WhenUrlExist._ids[this.id] = setTimeout(function(a) {a.fire();}, this.time, this);
+      }
+    };
+    clear() {
+      if (WhenUrlExist._ids[this.when_url_exist.id]) clearTimeout(WhenUrlExist._ids[this.when_url_exist.id])
+    }
+}
+
+function my_ajax(url, opt, done) {
+  if (!url) return $.ajax(opt).done(done);
+  if (isUrlOnline(url)) {
+    return $.ajax({
+      url: url,
+      type: "GET",
+      dataType: "json"
+    }).done(done);
+  }
+  opt.when_url_exist = new WhenUrlExist(url, null, done);
+  return $.ajax(opt).function(data, textStatus, jqXHR) {
+    if (textStatus!="timeout") return;
+    if (this.when_url_exist) {
+      this.when_url_exist.fire(this);
+    }
+  }.done(done);
+}
