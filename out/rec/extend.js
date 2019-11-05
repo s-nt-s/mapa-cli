@@ -193,17 +193,25 @@ class WhenUrlExist {
       } else {
         this.intentos = this.intentos + 1;
         var tt = this.intentos<2?(this.time*2):this.time;
-        console.log(this.id+": "+this.intentos+" "+this.tiempo())
+        console.log(this.id+": "+this.intentos+" "+this.tiempo(true))
         TimeoutIDS[this.id] = setTimeout(function(a) {a.fire();}, tt, this);
       }
     };
     clear() {
       if (TimeoutIDS[this.id]) clearTimeout(TimeoutIDS[this.id]);
     };
-    tiempo() {
+    tiempo(to_string) {
       var timeDiff = new Date() - this.start;
       timeDiff /= 1000;
       var seconds = Math.round(timeDiff);
+      if (to_string) {
+        if (seconds==1) return "un segundo";
+        if (seconds<60) return seconds+" segundos"
+        var m = Math.floor(seconds/60);
+        var s = seconds - (m*60);
+        if (m==1) return "un minuto y "+s+" segundos";
+        return m+" minutos y "+s+" segundos";
+      }
       return seconds;
     }
 }
