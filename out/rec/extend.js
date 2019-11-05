@@ -191,7 +191,9 @@ class WhenUrlExist {
         });
       } else {
         this.intentos = this.intentos + 1;
-        TimeoutIDS[this.id] = setTimeout(function(a) {a.fire();}, this.time, this);
+        var tt = this.intentos<2?(this.time*2):this.time;
+        console.log(this.id+": "+this.intentos+" "+this.tiempo())
+        TimeoutIDS[this.id] = setTimeout(function(a) {a.fire();}, tt, this);
       }
     };
     clear() {
