@@ -182,7 +182,7 @@ class WhenUrlExist {
         if (opt!=null) this.opt = Object.assign({}, opt, {
           url: this.url,
           type: "GET",
-          dataType: "json".
+          dataType: "json",
           when_url_exist: this
         });
         return $.ajax(this.opt).done(this.done).always(function(){
