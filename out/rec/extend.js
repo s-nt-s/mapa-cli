@@ -164,9 +164,9 @@ String.prototype.hashCode = function() {
   return hash;
 };
 
+TimeoutIDS={}
 
 class WhenUrlExist {
-    static _ids = {};
     constructor(id, url, time, done) {
         if (time == null) time = 5000;
         this.id = id;
@@ -189,11 +189,11 @@ class WhenUrlExist {
           this.when_url_exist.clear();
         });
       } else {
-         WhenUrlExist._ids[this.id] = setTimeout(function(a) {a.fire();}, this.time, this);
+         TimeoutIDS[this.id] = setTimeout(function(a) {a.fire();}, this.time, this);
       }
     };
     clear() {
-      if (WhenUrlExist._ids[this.when_url_exist.id]) clearTimeout(WhenUrlExist._ids[this.when_url_exist.id])
+      if (TimeoutIDS[this.when_url_exist.id]) clearTimeout(TimeoutIDS[this.when_url_exist.id])
     }
 }
 
