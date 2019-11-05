@@ -628,6 +628,9 @@ $("form").submit(function(e) {
       data: form.serialize(), // serializes the form's elements.
     }).always(function(data, textStatus, jqXHR) {
         var form=$("form[action='"+this.url+"'");
+        if (form.length==0) {
+          form = $("input.store_in").filter(function(){return this.value==this.url}).closest("form");
+        }
         if (form.length==1 && form.data("submitted")) {
             var ok = form.data("submitted").apply(this, arguments);
             if (ok) return;
