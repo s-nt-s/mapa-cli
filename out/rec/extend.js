@@ -225,7 +225,7 @@ function my_ajax(url, opt, done, always) {
       type: "GET",
       dataType: "json",
       form: opt.form
-    }).done(done);
+    }).done(done).always(always);
   }
   opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null, done, always);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
