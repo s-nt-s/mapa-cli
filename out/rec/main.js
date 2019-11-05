@@ -609,6 +609,12 @@ $("form").submit(function(e) {
     var i = $("#iResultado").show().find("i");
     if (!$("#resultado .content").is(":visible")) i.click();
     var url = form.attr('action');
+    var settings = {
+      type: "POST",
+      url: url,
+      data: form.serialize(), // serializes the form's elements.
+      context: form
+    }
     var store_in = form.find("input.store_in");
     if (store_in.length) {
       store_in.val("");
@@ -620,14 +626,13 @@ $("form").submit(function(e) {
       fn = ahora + "_" + fn + ".json";
       store_in.val(fn);
       var _url = "/rec/api/"+fn;
-      if (isUrlOnline(_url)) url = _url;
+      if (isUrlOnline(_url)) {
+        settings.url = _url;
+        settings.data = null;
+        settings.type = "GET";
+      }
     }
-    $.ajax({
-      type: "POST",
-      url: url,
-      data: form.serialize(), // serializes the form's elements.
-      context: form
-    }).always(function(data, textStatus, jqXHR) {
+    $.ajax(settings).always(function(data, textStatus, jqXHR) {
         if (this.data("submitted")) {
             var ok = this.data("submitted").apply(this, arguments);
             if (ok) return;
