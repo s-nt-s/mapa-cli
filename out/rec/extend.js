@@ -173,7 +173,6 @@ class WhenUrlExist {
         this.url = url;
         this.time = time;
         this.done = done;
-        this.always = always;
         this.opt = null;
         this.intentos = 1;
         this.start = new Date();
@@ -191,7 +190,7 @@ class WhenUrlExist {
       if (isUrlOnline(this.url)) {
         return $.ajax(this.opt).done(this.done).always(function(){
           this.when_url_exist.clear();
-        }).always(this.always);
+        });
       } else {
         this.intentos = this.intentos + 1;
         var tt = this.intentos<2?(this.time*2):this.time;
@@ -217,7 +216,7 @@ class WhenUrlExist {
     }
 }
 
-function my_ajax(url, opt, done, always) {
+function my_ajax(url, opt, done) {
   if (!url) return $.ajax(opt).done(done);
   if (isUrlOnline(url)) {
     return $.ajax({
@@ -225,7 +224,7 @@ function my_ajax(url, opt, done, always) {
       type: "GET",
       dataType: "json",
       form: opt.form
-    }).done(done).always(always);
+    }).done(done);
   }
   opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null, done, always);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
@@ -233,5 +232,5 @@ function my_ajax(url, opt, done, always) {
     if (this.when_url_exist) {
       this.when_url_exist.fire(this);
     }
-  }).done(done).always(always);
+  }).done(done);
 }

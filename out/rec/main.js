@@ -627,7 +627,8 @@ $("form").submit(function(e) {
       data: form.serialize(), // serializes the form's elements.
       form: form
     };
-    my_ajax(_url, settings, form.data("submitted"), function(data, textStatus, jqXHR) {
+    my_ajax(_url, settings, function(data, textStatus, jqXHR) {
+        form.data("submitted").aply(this, arguments);
         var btn = this.form.find("input[type=submit]");
         btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
     });
