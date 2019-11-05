@@ -170,7 +170,7 @@ class WhenUrlExist {
     constructor(id, url, time, done) {
         if (time == null) time = 5000;
         this.id = id;
-        this.url = "/rec/api/"+url;
+        this.url = url;
         this.time = time;
         this.done = done;
         this.opt = null;
@@ -201,7 +201,7 @@ class WhenUrlExist {
       var timeDiff = new Date() - this.start;
       timeDiff /= 1000;
       var seconds = Math.round(timeDiff);
-      return timeDiff
+      return timeDiff;
     }
 }
 
