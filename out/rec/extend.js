@@ -203,7 +203,7 @@ class WhenUrlExist {
       var timeDiff = new Date() - this.start;
       timeDiff /= 1000;
       var seconds = Math.round(timeDiff);
-      return timeDiff;
+      return seconds;
     }
 }
 
