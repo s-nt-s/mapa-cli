@@ -619,11 +619,10 @@ $("form").submit(function(e) {
     if (store_in.length) {
       store_in.val("");
       var ahora = new Date();
-      var fn = form.serialize();
-      fn = btoa(fn);
-      fn = encodeURIComponent(fn);
+      var fn = form.serialize()+" "+form.attr("action");
+      fn = fn.hashCode().toString();
       ahora = ahora.getFullYear() + "-" + ahora.getMonth().pad(2) + "-" + ahora.getDate().pad(2);
-      fn = ahora + "_" + fn + ".json";
+      fn = ahora + "_" + form.attr("id") + "_" + fn + ".json";
       store_in.val(fn);
       var _url = "/rec/api/"+fn;
       if (isUrlOnline(_url)) {
