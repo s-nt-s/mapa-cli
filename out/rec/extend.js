@@ -177,7 +177,6 @@ class WhenUrlExist {
         this.clear();
     };
     fire(opt) {
-      if (this.stop && this.stop()) return;
       if (isUrlOnline(this.url)) {
         if (opt!=null) this.opt = Object.assign({}, opt, {
           url: this.url,
@@ -209,7 +208,7 @@ function my_ajax(url, opt, done) {
   }
   opt.when_url_exist = new WhenUrlExist(url, null, done);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
-    if (textStatus!="timeout") return;
+    //if (textStatus!="timeout") return;
     if (this.when_url_exist) {
       this.when_url_exist.fire(this);
     }
