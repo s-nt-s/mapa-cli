@@ -609,12 +609,6 @@ $("form").submit(function(e) {
     var i = $("#iResultado").show().find("i");
     if (!$("#resultado .content").is(":visible")) i.click();
     var url = form.attr('action');
-    var settings = {
-      type: "POST",
-      url: url,
-      data: form.serialize(), // serializes the form's elements.
-      form: form
-    }
     var store_in = form.find("input.store_in");
     var _url=null;
     if (store_in.length) {
@@ -627,6 +621,12 @@ $("form").submit(function(e) {
       store_in.val(fn);
       _url = "/rec/api/"+fn;
     }
+    var settings = {
+      type: "POST",
+      url: url,
+      data: form.serialize(), // serializes the form's elements.
+      form: form
+    };
     my_ajax(_url, settings, form.data("submitted")).always(function(data, textStatus, jqXHR) {
         var btn = this.form.find("input[type=submit]");
         btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
