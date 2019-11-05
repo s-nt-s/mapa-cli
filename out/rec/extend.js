@@ -176,15 +176,16 @@ class WhenUrlExist {
         this.opt = null;
         this.intentos = 0;
         this.start = new Date();
+        this.opt={
+          url: this.url,
+          type: "GET",
+          dataType: "json",
+          when_url_exist: this
+        }
         this.clear();
     };
     fire(opt) {
-      if (opt!=null) this.opt = Object.assign({}, opt, {
-        url: this.url,
-        type: "GET",
-        dataType: "json",
-        when_url_exist: this
-      });
+      if (opt!=null) this.opt = Object.assign({}, opt, this.opt);
       if (isUrlOnline(this.url)) {
         return $.ajax(this.opt).done(this.done).always(function(){
           this.when_url_exist.clear();
