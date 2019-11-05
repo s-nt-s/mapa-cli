@@ -205,17 +205,15 @@ class WhenUrlExist {
       var timeDiff = new Date() - this.start;
       timeDiff /= 1000;
       var seconds = Math.round(timeDiff);
-      if (to_string) {
-        if (seconds==1) return "un segundo";
-        if (seconds<60) return seconds+" segundos"
-        var m = Math.floor(seconds/60);
-        var s = seconds - (m*60);
-        if (m==1) m="un minuto";
-        else m=m+" minutos";
-        if (s<2) return m;
-        return m+" y "+s+" segundos";
-      }
-      return seconds;
+      if (!to_string) return seconds;
+      if (seconds==1) return "un segundo";
+      if (seconds<60) return seconds+" segundos"
+      var m = Math.floor(seconds/60);
+      var s = seconds - (m*60);
+      if (m==1) m="un minuto";
+      else m=m+" minutos";
+      if (s<2) return m;
+      return m+" y "+s+" segundos";
     }
 }
 
