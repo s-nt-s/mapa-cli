@@ -146,7 +146,7 @@ function ieDownloadEvent() {
 }
 
 function isUrlOnline(url, status) {
-  if (status == null) status == 200;
+  if (status == null) status = 200;
   var http = new XMLHttpRequest();
   http.open('HEAD', url, false);
   http.send();
