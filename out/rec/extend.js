@@ -174,6 +174,8 @@ class WhenUrlExist {
         this.time = time;
         this.done = done;
         this.opt = null;
+        this.intentos = 0;
+        this.start = new Date();
         this.clear();
     };
     fire(opt) {
@@ -188,11 +190,18 @@ class WhenUrlExist {
           this.when_url_exist.clear();
         });
       } else {
-         TimeoutIDS[this.id] = setTimeout(function(a) {a.fire();}, this.time, this);
+        this.intentos = this.intentos + 1;
+        TimeoutIDS[this.id] = setTimeout(function(a) {a.fire();}, this.time, this);
       }
     };
     clear() {
       if (TimeoutIDS[this.id]) clearTimeout(TimeoutIDS[this.id]);
+    };
+    tiempo() {
+      var timeDiff = new Date() - this.start;
+      timeDiff /= 1000;
+      var seconds = Math.round(timeDiff);
+      return timeDiff
     }
 }
 
