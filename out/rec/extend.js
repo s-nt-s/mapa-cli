@@ -191,7 +191,7 @@ class WhenUrlExist {
       if (isUrlOnline(this.url)) {
         return $.ajax(this.opt).done(this.done).always(function(){
           this.when_url_exist.clear();
-        }).always(always);
+        }).always(this.always);
       } else {
         this.intentos = this.intentos + 1;
         var tt = this.intentos<2?(this.time*2):this.time;
