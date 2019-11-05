@@ -144,3 +144,11 @@ function ieDownloadEvent() {
     window.top.navigator.msSaveOrOpenBlob($(this).data("blob"), this.download);
   }).addClass("ieDwn");
 }
+
+function isUrlOnline(url, status) {
+  if (status == null) status == 200;
+  var http = new XMLHttpRequest();
+  http.open('HEAD', url, false);
+  http.send();
+  return http.status == status;
+}

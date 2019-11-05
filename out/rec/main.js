@@ -619,6 +619,8 @@ $("form").submit(function(e) {
       ahora = ahora.getFullYear() + "-" + ahora.getMonth().pad(2) + "-" + ahora.getDate().pad(2);
       fn = ahora + "_" + fn + ".json";
       store_in.val(fn);
+      var _url = "/rec/api/"+fn;
+      if (isUrlOnline(_url)) url = _url;
     }
     $.ajax({
       type: "POST",
