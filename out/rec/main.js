@@ -628,7 +628,7 @@ $("form").submit(function(e) {
       form: form
     };
     my_ajax(_url, settings, function(data, textStatus, jqXHR) {
-        this.form.data("submitted").aply(this, arguments);
+        this.form.data("submitted").apply(this, arguments);
         var btn = this.form.find("input[type=submit]");
         btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
     });
