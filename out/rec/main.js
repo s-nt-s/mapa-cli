@@ -629,6 +629,7 @@ $("form").submit(function(e) {
         settings.url = _url;
         settings.data = null;
         settings.type = "GET";
+        settings.dataType = "json"
       }
     }
     $.ajax(settings).always(function(data, textStatus, jqXHR) {
