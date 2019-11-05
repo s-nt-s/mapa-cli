@@ -193,7 +193,7 @@ class WhenUrlExist {
       }
     };
     clear() {
-      if (TimeoutIDS[this.when_url_exist.id]) clearTimeout(TimeoutIDS[this.when_url_exist.id])
+      if (TimeoutIDS[this.id]) clearTimeout(TimeoutIDS[this.id]);
     }
 }
 
@@ -203,7 +203,8 @@ function my_ajax(url, opt, done) {
     return $.ajax({
       url: url,
       type: "GET",
-      dataType: "json"
+      dataType: "json",
+      form: opt.form
     }).done(done);
   }
   opt.when_url_exist = new WhenUrlExist(url, null, done);
