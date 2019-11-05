@@ -206,7 +206,7 @@ function my_ajax(url, opt, done) {
       form: opt.form
     }).done(done);
   }
-  opt.when_url_exist = new WhenUrlExist(url, null, done);
+  opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null, done);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
     //if (textStatus!="timeout") return;
     if (this.when_url_exist) {
