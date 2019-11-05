@@ -609,6 +609,17 @@ $("form").submit(function(e) {
     var i = $("#iResultado").show().find("i");
     if (!$("#resultado .content").is(":visible")) i.click();
     var url = form.attr('action');
+    var store_in = form.find("input.store_in");
+    if (store_in.length) {
+      store_in.val("");
+      var ahora = new Date();
+      var fn = form.serialize();
+      fn = btoa(fn);
+      fn = encodeURIComponent(fn);
+      ahora = ahora.getFullYear() + "-" + ahora.getMonth().pad(2) + "-" + ahora.getDate().pad(2);
+      fn = ahora + "_" + fn + ".json";
+      store_in.val(fn);
+    }
     $.ajax({
       type: "POST",
       url: url,
@@ -616,7 +627,7 @@ $("form").submit(function(e) {
     }).always(function(data, textStatus, jqXHR) {
         var form=$("form[action='"+this.url+"'");
         if (form.length==1 && form.data("submitted")) {
-            var ok = form.data("submitted").apply(this,arguments);
+            var ok = form.data("submitted").apply(this, arguments);
             if (ok) return;
         }
       var obj = data.status?objForm(form):data;
