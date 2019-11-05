@@ -628,15 +628,11 @@ $("form").submit(function(e) {
       data: form.serialize(), // serializes the form's elements.
       context: form
     }).always(function(data, textStatus, jqXHR) {
-        var form=$("form[action='"+this.url+"'");
-        if (form.length==0) {
-          form = $("input.store_in").filter(function(){return this.value==this.url}).closest("form");
-        }
-        if (form.length==1 && form.data("submitted")) {
-            var ok = form.data("submitted").apply(this, arguments);
+        if (this.data("submitted")) {
+            var ok = this.data("submitted").apply(this, arguments);
             if (ok) return;
         }
-      var obj = data.status?objForm(form):data;
+      var obj = data.status?objForm(this):data;
       if (typeof obj == "object") {
         if (obj.hasOwnProperty("html")) obj = obj.html;
         else obj="<pre>"+JSON.stringify(obj, null, 2)+"</pre>";
@@ -644,8 +640,7 @@ $("form").submit(function(e) {
       $("#popup").find("div:first").html(obj);
       $("body").addClass("showPopup");
     }).always(function(data, textStatus, jqXHR) {
-        var form=$("form[action='"+this.url+"'");
-        var btn = form.find("input[type=submit]");
+        var btn = this.find("input[type=submit]");
         btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
     });
 });
