@@ -207,10 +207,10 @@ function my_ajax(url, opt, done) {
     }).done(done);
   }
   opt.when_url_exist = new WhenUrlExist(url, null, done);
-  return $.ajax(opt).function(data, textStatus, jqXHR) {
+  return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
     if (textStatus!="timeout") return;
     if (this.when_url_exist) {
       this.when_url_exist.fire(this);
     }
-  }.done(done);
+  }).done(done);
 }
