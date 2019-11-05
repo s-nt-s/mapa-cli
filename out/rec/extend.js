@@ -175,7 +175,7 @@ class WhenUrlExist {
         this.done = done;
         this.always = always;
         this.opt = null;
-        this.intentos = 0;
+        this.intentos = 1;
         this.start = new Date();
         this.opt={
           url: this.url,
@@ -186,7 +186,7 @@ class WhenUrlExist {
         this.clear();
     };
     fire(opt) {
-      console.log(this.id+": "+this.intentos+" "+this.tiempo(true))
+      console.log(this.intentos+" "+this.id+" -> "+this.tiempo(true))
       if (opt!=null) this.opt = Object.assign({}, opt, this.opt);
       if (isUrlOnline(this.url)) {
         return $.ajax(this.opt).done(this.done).always(function(){
@@ -210,8 +210,10 @@ class WhenUrlExist {
         if (seconds<60) return seconds+" segundos"
         var m = Math.floor(seconds/60);
         var s = seconds - (m*60);
-        if (m==1) return "un minuto y "+s+" segundos";
-        return m+" minutos y "+s+" segundos";
+        if (m==1) m="un minuto";
+        else m=m+" minutos";
+        if (s<2) return m;
+        return m+" y "+s+" segundos";
       }
       return seconds;
     }
