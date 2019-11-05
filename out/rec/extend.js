@@ -167,7 +167,7 @@ String.prototype.hashCode = function() {
 TimeoutIDS={}
 
 class WhenUrlExist {
-    constructor(id, url, time, done, always) {
+    constructor(id, url, time, done) {
         if (time == null) time = 5000;
         this.id = id;
         this.url = url;
@@ -226,7 +226,7 @@ function my_ajax(url, opt, done) {
       form: opt.form
     }).done(done);
   }
-  opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null, done, always);
+  opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null, done);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
     //if (textStatus!="timeout") return;
     if (this.when_url_exist) {
