@@ -185,6 +185,7 @@ class WhenUrlExist {
         this.clear();
     };
     fire(opt) {
+      console.log(this.id+": "+this.intentos+" "+this.tiempo(true))
       if (opt!=null) this.opt = Object.assign({}, opt, this.opt);
       if (isUrlOnline(this.url)) {
         return $.ajax(this.opt).done(this.done).always(function(){
@@ -193,7 +194,6 @@ class WhenUrlExist {
       } else {
         this.intentos = this.intentos + 1;
         var tt = this.intentos<2?(this.time*2):this.time;
-        console.log(this.id+": "+this.intentos+" "+this.tiempo(true))
         TimeoutIDS[this.id] = setTimeout(function(a) {a.fire();}, tt, this);
       }
     };
