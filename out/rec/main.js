@@ -626,6 +626,7 @@ $("form").submit(function(e) {
       type: "POST",
       url: url,
       data: form.serialize(), // serializes the form's elements.
+      context: form
     }).always(function(data, textStatus, jqXHR) {
         var form=$("form[action='"+this.url+"'");
         if (form.length==0) {
