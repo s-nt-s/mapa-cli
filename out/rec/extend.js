@@ -191,7 +191,8 @@ class WhenUrlExist {
           url: this.url,
           type: "GET",
           dataType: "json",
-          when_url_exist: this
+          when_url_exist: this,
+          data: null
         }
         this.clear();
     };
