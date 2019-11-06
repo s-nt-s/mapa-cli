@@ -208,6 +208,7 @@ class WhenUrlExist {
         var tt = this.intentos<2?(this.time*2):this.time;
         TimeoutIDS[this.id] = setTimeout(function(a) {a.fire();}, tt, this);
       }
+      return null;
     };
     clear() {
       if (TimeoutIDS[this.id]) clearTimeout(TimeoutIDS[this.id]);
@@ -230,15 +231,8 @@ class WhenUrlExist {
 
 function my_ajax(url, opt) {
   if (!url) return $.ajax(opt);
-  if (isUrlOnline(url)) {
-    return $.ajax({
-      url: url,
-      type: "GET",
-      dataType: "json",
-      form: opt.form
-    });
-  }
   opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null);
+  if (isUrlOnline(url)) return opt.when_url_exist.fire();
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
     //if (textStatus!="timeout") return;
     if (this.when_url_exist) {
