@@ -232,7 +232,7 @@ class WhenUrlExist {
 function my_ajax(url, opt) {
   if (!url) return $.ajax(opt);
   opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null);
-  if (isUrlOnline(url)) return opt.when_url_exist.fire();
+  if (isUrlOnline(url)) return opt.when_url_exist.fire(opt);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
     //if (textStatus!="timeout") return;
     if (this.when_url_exist) {
