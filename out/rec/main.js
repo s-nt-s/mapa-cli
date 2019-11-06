@@ -375,8 +375,8 @@ $("#fPrediccion").data("submitted", function(data, textStatus, jqXHR) {
     causas = causas.join(", ")
     html = html + "<ul>";
     var ahora =  new Date();
-    var strAhora = ahora.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit',minute:'2-digit'});
-    strAhora = strAhora.replace(/[^ \d:]+/g, "");
+    var strAhora = ahora.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit', minute:'2-digit'});
+    strAhora = strAhora.replace(/[^ \d:\/\._]+/g, "");
     html = html + `
       </li>
       <li>Región: ${zonas}</li>
@@ -454,6 +454,7 @@ Incendios;${obj.inc_usados}
 
 
     var strAhora = ahora.getFullYear() + "." + ahora.getMonth().pad(2) + "." + ahora.getDate().pad(2)+"_"+ahora.getHours().pad(2)+"."+ahora.getMinutes().pad(2);
+    strAhora = strAhora.replace(/[^ \d:\/\._]+/g, "");
     var _md = btoa(toWin(md));
     var _csv = btoa(toWin(csv));
     html = html + `
@@ -529,6 +530,7 @@ $("#fAnalisis").data("submitted", function(data, textStatus, jqXHR) {
       }
       var ahora =  new Date();
       var strAhora = ahora.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit',minute:'2-digit'});
+      strAhora = strAhora.replace(/[^ \d:\/\._]+/g, "");
       html = html + `
         </li>
         <li>Región: ${zonas}</li>
@@ -549,6 +551,7 @@ $("#fAnalisis").data("submitted", function(data, textStatus, jqXHR) {
       var md = html_to_md(`<h1>Análisis ${strAhora}</h1>${html}`);
       var _md = btoa(toWin(md));
       var strAhora = ahora.getFullYear() + "." + ahora.getMonth().pad(2) + "." + ahora.getDate().pad(2)+"_"+ahora.getHours().pad(2)+"."+ahora.getMinutes().pad(2);
+      strAhora = strAhora.replace(/[^ \d:\/\._]+/g, "");
       html = html + `
       <p class='avoidDwn'>
         <a class="aButton" download="analisis_${strAhora}.txt" href="data:text/plain;base64,`+_md+`" class="button"><button>Descargar informe (txt)</button></a>
