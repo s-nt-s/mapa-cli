@@ -616,8 +616,9 @@ $("form").submit(function(e) {
       var ahora = new Date();
       var fn = form.serialize()+" "+form.attr("action");
       fn = fn.hashCode().toString();
-      ahora = ahora.getFullYear() + "-" + ahora.getMonth().pad(2) + "-" + ahora.getDate().pad(2);
-      fn = ahora + "_" + form.attr("id") + "_" + fn + ".json";
+      fn = form.attr("id") + "_" + fn + ".json";
+      //ahora = ahora.getFullYear() + "-" + ahora.getMonth().pad(2) + "-" + ahora.getDate().pad(2);
+      //fn = ahora + "_" + fn;
       store_in.val(fn);
       _url = "/rec/api/"+fn;
     }

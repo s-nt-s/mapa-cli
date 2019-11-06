@@ -145,12 +145,24 @@ function ieDownloadEvent() {
   }).addClass("ieDwn");
 }
 
-function isUrlOnline(url, status) {
+function isUrlOnline(url, status, fecha) {
   if (status == null) status = 200;
+  if (fecha == null) {
+    fecha = new Date();
+    fecha.setHours(0,0,0,0);
+  }
   var http = new XMLHttpRequest();
   http.open('HEAD', url, false);
   http.send();
-  return http.status == status;
+  if (http.status != status) {
+    console.log(http.status+" "+url);
+    return false;
+  }
+  var s_dt = http.getResponseHeader("date");
+  var dt = new Date(s_dt);
+  if (dt>=fecha) return true;
+  console.log(s_dt+" "+url);
+  return false;
 }
 
 String.prototype.hashCode = function() {
