@@ -625,13 +625,14 @@ $("form").submit(function(e) {
       type: "POST",
       url: url,
       data: form.serialize(), // serializes the form's elements.
-      form: form
+      form: form,
+      success: function(data, textStatus, jqXHR) {
+          this.form.data("submitted").apply(this, arguments);
+          var btn = this.form.find("input[type=submit]");
+          btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
+      }
     };
-    my_ajax(_url, settings, function(data, textStatus, jqXHR) {
-        this.form.data("submitted").apply(this, arguments);
-        var btn = this.form.find("input[type=submit]");
-        btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
-    });
+    my_ajax(_url, settings);
 });
 
 $("select.oneGroup").change(function(){

@@ -167,12 +167,11 @@ String.prototype.hashCode = function() {
 TimeoutIDS={}
 
 class WhenUrlExist {
-    constructor(id, url, time, done) {
+    constructor(id, url, time) {
         if (time == null) time = 5000;
         this.id = id;
         this.url = url;
         this.time = time;
-        this.done = done;
         this.opt = null;
         this.intentos = 1;
         this.start = new Date();
@@ -188,7 +187,7 @@ class WhenUrlExist {
       console.log(this.intentos+" "+this.id+" -> "+this.tiempo(true))
       if (opt!=null) this.opt = Object.assign({}, opt, this.opt);
       if (isUrlOnline(this.url)) {
-        return $.ajax(this.opt).done(this.done).always(function(){
+        return $.ajax(this.opt).always(function(){
           this.when_url_exist.clear();
         });
       } else {
@@ -216,21 +215,21 @@ class WhenUrlExist {
     }
 }
 
-function my_ajax(url, opt, done) {
-  if (!url) return $.ajax(opt).done(done);
+function my_ajax(url, opt) {
+  if (!url) return $.ajax(opt);
   if (isUrlOnline(url)) {
     return $.ajax({
       url: url,
       type: "GET",
       dataType: "json",
       form: opt.form
-    }).done(done);
+    });
   }
-  opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null, done);
+  opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
     //if (textStatus!="timeout") return;
     if (this.when_url_exist) {
       this.when_url_exist.fire(this);
     }
-  }).done(done);
+  });
 }
