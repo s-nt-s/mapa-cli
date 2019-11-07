@@ -457,7 +457,7 @@ Incendios;${obj.inc_usados}
     });
     csv = csv.replace(/\./g, ",");
 
-
+    var ahora = new Date();
     var strAhora = ahora.getFullYear() + "." + ahora.getMonth().pad(2) + "." + ahora.getDate().pad(2)+"_"+ahora.getHours().pad(2)+"."+ahora.getMinutes().pad(2);
     strAhora = strAhora.replace(/[^ \d:\/\._]+/g, "");
     var _md = btoa(toWin(md));
