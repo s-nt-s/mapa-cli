@@ -36,7 +36,7 @@ function getStrFecha(dt) {
 }
 function getPthFecha(dt) {
   if (dt==null) dt =  new Date();
-  var s = dt.getFullYear() + "." + ahora.getMonth().pad(2) + "." + ahora.getDate().pad(2)+"_"+ahora.getHours().pad(2)+"."+ahora.getMinutes().pad(2);
+  var s = dt.getFullYear() + "." + dt.getMonth().pad(2) + "." + dt.getDate().pad(2)+"_"+dt.getHours().pad(2)+"."+dt.getMinutes().pad(2);
   s = s.replace(/[^ \d:\/\._]+/g, "");
   return s;
 }
