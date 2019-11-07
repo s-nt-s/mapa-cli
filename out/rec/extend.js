@@ -28,6 +28,20 @@ Array.prototype.diff = function(o) {
   return arr;
 }
 
+function getStrFecha(dt) {
+  if (dt==null) dt =  new Date();
+  var s = dt.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit',minute:'2-digit'});
+  s = s.replace(/[^ \d:\/\._]+/g, "");
+  return s;
+}
+function getPthFecha(dt) {
+  if (dt==null) dt =  new Date();
+  var s = dt.getFullYear() + "." + ahora.getMonth().pad(2) + "." + ahora.getDate().pad(2)+"_"+ahora.getHours().pad(2)+"."+ahora.getMinutes().pad(2);
+  s = s.replace(/[^ \d:\/\._]+/g, "");
+  return s;
+}
+
+
 function objForm(f) {
   if (!f) f=$("form:visible");
   var obj={};

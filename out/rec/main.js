@@ -19,13 +19,6 @@ var sidebar_observer = new MutationObserver(function(mutations) {
   });
 });
 
-function getStrFecha(dt) {
-  if (dt==null) dt =  new Date();
-  var s = dt.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit',minute:'2-digit'});
-  s = s.replace(/[^ \d:\/\._]+/g, "");
-  return s;
-}
-
 function riesgoTxt(v) {
   if (v==0) return "bajo";
   if (v==1) return "medio";
@@ -457,9 +450,7 @@ Incendios;${obj.inc_usados}
     });
     csv = csv.replace(/\./g, ",");
 
-    var ahora = new Date();
-    var strAhora = ahora.getFullYear() + "." + ahora.getMonth().pad(2) + "." + ahora.getDate().pad(2)+"_"+ahora.getHours().pad(2)+"."+ahora.getMinutes().pad(2);
-    strAhora = strAhora.replace(/[^ \d:\/\._]+/g, "");
+    var strAhora = getPthFecha();
     var _md = btoa(toWin(md));
     var _csv = btoa(toWin(csv));
     html = html + `
@@ -553,8 +544,7 @@ $("#fAnalisis").data("submitted", function(data, textStatus, jqXHR) {
 
       var md = html_to_md(`<h1>Análisis ${strAhora}</h1>${html}`);
       var _md = btoa(toWin(md));
-      var strAhora = ahora.getFullYear() + "." + ahora.getMonth().pad(2) + "." + ahora.getDate().pad(2)+"_"+ahora.getHours().pad(2)+"."+ahora.getMinutes().pad(2);
-      strAhora = strAhora.replace(/[^ \d:\/\._]+/g, "");
+      var strAhora = getPthFecha();
       html = html + `
       <p class='avoidDwn'>
         <a class="aButton" download="analisis_${strAhora}.txt" href="data:text/plain;base64,`+_md+`" class="button"><button>Descargar informe (txt)</button></a>
@@ -619,12 +609,9 @@ $("form").submit(function(e) {
     var _url=null;
     if (store_in.length) {
       store_in.val("");
-      var ahora = new Date();
       var fn = form.serialize()+" "+form.attr("action");
       fn = fn.hashCode().toString();
       fn = form.attr("id") + "_" + fn + ".json";
-      //ahora = ahora.getFullYear() + "-" + ahora.getMonth().pad(2) + "-" + ahora.getDate().pad(2);
-      //fn = ahora + "_" + fn;
       store_in.val(fn);
       _url = "/rec/api/"+fn;
     }
