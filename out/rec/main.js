@@ -19,6 +19,13 @@ var sidebar_observer = new MutationObserver(function(mutations) {
   });
 });
 
+function getStrFecha(dt) {
+  if (dt==null) dt =  new Date();
+  var s = dt.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit',minute:'2-digit'});
+  s = s.replace(/[^ \d:\/\._]+/g, "");
+  return s;
+}
+
 function riesgoTxt(v) {
   if (v==0) return "bajo";
   if (v==1) return "medio";
@@ -374,9 +381,7 @@ $("#fPrediccion").data("submitted", function(data, textStatus, jqXHR) {
     var causas = obj.input.causas.map(function(k) { return "<span title='"+TXT.causas[k]+"'>"+k+"</span>" })
     causas = causas.join(", ")
     html = html + "<ul>";
-    var ahora =  new Date();
-    var strAhora = ahora.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit', minute:'2-digit'});
-    strAhora = strAhora.replace(/[^ \d:\/\._]+/g, "");
+    var strAhora = getStrFecha();
     html = html + `
       </li>
       <li>Región: ${zonas}</li>
@@ -528,9 +533,7 @@ $("#fAnalisis").data("submitted", function(data, textStatus, jqXHR) {
           <li>año para el test: ${obj.input.test}</li>
         </ul>`
       }
-      var ahora =  new Date();
-      var strAhora = ahora.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit',minute:'2-digit'});
-      strAhora = strAhora.replace(/[^ \d:\/\._]+/g, "");
+      var strAhora = getStrFecha();
       html = html + `
         </li>
         <li>Región: ${zonas}</li>
