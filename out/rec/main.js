@@ -612,8 +612,9 @@ $("form").submit(function(e) {
       var fn = form.serialize()+" "+form.attr("action");
       fn = fn.hashCode().toString();
       fn = form.attr("id") + "_" + fn + ".json";
-      store_in.val(fn);
+      //store_in.val(fn);
       _url = window.location.pathname+"rec/api/"+fn;
+      store_in.val(_url);
     }
     var settings = {
       type: "POST",
