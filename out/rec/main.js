@@ -613,7 +613,7 @@ $("form").submit(function(e) {
       fn = fn.hashCode().toString();
       fn = form.attr("id") + "_" + fn + ".json";
       store_in.val(fn);
-      _url = "rec/api/"+fn;
+      _url = window.location.pathname+"rec/api/"+fn;
     }
     var settings = {
       type: "POST",
