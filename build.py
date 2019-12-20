@@ -111,7 +111,7 @@ for t in ("provincias", "municipios"):
     r = requests.get(url)
     geojson = r.json()
     param={"geo"+t:geojson}
-    create_script(out, indent=None, **param)
+    create_script("out/geo/"+t+".js", indent=None, **param)
     
 provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)
