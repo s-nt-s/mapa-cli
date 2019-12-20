@@ -106,6 +106,13 @@ if os.environ.get("JS_PROVINCIAS"):
     r = requests.get(os.environ["JS_PROVINCIAS"])
     provincias = r.json()
 
+for t in ("provincias", "municipios"):
+    url = os.environ.get("GEO_"+t.upper())
+    r = requests.get(url)
+    geojson = r.json()
+    param={"geo"+t:geojson}
+    create_script(out, indent=None, **param)
+    
 provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)
 
