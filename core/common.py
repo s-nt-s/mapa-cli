@@ -1,6 +1,6 @@
 import json
-import re
 import os
+import re
 
 import bs4
 import requests
@@ -33,14 +33,15 @@ def save_js(file, data):
 
 
 def create_script(file, indent=2, **kargv):
-    separators=(',', ':') if indent is None else None
+    separators = (',', ':') if indent is None else None
     with open(file, "w") as f:
         for i, (k, v) in enumerate(kargv.items()):
-            if i>0:
+            if i > 0:
                 f.write("\n")
             f.write("var "+k+"=")
             json.dump(v, f, indent=indent, separators=separators)
             f.write(";")
+
 
 def read_js(fl):
     if os.path.isfile(fl):

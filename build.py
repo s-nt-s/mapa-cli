@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
-import json
+import os
 import re
 
 import bs4
-from unidecode import unidecode
 import requests
+from bunch import Bunch
+from unidecode import unidecode
 
 from core.common import create_script, read_js
 from core.j2 import Jnj2, toTag
-from bunch import Bunch
-import os
 
 
 def get_label(soup, id, tag=False):
@@ -26,7 +25,7 @@ def get_label(soup, id, tag=False):
 def parse(html, *args, **kargv):
     html = re.sub(r"<br/>(\s*</)", r"\1", html).strip()
     soup = bs4.BeautifulSoup(html, 'lxml')
-    TXT={}
+    TXT = {}
     for form in soup.findAll("form"):
         names = set()
         for fls in form.findAll("fieldset"):
@@ -51,14 +50,15 @@ def parse(html, *args, **kargv):
                     i.attrs["min"] = 2006
                 if i.attrs.get("title") is None:
                     lb = get_label(soup, id)
-                    if i.name=="select" and i.attrs.get("multiple"):
-                        lb = (lb or "")+". Manten pulsada la tecla control para seleccionar varias opciones"
+                    if i.name == "select" and i.attrs.get("multiple"):
+                        lb = (
+                            lb or "")+". Manten pulsada la tecla control para seleccionar varias opciones"
                         lb.rstrip(". ")
                     if lb:
                         i.attrs["title"] = lb
                 else:
                     lb = get_label(soup, id, tag=True)
-                    if lb and not lb.attrs.get("title") and lb.get_text().strip()!=i.attrs.get("title"):
+                    if lb and not lb.attrs.get("title") and lb.get_text().strip() != i.attrs.get("title"):
                         lb.attrs["title"] = i.attrs.get("title")
                 name = i.attrs.get("name")
                 if name and name.endswith("[]") and tp in ("radio", "checkbox"):
@@ -66,30 +66,31 @@ def parse(html, *args, **kargv):
                     if None not in (value, lb) and "" not in (value, lb):
                         name = name[:-2]
                         obj = TXT.get(name, {})
-                        obj[value]=lb
-                        TXT[name]=obj
-    att="data-defval"
+                        obj[value] = lb
+                        TXT[name] = obj
+    att = "data-defval"
     for i in soup.select("input[type=submit]"):
         v = i.attrs.get("value")
         if v and att not in i.attrs:
-            i.attrs[att]=v
+            i.attrs[att] = v
 
-    zonas={}
-    for op in soup.find("select", attrs={"name":"zona[]"}).findAll("option"):
+    zonas = {}
+    for op in soup.find("select", attrs={"name": "zona[]"}).findAll("option"):
         txt = op.get_text().strip()
         if txt:
-            zonas[op.attrs["value"]]=txt
+            zonas[op.attrs["value"]] = txt
 
-    entrenamiento={}
-    for op in soup.find("select", attrs={"id":"tEntrenamiento"}).findAll("option"):
+    entrenamiento = {}
+    for op in soup.find("select", attrs={"id": "tEntrenamiento"}).findAll("option"):
         txt = op.get_text().strip().rstrip(".")
         if txt:
-            entrenamiento[op.attrs["value"]]=txt
+            entrenamiento[op.attrs["value"]] = txt
 
-    TXT["zonas"]=zonas
-    TXT["entrenamiento"]=entrenamiento
+    TXT["zonas"] = zonas
+    TXT["entrenamiento"] = entrenamiento
     create_script("out/rec/txt.js", indent=2, TXT=TXT)
     return soup
+
 
 def sort_prov(p):
     n = p.nombre.lower()
@@ -98,10 +99,11 @@ def sort_prov(p):
     n.replace("--------", "ñ")
     return (n, p.ID)
 
+
 os.makedirs("out/geo", exist_ok=True)
 os.makedirs("out/rec", exist_ok=True)
 
-provincias=read_js("data/provincias.json") or []
+provincias = read_js("data/provincias.json") or []
 if os.environ.get("JS_PROVINCIAS"):
     r = requests.get(os.environ["JS_PROVINCIAS"])
     provincias = r.json()
@@ -110,11 +112,12 @@ for t in ("provincias", "municipios"):
     url = os.environ.get("GEO_"+t.upper())
     r = requests.get(url)
     geojson = r.json()
-    param={"geo"+t:geojson}
+    param = {"geo"+t: geojson}
     create_script("out/geo/"+t+".js", indent=None, **param)
-    
+
 provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)
 
 jHtml = Jnj2("templates/", "out/", post=parse)
-jHtml.save("index.html", provincias=provincias, API_ENDPOINT=os.environ.get("API_ENDPOINT", ""))
+jHtml.save("index.html", provincias=provincias,
+           API_ENDPOINT=os.environ.get("API_ENDPOINT", ""))
