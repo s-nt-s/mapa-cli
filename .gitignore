@@ -3,6 +3,7 @@
 out/geo/*.js
 .project
 .pydevproject
+out/index.html
 
 # Plantilla python
 
