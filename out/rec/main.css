@@ -7,7 +7,12 @@ body {
 html, body, #map  {
   height: 100%;
 }
-
+.sidebar-tabs > ul {
+    position: unset !important;;
+}
+.sidebar-tabs > ul + ul {
+    bottom: unset !important;
+}
 
 table {
 	margin-top: 14px;
@@ -265,4 +270,39 @@ dl.con_bas dd {
 
 p.logo img {
   max-width: 100%;
+}
+
+#sidebar {
+  overflow: visible !important;
+}
+ul.tGroup {
+  border-left: 5px solid transparent;
+  border-radius: 5px;
+  margin-left: -5px !important;
+}
+.sidebar-tabs > ul.tGroup > li.disabled.tGroup {
+  color: unset;
+}
+ul.tGroup.tSocial li.tGroup {
+  background-color: pink !important;
+}
+.tSocial {
+  border-left-color: pink !important;
+}
+ul.tGroup.tMeteo li.tGroup {
+  background-color: yellow !important;
+}
+.tMeteo {
+  border-left-color: yellow !important;
+}
+
+fieldset.fOneField input, fieldset.fOneField select {
+  width: 100%;
+}
+fieldset.fOneField input[type=number] {
+  width: 90%;
+}
+fieldset.fLabelInput label {
+  display: inline-block;
+  min-width: 17em;
 }

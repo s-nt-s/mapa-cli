@@ -7,10 +7,14 @@ import bs4
 import requests
 from bunch import Bunch
 from unidecode import unidecode
+import argparse
 
 from core.common import create_script, read_js
 from core.j2 import Jnj2, toTag
 
+parser = argparse.ArgumentParser(description='Crea la página web')
+parser.add_argument('--local', action='store_true', help='No descarga los json si ya estan en local')
+args = parser.parse_args()
 
 def get_label(soup, id, tag=False):
     lb = soup.find("label", attrs={"for": id})
@@ -89,6 +93,15 @@ def parse(html, *args, **kargv):
     TXT["zonas"] = zonas
     TXT["entrenamiento"] = entrenamiento
     create_script("out/rec/txt.js", indent=2, TXT=TXT)
+
+    for wrapper in soup.select("*[data-idprefix]"):
+        prefix = wrapper.attrs["data-idprefix"]
+        for item in wrapper.select(":scope *[id]"):
+            id = item.attrs["id"]
+            ni = prefix+id
+            for label in wrapper.select(":scope *[for='"+id+"']"):
+                label.attrs["for"]=ni
+            item.attrs["id"]=ni
     return soup
 
 
@@ -104,16 +117,19 @@ os.makedirs("out/geo", exist_ok=True)
 os.makedirs("out/rec", exist_ok=True)
 
 provincias = read_js("data/provincias.json") or []
-if os.environ.get("JS_PROVINCIAS"):
+if os.environ.get("JS_PROVINCIAS") and not(provincias and args.local):
     r = requests.get(os.environ["JS_PROVINCIAS"])
     provincias = r.json()
 
 for t in ("provincias", "municipios"):
+    fl = "out/geo/"+t+".js"
+    if args.local and os.path.isfile(fl):
+        continue
     url = os.environ.get("GEO_"+t.upper())
     r = requests.get(url)
     geojson = r.json()
     param = {"geo"+t: geojson}
-    create_script("out/geo/"+t+".js", indent=None, **param)
+    create_script(fl, indent=None, **param)
 
 provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)

@@ -42,8 +42,19 @@
     <div class="sidebar-tabs">
       <ul role="tablist">
         <li title="Información"><a href="#info" role="tab"><i class="fa fa-info-circle"></i></a></li>
+      </ul>
+      <ul role="tablist" class="tGroup tSocial">
+        <li title="Datos socioeconómicos" class="disabled tGroup"><a href="#" role="tab"><i class="fas fa-users"></i></a></li>
         <li title="Predicción de Incendios a Escala Municipal"><a href="#prediccion" role="tab"><i class="fas fa-fire-extinguisher"></i></a></li>
         <li title="Análisis de Incendios a Escala Municipal"><a href="#analisis" role="tab"><i class="fas fa-calculator"></i></a></li>
+      </ul>
+      <ul role="tablist" class="tGroup tMeteo">
+        <li title="Datos meteorológicos" class="disabled tGroup"><a href="#" role="tab"><i class="fas fa-cloud-sun-rain"></i></a></li>
+        <li title="Predicción o análisis anual de superficie quemada y número de incendios para toda España"><a href="#superficie" role="tab"><i class="fas fa-calendar"></i></a></li>
+        <li title="Predicción semanal-provincial de superficie quemada y número de incendios"><a href="#predicion-semana-provincia" role="tab"><i class="fas fa-calendar-week"></i></a></li>
+        <li title="Análisis de impacto de meteorología y territorio en la ocurrencia de incendios y en la superficie quemada a nivel semanal-provincial"><a href="#analisis-semana-provincia" role="tab"><i class="fas fa-calculator"></i></a></li>
+      </ul>
+      <ul role="tablist">
         <li id="iResultado" class="hide" title="Resultado"><a href="#resultado" id="clear" role="tab" target="_blank"><i class="fas fa-coffee"></i></a></li>
         <li id="limpiar" class="hide" title="Limpia el mapa"><a href="" id="clear" role="tab" target="_blank"><i class="fas fa-eraser"></i></a></li>
       </ul>
@@ -108,7 +119,7 @@
           <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
         </h1>
           {% with pre="pr_" %}
-          {% include 'common_param.html' %}
+          {% include 'social_common_param.html' %}
           {% endwith %}
           <fieldset class="fTemporal">
             <legend>Rango temportal</legend>
@@ -131,7 +142,7 @@
           <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
         </h1>
           {% with pre="an_" %}
-          {% include 'common_param.html' %}
+          {% include 'social_common_param.html' %}
           {% endwith %}
           <fieldset class="fEntrenamiento">
             <legend>Entrenamiento</legend>
@@ -176,6 +187,72 @@
 
           </div>
         </div>
+
+        <div class="sidebar-pane" id="superficie">
+          <form id="fMeteoAnalisis" name="meteo_analisis" action="{{API_ENDPOINT}}meteo_analisis" method="POST" data-resultado="Resultado Análisis" data-idprefix="meteo_anual_">
+          
+          <h1 class="sidebar-header">
+            <span>Predicción o análisis anual</span>
+            <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+            <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+          </h1>
+
+          <fieldset class="fOneField">
+            <legend>Target</legend>
+            <label for="Target" class="hide">Target:</label><select id="Target" name="target" required>
+                <option/>
+                <option value="0">Superficie quemada</option>
+                <option value="1">Número de incendios</option>
+            </select>
+          </fieldset>
+
+          <fieldset class="fLabelInput">
+            <legend>Predictores</legend>
+              {% include 'meteo_common_param.html' %}
+          </fieldset>
+
+          <fieldset class="fOneField">
+            <legend>Reg. Ridge (α)</legend>
+            <label for="Ridge" class="hide">Reg. Ridge (α):</label><input type="number" id="Ridge" name="ridge">
+          </fieldset>
+
+
+
+          <input data-defval="Predecir" type="submit" value="Predecir">
+
+
+          </form>
+        </div>
+
+        <div class="sidebar-pane" id="predicion-semana-provincia">
+          <h1 class="sidebar-header">
+            <span>Predicción semanal-provincial</span>
+            <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+            <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+          </h1>
+          {{lipsum()}}
+        </div>
+
+
+        <div class="sidebar-pane" id="analisis-semana-provincia">
+          <h1 class="sidebar-header">
+            <span>Análisis semanal-provincial</span>
+            <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+            <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+          </h1>
+          {{lipsum()}}
+        </div>
+
+        {#
+        <div class="sidebar-pane" id="ID">
+          <h1 class="sidebar-header">
+            <span>TITLE</span>
+            <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+            <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+          </h1>
+          {{lipsum()}}
+        </div>
+        #}
     </div>
   </div>
   <div id="popup" class="hide">
