@@ -1,0 +1,47 @@
+<h1 class="sidebar-header">
+  Información
+  <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+  <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+    <p class="logo">
+      <img src="img/logo.png" alt="Logo MAPA" title="Logo MAPA"/>
+    </p>
+  <h2>Conceptos básicos</h2>
+  <p>
+    Para el correcto aprovechamiento de esta herramienta conviene conocer los siguientes conceptos básicos:
+  </p>
+  <dl class="con_bas">
+    <dt>Baseline (panel-análisis)</dt><dd>Valor de base de la predicción. Se obtiene a partir del cálculo de la distribución de las probabilidades entre los cuatro niveles de riesgo. Es lo que obtendríamos sin emplear ningún parámetro.</dd>
+    <dt>Accuracy (panel-análisis)</dt><dd>Acierto general de la predicción, medido como el número de casos acertados dividido por el número de casos totales.</dd>
+    <dt>Mejora (panel-análisis)</dt><dd>Diferencia entre accuracy y baseline. Da una idea de cuánto hemos mejorado al introducir los parámetros.</dd>
+    <dt>Carga explicativa (panel-análisis)</dt><dd>Porcentaje de influencia en la ocurrencia de incendios que tienen los parámetros seleccionados. Se obtiene como el cociente entre la mejora y el total de la máxima carga explicativa posible. Esta se obtiene como la diferencia entre el 100% de acierto y el porcentaje del baseline.</dd>
+    <dt>Importancia global de un parámetro (panel-predicción y análisis)</dt><dd>Grado de influencia que tiene el parámetro sobre la ocurrencia de incendios sobre el territorio seleccionado y para las características establecidas en el panel. Esta información se obtiene durante el entrenamiento del algoritmo y corresponde a los patrones generales.</dd>
+    <dt>Importancia local de un parámetro (panel-predicción)</dt><dd>Explicación de las causas que hacen que un municipio determinado tenga asignado un determinado riesgo. Los valores mayores corresponden a los parámetros que han tenido una mayor carga en la asignación del nivel de riesgo. Se obtiene en fase de predicción, ya que es específico de cada municipio para los últimos datos recabados.</dd>
+    <dt>Valor real (pop up - predicción)</dt><dd>Valor absoluto de ese parámetro para el municipio seleccionado. Las celdas vacías corresponden a valores que se han inferido internamente.</dd>
+    <dt>Percentil (pop up - predicción)</dt><dd>Percentil que corresponde al municipio seleccionado en cada parámetro, dentro del conjunto de municipios de las provincias seleccionadas para la predicción</dd>
+  </dl>
+  <h2>Predicción de Incendios</h2>
+  <p>Funcionalidad que permite estimar la probabilidad de riesgo de incendio a escala municipal para el conjunto de las provincias seleccionadas (por defecto, toda España) asociada a factores socioeconómicos. Se pueden configurar diferentes parámetros, causas, radios de influencia, rangos de riesgos o rangos temporales de los que obtener los patrones. Además, presenta información adicional valiosa para determinar las causas de la asignación de niveles de riesgo.</p>
+  <dl class="con_bas">
+    <dt>Selección de zonas</dt><dd>Se permite seleccionar múltiples provincias de varias forzas: en el panel lateral izquierdo de la aplicación o, sobre el mapa, pulsando el botón derecho del ratón sobre las diferentes provincias o manteniendo pulsada la tecla "Control".</dd>
+    <dt>Comparativa entre municipios</dt><dd>Se permite crear tablas comparativas de los valores resultantes de la predicción pulsando con el botón derecho del ratón sobre aquellos municipios que se deseen comparar.</dd>
+  </dl>
+  <h2>Análisis de Incendios</h2>
+  <p>Funcionalidad que permite medir la bondad de las predicciones para años pasados y analizar la influencia de los distintos parámetros en diversas zonas y regiones. Se obtienen las métricas explicadas en la sección de "Conceptos básicos".</p>
+  <h2>Leyenda</h2>
+  <p>Niveles de riesgo en el mapa. La cuantificación de dichos niveles es uno de los parámetros que se introducen como entrada de una predicción o un análisis.</p>
+  <ul>
+  <li>Verde: riesgo bajo.</li>
+  <li>Amarillo: riesgo medio.</li>
+  <li>Naranja: riesgo alto.</li>
+  <li>Rojo: riesgo muy alto.</li>
+  </ul>
+  <h2>Fuentes</h2>
+  <ul>
+  <li>Estadística General de Incendios Forestales (EGIF) del MAPA</li>
+  <li>Instituto Nacional de Estadística (INE)</li>
+  <li>Servicio Estatal de Empleo (SEPE)</li>
+  <li>Agencia Tributaria (AEAT)</li>
+  <li>Portal datos abierto del País Vasco</li>
+  <li>Información de límites geográficos del Ministerio de Fomento</li>
+</ul>

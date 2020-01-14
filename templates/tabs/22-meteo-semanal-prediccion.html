@@ -1,0 +1,34 @@
+<form id="fMeteoAnalisis" name="predicion_semana_provincia" action="{{API_ENDPOINT}}predicion_semana_provincia" method="POST" data-resultado="Resultado Análisis" data-idprefix="predicion_semana_provincia_">
+
+<h1 class="sidebar-header">
+  <span>Predicción semanal-provincial</span>
+  <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+  <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+
+<fieldset class="fOneField">
+  <legend>Target</legend>
+  <label for="Target" class="hide">Target:</label><select id="Target" name="target" required>
+      <option/>
+      <option value="0">Superficie quemada</option>
+      <option value="1">Número de incendios</option>
+      <option value="2">Ambos</option>
+  </select>
+</fieldset>
+
+<fieldset>
+  <legend>Ventana</legend>
+  <label for="ventana_size">Tamaño ventana:</label>
+  <input id="ventana_size" name="ventana_size" required type="number" min="0" max="4" value="3"><br/>
+  <input id="target_previos" name="target_previos" type="checkbox"> <label for="target_previos">Considerar targets previos</label>
+</fieldset>
+
+<fieldset class="fLabelInput">
+  <legend>Predictores</legend>
+  {% include 'common/meteo_param.html' %}
+</fieldset>
+
+
+<input data-defval="Predecir" type="submit" value="Predecir">
+
+</form>

@@ -1,0 +1,35 @@
+
+<form id="fAnalisis" name="analisis" action="{{API_ENDPOINT}}analisis" method="POST" data-resultado="Resultado Análisis">
+<input type="hidden" name="store_in" value="" class="store_in"/>
+<h1 class="sidebar-header">
+  Análisis de Incendios
+  <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+  <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+  {% with pre="an_" %}
+  {% include 'common/social_param.html' %}
+  {% endwith %}
+  <fieldset class="fEntrenamiento">
+    <legend>Entrenamiento</legend>
+    <label for="tEntrenamiento">Tipo:</label> <select id="tEntrenamiento">
+        <option></option>
+        <option value="dbToda">Toda la base de datos...</option>
+        <option value="dbPersonalizada">Personalizada...</option>
+    </select>
+    <div class="dbToda hide">
+      <label for="ttEnd">hasta</label> <input name="fin" type="number" min="2006" step="1" id="ttEnd" placeholder="2017" value=""><br/>
+      <label for="ttPrc">% entrenamiento</label> <input name="prc" type="number" min="10" max="95" step="1" id="ttPrc" placeholder="70" value="70"><br/>
+      <label for="ttTest">% test</label> <input class="disabled" disabled="disabled" name="test" type="number" min="0" max="100" step="1" id="ttTest" placeholder="30" value="30"><br/>
+      <fieldset>
+        <legend>Validación cruzada</legend>
+            <label for="folds">Número de iteraciones:</label> <input type="number" min="1" max="100" step="1" id="folds" placeholder="100" value="4">
+      </fieldset>
+    </div>
+    <div class="dbPersonalizada hide">
+        <label for="prBng">de</label> <input name="ini" type="number" min="2006" step="1" id="prBng" placeholder="2006" value="2006"><br/>
+        <label for="prEnd">hasta</label> <input name="fin" type="number" min="2006" step="1"  id="prEnd" placeholder="2010" value="2010"><br/>
+        <label for="prTest">Año para el test</label> <input name="test" type="number" min="2006" step="1" id="prTest" placeholder="2011">
+    </div>
+  </fieldset>
+   <input type="submit" value="Calcular">
+</form>

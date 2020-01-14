@@ -50,8 +50,6 @@ def parse(html, *args, **kargv):
                     if name not in names and not i.attrs.get("checked"):
                         i.attrs["checked"] = "checked"
                     names.add(name)
-                if tp == "number" and i.attrs.get("min") is None:
-                    i.attrs["min"] = 2006
                 if i.attrs.get("title") is None:
                     lb = get_label(soup, id)
                     if i.name == "select" and i.attrs.get("multiple"):
@@ -133,7 +131,6 @@ for t in ("provincias", "municipios"):
 
 provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)
-
 jHtml = Jnj2("templates/", "out/", post=parse)
 jHtml.save("index.html", provincias=provincias,
            API_ENDPOINT=os.environ.get("API_ENDPOINT", ""))

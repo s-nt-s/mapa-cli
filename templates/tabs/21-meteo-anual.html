@@ -1,0 +1,30 @@
+<form id="fMeteoAnalisis" name="anual_pais" action="{{API_ENDPOINT}}anual_pais" method="POST" data-resultado="Resultado Análisis" data-idprefix="meteo_anual_">
+
+<h1 class="sidebar-header">
+  <span>Predicción o análisis anual</span>
+  <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+  <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+
+<fieldset class="fOneField">
+  <legend>Target</legend>
+  <label for="Target" class="hide">Target:</label><select id="Target" name="target" required>
+      <option/>
+      <option value="0">Superficie quemada</option>
+      <option value="1">Número de incendios</option>
+  </select>
+</fieldset>
+
+<fieldset class="fLabelInput">
+  <legend>Predictores</legend>
+  {% include 'common/meteo_param.html' %}
+</fieldset>
+
+<fieldset class="fOneField">
+  <legend>Reg. Ridge (α)</legend>
+  <label for="Ridge" class="hide">Reg. Ridge (α):</label><input type="number" id="Ridge" name="ridge">
+</fieldset>
+
+<input data-defval="Predecir" type="submit" value="Predecir">
+
+</form>
