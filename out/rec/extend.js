@@ -172,10 +172,12 @@ function isUrlOnline(url, status, fecha) {
     console.log(http.status+" "+url);
     return false;
   }
-  var s_dt = http.getResponseHeader("last-modified");
-  var dt = new Date(s_dt);
-  if (dt>=fecha) return true;
-  console.log(s_dt+" "+url);
+  var dtC = http.getResponseHeader("date");
+  var dtM = http.getResponseHeader("last-modified");
+  var dtC = dtC?new Date(dtC):null;
+  var dtM = dtM?new Date(dtM):null;
+  if (dtC>=fecha || dtM>=fecha) return true;
+  console.log(dtC+"\n"+dtM+"\n"+url);
   return false;
 }
 
