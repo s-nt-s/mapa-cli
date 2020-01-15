@@ -13,8 +13,8 @@
     <legend>Entrenamiento</legend>
     <label for="tEntrenamiento">Tipo:</label> <select id="tEntrenamiento">
         <option></option>
-        <option value="dbToda">Toda la base de datos...</option>
-        <option value="dbPersonalizada">Personalizada...</option>
+        <option value="dbToda"          data-hide=".dbPersonalizada" data-show=".dbToda">Toda la base de datos...</option>
+        <option value="dbPersonalizada" data-show=".dbPersonalizada" data-hide=".dbToda">Personalizada...</option>
     </select>
     <div class="dbToda hide">
       <label for="ttEnd">hasta</label> <input name="fin" type="number" min="2006" step="1" id="ttEnd" placeholder="2017" value=""><br/>
