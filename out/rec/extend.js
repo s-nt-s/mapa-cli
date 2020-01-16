@@ -198,11 +198,16 @@ class WhenUrlExist {
     constructor(id, url, time) {
         if (time == null) time = 5000;
         this.id = id;
-        this.url = url;
         this.time = time;
         this.opt = null;
         this.intentos = 1;
         this.start = new Date();
+        this.url = url;
+        if (this.url.endsWith(".json")) {
+          var fecha = new Date();
+          fecha.setHours(0,0,0,0);
+          this.url=this.url+"?"+fecha.get_Time();
+        }
         this.opt={
           url: this.url,
           type: "GET",
