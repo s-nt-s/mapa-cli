@@ -206,7 +206,7 @@ class WhenUrlExist {
         if (this.url.endsWith(".json")) {
           var fecha = new Date();
           fecha.setHours(0,0,0,0);
-          this.url=this.url+"?"+fecha.getTime();
+          this.url=this.url+"?dt="+fecha.getTime();
         }
         this.opt={
           url: this.url,
