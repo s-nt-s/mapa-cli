@@ -1,0 +1,12 @@
+<input type="checkbox" value="1" title="Habilita {{label}}" name="{{check_name}}" data-show="input[name='{{id}}']">
+<label for="{{id}}">{{label}}:</label>
+{% if val_min is defined and val_max is defined %}
+  <input type="number" name="{{id}}" id="{{id}}" value="" min="{{val_min}}" max="{{val_max}}">
+{% elif val_min is defined %}
+  <input type="number" name="{{id}}" id="{{id}}" value="" min="{{val_min}}">
+{% elif val_max is defined %}
+  <input type="number" name="{{id}}" id="{{id}}" value="" max="{{val_max}}">
+{% else %}
+  <input type="number" name="{{id}}" id="{{id}}" value="">
+{% endif %}
+<br/>

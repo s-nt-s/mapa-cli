@@ -29,6 +29,17 @@ def get_label(soup, id, tag=False):
 def parse(html, *args, **kargv):
     html = re.sub(r"<br/>(\s*</)", r"\1", html).strip()
     soup = bs4.BeautifulSoup(html, 'lxml')
+
+    # Añadir prefijos a los ids
+    for wrapper in soup.select("*[data-idprefix]"):
+        prefix = wrapper.attrs["data-idprefix"]
+        for item in wrapper.select(":scope *[id]"):
+            id = item.attrs["id"]
+            ni = prefix+id
+            for label in wrapper.select(":scope *[for='"+id+"']"):
+                label.attrs["for"]=ni
+            item.attrs["id"]=ni
+
     TXT = {}
     for form in soup.findAll("form"):
         names = set()
@@ -38,9 +49,9 @@ def parse(html, *args, **kargv):
                 tp = i.attrs.get("type")
                 if tp in ("submit", ):
                     continue
-                id = i.attrs["id"]
+                id = i.attrs.get("id")
                 # ID && !name ---> name = ID
-                if not i.attrs.get("name"):
+                if id and not i.attrs.get("name"):
                     i.attrs["name"] = id
                 # Todo obligatorio menos radio y checkbox
                 if tp not in ("radio", "checkbox"):
@@ -54,6 +65,9 @@ def parse(html, *args, **kargv):
                     if name not in names and not i.attrs.get("checked"):
                         i.attrs["checked"] = "checked"
                     names.add(name)
+
+                if not id:
+                    continue
                 # label && !title ---> title = label
                 if i.attrs.get("title") is None:
                     lb = get_label(soup, id)
@@ -68,17 +82,6 @@ def parse(html, *args, **kargv):
                     lb = get_label(soup, id, tag=True)
                     if lb and not lb.attrs.get("title") and lb.get_text().strip() != i.attrs.get("title"):
                         lb.attrs["title"] = i.attrs.get("title")
-
-                # Añadir title a los inputs de habilitar/deshabilitar
-                if tp == "checkbox" and id and "enable_" in id and i.attrs.get("title") is None:
-                    ot = id.replace("enable_", "")
-                    lb = fls.select(":scope label[for='"+ot+"']")
-                    if len(lb)==1:
-                        tt = lb[0].get_text().strip().rstrip(":")
-                        i.attrs["title"]="Habilita "+tt
-
-                if i.attrs.get("disabled"):
-                    i.attrs["data-defdisabled"]="true"
 
                 # Guardar texto de grupos radio/checkbox
                 name = i.attrs.get("name")
@@ -114,16 +117,6 @@ def parse(html, *args, **kargv):
     TXT["zonas"] = zonas
     TXT["entrenamiento"] = entrenamiento
     create_script("out/rec/txt.js", indent=2, TXT=TXT)
-
-    # Añadir prefijos a los ids
-    for wrapper in soup.select("*[data-idprefix]"):
-        prefix = wrapper.attrs["data-idprefix"]
-        for item in wrapper.select(":scope *[id]"):
-            id = item.attrs["id"]
-            ni = prefix+id
-            for label in wrapper.select(":scope *[for='"+id+"']"):
-                label.attrs["for"]=ni
-            item.attrs["id"]=ni
 
     return soup
 

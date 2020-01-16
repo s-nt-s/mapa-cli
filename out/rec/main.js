@@ -159,20 +159,6 @@ mymap.addLayer(layerProvincias());
 centerMap();
 L.control.sidebar('sidebar').addTo(mymap);
 
-$("#tEntrenamiento").change(function() {
-  var v=this.value;
-  var hide;
-  var show=$([]);
-  var divs=$(this).closest("fieldset").find(">div");
-  if (v) {
-    show = divs.filter("."+v);
-    hide = divs.not("."+v);
-  } else{
-    hide = divs;
-  }
-  show.show().find("input").not(".disabled").prop("disabled", false);
-  hide.hide().find("input").prop("disabled", true);
-}).change();
 $(".fRangos input[type=range]").bind("change input",function(){
     var v = Number(this.value);
     var i=$(this);

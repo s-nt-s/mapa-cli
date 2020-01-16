@@ -12,11 +12,11 @@
   <fieldset class="fEntrenamiento">
     <legend>Entrenamiento</legend>
     <label for="tEntrenamiento">Tipo:</label> <select id="tEntrenamiento">
-        <option></option>
-        <option value="dbToda"          data-hide=".dbPersonalizada" data-show=".dbToda">Toda la base de datos...</option>
-        <option value="dbPersonalizada" data-show=".dbPersonalizada" data-hide=".dbToda">Personalizada...</option>
+        <option data-hide=".dbToda, .dbPersonalizada"></option>
+        <option value="dbToda"          data-show=".dbToda"         >Toda la base de datos...</option>
+        <option value="dbPersonalizada" data-show=".dbPersonalizada">Personalizada...</option>
     </select>
-    <div class="dbToda hide">
+    <div class="dbToda hidebyinput">
       <label for="ttEnd">hasta</label> <input name="fin" type="number" min="2006" step="1" id="ttEnd" placeholder="2017" value=""><br/>
       <label for="ttPrc">% entrenamiento</label> <input name="prc" type="number" min="10" max="95" step="1" id="ttPrc" placeholder="70" value="70"><br/>
       <label for="ttTest">% test</label> <input class="disabled" disabled="disabled" name="test" type="number" min="0" max="100" step="1" id="ttTest" placeholder="30" value="30"><br/>
@@ -25,7 +25,7 @@
             <label for="folds">Número de iteraciones:</label> <input type="number" min="1" max="100" step="1" id="folds" placeholder="100" value="4">
       </fieldset>
     </div>
-    <div class="dbPersonalizada hide">
+    <div class="dbPersonalizada hidebyinput">
         <label for="prBng">de</label> <input name="ini" type="number" min="2006" step="1" id="prBng" placeholder="2006" value="2006"><br/>
         <label for="prEnd">hasta</label> <input name="fin" type="number" min="2006" step="1"  id="prEnd" placeholder="2010" value="2010"><br/>
         <label for="prTest">Año para el test</label> <input name="test" type="number" min="2006" step="1" id="prTest" placeholder="2011">

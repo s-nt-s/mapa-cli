@@ -1,22 +1,14 @@
-<input type="checkbox" id="enable_Tepri" value="1">
-  <label for="Tepri">Temperatura de la primavera:</label>     <input type="number" name="tepri" id="Tepri" value=""><br/>
-<input type="checkbox" id="enable_Prpri" value="1">
-  <label for="Prpri">Precipitaciones de la primavera:</label> <input type="number" name="prpri" id="Prpri" value=""><br/>
-<input type="checkbox" id="enable_Temax" value="1">
-  <label for="Temax">Temperatura máxima:</label>              <input type="number" name="temax" id="Temax" value=""><br/>
-<input type="checkbox" id="enable_Tevar" value="1">
-  <label for="Tevar">Variación de temperatura:</label>        <input type="number" name="tevar" id="Tevar" value=""><br/>
-<input type="checkbox" id="enable_Vevie" value="1">
-  <label for="Vevie">Viento:</label>                          <input type="number" name="vevie" id="Vevie" value=""><br/>
-<input type="checkbox" id="enable_Ravie" value="1">
-  <label for="Ravie">Racha de viento:</label>                 <input type="number" name="ravie" id="Ravie" value=""><br/>
-<input type="checkbox" id="enable_Prmax" value="1">
-  <label for="Prmax">Presión atmosférica máxima:</label>      <input type="number" name="prmax" id="Prmax" value=""><br/>
-<input type="checkbox" id="enable_Prmin" value="1">
-  <label for="Prmin">Presión atmosférica mínima:</label>      <input type="number" name="prmin" id="Prmin" value=""><br/>
-<input type="checkbox" id="enable_Hurel" value="1">
-  <label for="Hurel">Humedad relativa:</label>                <input type="number" name="hurel" id="Hurel" value=""><br/>
-<input type="checkbox" id="enable_Hrsol" value="1">
-  <label for="Hrsol">Horas de sol:</label>                    <input type="number" name="hrsol" id="Hrsol" value=""><br/>
-<input type="checkbox" id="enable_Prmed" value="1">
-  <label for="Prmed">Precipitaciones:</label>                 <input type="number" name="prmed" id="Prmed" value="">
+<div class="greyinhide">
+{% with check_name='check_meteo_param' %}
+{% with id='tepri', label='Temperatura de la primavera' %} {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% with id='temax', label='Temperatura máxima' %}          {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% with id='tevar', label='Variación de temperatura' %}    {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% with id='vevie', label='Viento' %}                      {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% with id='ravie', label='Racha de viento' %}             {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% with id='prmax', label='Presión atmosférica máxima' %}  {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% with id='prmin', label='Presión atmosférica mínima' %}  {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% with id='hurel', label='Humedad relativa' %}            {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% with id='hrsol', label='Horas de sol' %}                {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% with id='prmed', label='Precipitaciones' %}             {% include 'snippet/check_label_number.html' %}{% endwith %}
+{% endwith %}
+</div>
