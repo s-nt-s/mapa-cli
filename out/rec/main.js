@@ -622,6 +622,11 @@ $("form").submit(function(e) {
       data: form.serialize(), // serializes the form's elements.
       form: form,
       success: function(data, textStatus, jqXHR) {
+          if (typeof data == "object" && data["__timestamp__"]) {
+              var d=new Date(0)
+                d.setUTCSeconds(data["__timestamp__"]);
+                console.log("Recuperado json de "+getStrFecha(d)+" [hace "+intervalo(d)+"]");
+          }
           this.form.data("submitted").apply(this, arguments);
           var btn = this.form.find("input[type=submit]");
           btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});

@@ -41,6 +41,28 @@ function getPthFecha(dt) {
   return s;
 }
 
+function intervalo(start, to_string) {
+  var timeDiff = new Date() - start;
+  timeDiff /= 1000;
+  var seconds = Math.round(timeDiff);
+  if (!to_string) return seconds;
+  if (seconds==1) return "un segundo";
+  if (seconds<60) return seconds+" segundos"
+  var m = Math.floor(seconds/60);
+  var s = seconds - (m*60);
+  var h = "";
+  if (m>=60) {
+      h = Math.floor(m/60);
+      m = m - (h*60);
+      if (h==1) h="1 hora y";
+      else h = h+"h y ";
+  }
+  if (m==1) m="un minuto";
+  else m=m+" minutos";
+  if (s<2) return h+m;
+  return h+m+" y "+s+" segundos";
+}
+
 
 function objForm(f) {
   if (!f) f=$("form:visible");
@@ -236,18 +258,7 @@ class WhenUrlExist {
       if (TimeoutIDS[this.id]) clearTimeout(TimeoutIDS[this.id]);
     };
     tiempo(to_string) {
-      var timeDiff = new Date() - this.start;
-      timeDiff /= 1000;
-      var seconds = Math.round(timeDiff);
-      if (!to_string) return seconds;
-      if (seconds==1) return "un segundo";
-      if (seconds<60) return seconds+" segundos"
-      var m = Math.floor(seconds/60);
-      var s = seconds - (m*60);
-      if (m==1) m="un minuto";
-      else m=m+" minutos";
-      if (s<2) return m;
-      return m+" y "+s+" segundos";
+      return intervalo(this.start, to_string);
     }
 }
 
