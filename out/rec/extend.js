@@ -176,7 +176,7 @@ function isUrlOnline(url, status, fecha) {
   var dtM = http.getResponseHeader("last-modified");
   var dtC = dtC?new Date(dtC):null;
   var dtM = dtM?new Date(dtM):null;
-  #if (dtC>=fecha || dtM>=fecha) return true;
+  //if (dtC>=fecha || dtM>=fecha) return true;
   if (dtM>=fecha) return true;
   console.log(dtC+"\n"+dtM+"\n"+url);
   return false;
