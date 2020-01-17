@@ -193,6 +193,8 @@ function isUrlOnline(url, status, fecha) {
       else url = url + "?rd="+Math.random();
   }
   http.open('HEAD', url, false);
+  http.setRequestHeader('cache-control', 'no-cache, must-revalidate, post-check=0, pre-check=0');
+  http.setRequestHeader('cache-control', 'max-age=0');
   http.send();
   if (http.status != status) {
     console.log(http.status+" "+url);
