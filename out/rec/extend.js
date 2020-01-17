@@ -232,6 +232,8 @@ class WhenUrlExist {
         this.intentos = 1;
         this.start = new Date();
         this.url = url;
+        if (url.startsWith("/")) url = document.location.origin + url;
+        console.log("WhenUrlExist para "+url);
         if (this.url.endsWith(".json")) {
           var fecha = new Date();
           fecha.setHours(0,0,0,0);
