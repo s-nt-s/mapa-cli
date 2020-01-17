@@ -188,6 +188,10 @@ function isUrlOnline(url, status, fecha) {
     fecha.setHours(0,0,0,0);
   }
   var http = new XMLHttpRequest();
+  if (url.indexOf(".json")) {
+      if (url.indexOf("?")) url = url + "&rd="+Math.random();
+      else url = url + "?rd="+Math.random();
+  }
   http.open('HEAD', url, false);
   http.send();
   if (http.status != status) {

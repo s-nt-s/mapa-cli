@@ -624,8 +624,8 @@ $("form").submit(function(e) {
       success: function(data, textStatus, jqXHR) {
           if (typeof data == "object" && data["__timestamp__"]) {
               var d=new Date(0)
-                d.setUTCSeconds(data["__timestamp__"]);
-                console.log("Recuperado json de "+getStrFecha(d)+" [hace "+intervalo(d)+"]");
+              d.setUTCSeconds(data["__timestamp__"]);
+              console.log("Recuperado json de "+getStrFecha(d)+" [hace "+intervalo(d, true)+"]");
           }
           this.form.data("submitted").apply(this, arguments);
           var btn = this.form.find("input[type=submit]");
