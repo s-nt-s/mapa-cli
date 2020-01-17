@@ -178,7 +178,7 @@ function isUrlOnline(url, status, fecha) {
   var dtM = dtM?new Date(dtM):null;
   //if (dtC>=fecha || dtM>=fecha) return true;
   if (dtM>=fecha) return true;
-  console.log(dtC+"\n"+dtM+"\n"+url);
+  console.log("date:          "+dtC+"\nlast-modified: "+dtM+"\n"+url);
   return false;
 }
 
