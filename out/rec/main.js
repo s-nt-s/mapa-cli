@@ -202,7 +202,7 @@ if (meta_info["p4_year"]>meta_info["egif_year"]) {
 }
 $("input[name='ini']").change(function(){
   var v = Number(this.value)+1;
-  var e=$(this).closest(".paramgroup").find("input[name='fin']");
+  var e=$(this).closest("fieldset,.paramgroup").find("input[name='fin']");
   if (e.length) {
     e.attr("min", v);
     if (Number(e.val())<e.attr("min")) e.val(v).change();
