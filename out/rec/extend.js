@@ -42,6 +42,7 @@ function getPthFecha(dt) {
 }
 
 function seconds_to_string(seconds) {
+  seconds = Math.round(seconds);
   if (seconds==1) return "un segundo";
   if (seconds<60) return seconds+" segundos"
   var m = Math.floor(seconds/60);
