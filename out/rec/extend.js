@@ -186,7 +186,8 @@ function ieDownloadEvent() {
   }).addClass("ieDwn");
 }
 
-function isUrlOnline(url, status, fecha) {
+function isUrlOnline(url, status, fecha, method) {
+  if (method == null) method = 'HEAD';
   if (status == null) status = 200;
   if (fecha == null) {
     fecha = new Date();
@@ -197,22 +198,22 @@ function isUrlOnline(url, status, fecha) {
       if (url.indexOf("?")) url = url + "&rd="+Math.random();
       else url = url + "?rd="+Math.random();
   }
-  http.open('HEAD', url, false);
+  http.open(method, url, false);
   http.setRequestHeader('cache-control', 'no-cache, no-store, must-revalidate, post-check=0, pre-check=0');
   http.setRequestHeader('cache-control', 'max-age=0');
   http.send();
   if (http.status != status) {
     console.log(http.status+" "+url);
-    return false;
+    return http.status;
   }
   var dtC = http.getResponseHeader("date");
   var dtM = http.getResponseHeader("last-modified");
   var dtC = dtC?new Date(dtC):null;
   var dtM = dtM?new Date(dtM):null;
   //if (dtC>=fecha || dtM>=fecha) return true;
-  if (dtM>=fecha) return true;
+  if (dtM>=fecha) return http.status;
   console.log("date:          "+dtC+"\nlast-modified: "+dtM+"\n"+url);
-  return false;
+  return -http.status;
 }
 
 String.prototype.hashCode = function() {
@@ -237,6 +238,7 @@ class WhenUrlExist {
         this.intentos = 1;
         this.start = new Date();
         this.url = url;
+        this.status = null;
         if (url.startsWith("/")) url = document.location.origin + url;
         console.log("WhenUrlExist para "+url);
         if (this.url.endsWith(".json")) {
@@ -256,7 +258,7 @@ class WhenUrlExist {
     fire(opt) {
       console.log(this.intentos+" "+this.id+" -> "+this.tiempo(true))
       if (opt!=null) this.opt = Object.assign({}, opt, this.opt);
-      if (isUrlOnline(this.url)) {
+      if (this.testUrl()) {
         return $.ajax(this.opt).always(function(){
           this.when_url_exist.clear();
         });
@@ -272,13 +274,18 @@ class WhenUrlExist {
     };
     tiempo(to_string) {
       return intervalo(this.start, to_string);
-    }
+    };
+    testUrl() {
+      var method = this.status == 404?'GET':'HEAD';
+      this.status = isUrlOnline(this.url, 200, null, method);
+      return this.status == 200;
+    };
 }
 
 function my_ajax(url, opt) {
   if (!url) return $.ajax(opt);
   opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null);
-  if (isUrlOnline(opt.when_url_exist.url)) return opt.when_url_exist.fire(opt);
+  if (opt.when_url_exist.testUrl()) return opt.when_url_exist.fire(opt);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
     //if (textStatus!="timeout") return;
     if (this.when_url_exist) {
