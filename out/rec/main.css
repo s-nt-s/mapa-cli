@@ -105,7 +105,10 @@ fieldset.fEntrenamiento label, fieldset.fEntrenamiento span.label {
 fieldset fieldset {
   margin-top: unset !important;;
 }
-.hide, .hidebyinput:not(.greyinhide) {
+.hide {
+  display: none;
+}
+.hidebyinput:not(.greyinhide) {
   display: none !important;
 }
 .hidebyinput.greyinhide, .greyinhide .hidebyinput {

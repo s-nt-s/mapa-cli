@@ -8,6 +8,7 @@ import requests
 from bunch import Bunch
 from unidecode import unidecode
 import argparse
+from datetime import datetime
 
 from core.common import create_script, read_js
 from core.j2 import Jnj2, toTag
@@ -151,4 +152,4 @@ provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)
 jHtml = Jnj2("templates/", "out/", post=parse)
 jHtml.save("index.html", provincias=provincias,
-           API_ENDPOINT=os.environ.get("API_ENDPOINT", ""))
+           API_ENDPOINT=os.environ.get("API_ENDPOINT", ""), now=datetime.now())

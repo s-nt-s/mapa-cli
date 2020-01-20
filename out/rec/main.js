@@ -1,5 +1,5 @@
 var now=new Date();
-var hayDatosHasta=now.getFullYear()-4;
+var currentYear=now.getFullYear();
 var mymap;
 var layers={}
 var marcas=null;
@@ -159,26 +159,6 @@ mymap.addLayer(layerProvincias());
 centerMap();
 L.control.sidebar('sidebar').addTo(mymap);
 
-$(".fRangos input[type=range]").bind("change input",function(){
-    var v = Number(this.value);
-    var i=$(this);
-    var ch=$([])
-    var _next = i.nextAll("input[type=range]")
-    var ot=_next.eq(0);
-    if (ot.length && Number(ot.val())<=v) {
-      var nv = v+Number(ot.attr("step"));
-      ot.val(nv);
-      ch = ch.add(ot);
-    }
-    var _prev=i.prevAll("input[type=range]")
-    var ot=_prev.eq(0);
-    if (ot.length && Number(ot.val())>=v) {
-      var nv = v+Number(ot.attr("step"));
-      ot.val(v)
-      ch = ch.add(ot)
-    }
-    ch.change();
-})
 // maximum, value, placeholder
 set_max("#ttEnd,#prTest,#yEnd", meta_info["p4_year"], meta_info["egif_year"], meta_info["egif_year"]);
 set_max("#prEnd,#yBgn", meta_info["p4_year"]-1, meta_info["egif_year"]-1, meta_info["egif_year"]-1);
@@ -186,25 +166,6 @@ set_max("#prBng", meta_info["p4_year"]-2);
 if (meta_info["p4_year"]>meta_info["egif_year"]) {
 	$(".fTemporal,.dbToda,.dbPersonalizada").append("<p>(*) Tenga en cuenta que solo hay datos EGIF consolidados hasta "+meta_info["egif_year"]+", por lo tanto, cualquier rango que supere ese año trabajará con datos incompletos.</p>");
 }
-$("input[name='ini']").change(function(){
-  var v = Number(this.value)+1;
-  var e=$(this).closest("fieldset,.paramgroup").find("input[name='fin']");
-  if (e.length) {
-    e.attr("min", v);
-    if (Number(e.val())<e.attr("min")) e.val(v).change();
-  }
-}).change();
-$("#prEnd").change(function(){
-  var v = Number(this.value)+1;
-  var e=$("#prTest");
-  e.attr("min", v);
-  if (Number(e.val())<e.attr("min")) e.val(v).change();
-}).change();
-$("#ttPrc").change(function(){
-  var v = parseInt(this.value, 10);
-  if (!Number.isNaN(v)) $("#ttTest").val(100-v);
-}).change();
-
 $("#fPrediccion").data("submitted", function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (textStatus!="success") return false;
@@ -581,52 +542,6 @@ $("#resultado").bind("mouseenter", function() {
 $(".sidebar-close").click(function(){
   $("#sidebar").removeClass("expanded");
 })
-$("form").submit(function(e) {
-    e.preventDefault(); // avoid to execute the actual submit of the form.
-    var form = $(this);
-    form.find("input[type=submit]").attr("disabled", true).val("Cargando...");
-    var resultado=$("#resultado");
-    resultado.find(".content").html("");
-    resultado.find("#loading").show();
-    var tResultado = $("#tResultado");
-    tResultado.text(tResultado.data("default"))
-    var i = $("#iResultado").show().find("i");
-    if (!$("#resultado .content").is(":visible")) i.click();
-    var url = form.attr('action');
-    var store_in = form.find("input.store_in");
-    var _url=null;
-    if (store_in.length) {
-      store_in.val("");
-      var fn = form.serialize()+" "+form.attr("action");
-      fn = fn.hashCode().toString();
-      fn = form.attr("id") + "_" + fn + ".json";
-      //store_in.val(fn);
-      _url = window.location.pathname+"rec/api/"+fn;
-      store_in.val(_url);
-    }
-    var settings = {
-      type: "POST",
-      url: url,
-      data: form.serialize(), // serializes the form's elements.
-      form: form,
-      success: function(data, textStatus, jqXHR) {
-          if (typeof data == "object") {
-             if (data["__timestamp__"]) {
-               var d=new Date(0)
-               d.setUTCSeconds(data["__timestamp__"]);
-               console.log("Recuperado json de "+getStrFecha(d)+" [hace "+intervalo(d, true)+"]");
-            }
-            if (data["__timespent__"]) {
-              console.log("Timepo de servidor: "+seconds_to_string(data["__timespent__"]));
-            }
-          }
-          this.form.data("submitted").apply(this, arguments);
-          var btn = this.form.find("input[type=submit]");
-          btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
-      }
-    };
-    my_ajax(_url, settings);
-});
 
 $("select.oneGroup").change(function(){
   var t=$(this);

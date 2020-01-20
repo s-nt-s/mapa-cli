@@ -8,15 +8,15 @@
 
 <fieldset class="fOneField">
   <legend>Target</legend>
-  <label for="Target" class="hide">Target:</label><select id="Target" name="target" required>
+  <label for="Target" class="hide">Target:</label><select id="Target" name="target" required data-desmarcar=".anual_predictores input[type='checkbox']">
       <option/>
-      <option value="0">Superficie quemada</option>
-      <option value="1">Número de incendios</option>
-      <option value="2">Ambos</option>
+      <option value="0" data-marcar=".predic_super[type='checkbox']">Superficie quemada</option>
+      <option value="1" data-marcar=".predic_incen[type='checkbox']">Número de incendios</option>
+      <option value="2" data-marcar=".predic_super[type='checkbox'], .predic_incen[type='checkbox']">Ambos</option>
   </select>
 </fieldset>
 
-<fieldset class="fLabelInput">
+<fieldset class="fLabelInput anual_predictores">
   <legend>Predictores</legend>
   {% include 'common/meteo_param.html' %}
 </fieldset>
@@ -27,15 +27,29 @@
 </fieldset>
 
 <fieldset class="fOneField">
-  <legend>Rango temporal</legend>
-  <label for="rango_temporal" class="hide">Rango temporal:</label><select id="rango_temporal" name="rango_temporal[]" required multiple="multiple">
-      <option/>
-      {% for y in range(2006, 2018) %}
+  <legend>Años del modelo</legend>
+  <label for="rango_temporal" class="hide">Años del modelo:</label>
+  <select id="rango_temporal" name="rango_temporal[]" required multiple="multiple" data-opuesto=".rango_temporal_evaluar">
+      {% for y in range(2006, now.year+1) %}
         <option value="{{y}}">{{y}}</option>
       {% endfor %}
   </select>
 </fieldset>
 
-<input data-defval="Predecir" type="submit" value="Predecir">
+<input data-defval="Predecir" type="submit" value="Predecir" formaction="{{API_ENDPOINT}}anual_pais_predecir" data-opcional=".rango_temporal_evaluar">
+
+<hr/>
+
+
+<fieldset class="fOneField">
+  <legend>Años para evaluar</legend>
+  <label for="rango_temporal_evaluar" class="hide">Años para evaluar:</label><select id="rango_temporal_evaluar" name="rango_temporal_evaluar[]" required multiple="multiple" class="rango_temporal_evaluar">
+      {% for y in range(2006, now.year+1) %}
+        <option value="{{y}}">{{y}}</option>
+      {% endfor %}
+  </select>
+</fieldset>
+
+<input data-defval="Analizar" type="submit" value="Analizar" formaction="{{API_ENDPOINT}}anual_pais_analizar" data-obligatorio=".rango_temporal_evaluar">
 
 </form>
