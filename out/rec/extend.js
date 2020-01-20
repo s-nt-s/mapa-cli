@@ -194,10 +194,12 @@ function isUrlOnline(url, status, fecha, method) {
     fecha.setHours(0,0,0,0);
   }
   var http = new XMLHttpRequest();
+  /*
   if (url.indexOf(".json")) {
       if (url.indexOf("?")) url = url + "&rd="+Math.random();
       else url = url + "?rd="+Math.random();
   }
+  */
   http.open(method, url, false);
   http.setRequestHeader('cache-control', 'no-cache, no-store, must-revalidate, post-check=0, pre-check=0');
   http.setRequestHeader('cache-control', 'max-age=0');
@@ -243,11 +245,13 @@ class WhenUrlExist {
         this.status = null;
         if (url.startsWith("/")) url = document.location.origin + url;
         console.log("WhenUrlExist para "+url);
+        /*
         if (this.url.endsWith(".json")) {
           var fecha = new Date();
           fecha.setHours(0,0,0,0);
           this.url=this.url+"?dt="+fecha.getTime();
         }
+        */
         this.opt={
           url: this.url,
           type: "GET",
@@ -278,7 +282,7 @@ class WhenUrlExist {
       return intervalo(this.start, to_string);
     };
     testUrl() {
-      var method = this.status == 404?'GET':'HEAD';
+      var method = null; //this.status == 404?'GET':'HEAD';
       this.status = isUrlOnline(this.url, 200, null, method);
       return this.status == 200;
     };
