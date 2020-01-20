@@ -29,7 +29,7 @@ Array.prototype.diff = function(o) {
 }
 
 function getStrFecha(dt) {
-  if (dt==null) dt =  new Date();
+  if (dt==null) dt = new Date();
   var s = dt.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit',minute:'2-digit'});
   s = s.replace(/[^ \d:\/\._]+/g, "");
   return s;
@@ -39,6 +39,33 @@ function getPthFecha(dt) {
   var s = dt.getFullYear() + "." + dt.getMonth().pad(2) + "." + dt.getDate().pad(2)+"_"+dt.getHours().pad(2)+"."+dt.getMinutes().pad(2);
   s = s.replace(/[^ \d:\/\._]+/g, "");
   return s;
+}
+
+function seconds_to_string(seconds) {
+  seconds = Math.round(seconds);
+  if (seconds==1) return "un segundo";
+  if (seconds<60) return seconds+" segundos"
+  var m = Math.floor(seconds/60);
+  var s = seconds - (m*60);
+  var h = "";
+  if (m>=60) {
+      h = Math.floor(m/60);
+      m = m - (h*60);
+      if (h==1) h="1 hora y";
+      else h = h+"h y ";
+  }
+  if (m==1) m="un minuto";
+  else m=m+" minutos";
+  if (s<2) return h+m;
+  return h+m+" y "+s+" segundos";
+}
+
+function intervalo(start, to_string) {
+  var timeDiff = new Date() - start;
+  timeDiff /= 1000;
+  var seconds = Math.round(timeDiff);
+  if (!to_string) return seconds;
+  return seconds_to_string(seconds);
 }
 
 
@@ -159,24 +186,38 @@ function ieDownloadEvent() {
   }).addClass("ieDwn");
 }
 
-function isUrlOnline(url, status, fecha) {
+function isUrlOnline(url, status, fecha, method) {
+  if (method == null) method = 'HEAD';
   if (status == null) status = 200;
   if (fecha == null) {
     fecha = new Date();
     fecha.setHours(0,0,0,0);
   }
   var http = new XMLHttpRequest();
-  http.open('HEAD', url, false);
+  /*
+  if (url.indexOf(".json")) {
+      if (url.indexOf("?")) url = url + "&rd="+Math.random();
+      else url = url + "?rd="+Math.random();
+  }
+  */
+  http.open(method, url, false);
+  http.setRequestHeader('cache-control', 'no-cache, no-store, must-revalidate, post-check=0, pre-check=0');
+  http.setRequestHeader('cache-control', 'max-age=0');
   http.send();
   if (http.status != status) {
     console.log(http.status+" "+url);
-    return false;
+    return http.status;
   }
-  var s_dt = http.getResponseHeader("last-modified");
-  var dt = new Date(s_dt);
-  if (dt>=fecha) return true;
-  console.log(s_dt+" "+url);
-  return false;
+  var dtC = http.getResponseHeader("date");
+  var dtM = http.getResponseHeader("last-modified");
+  dtC = dtC?new Date(dtC):null;
+  dtM = dtM?new Date(dtM):null;
+  //if (dtC>=fecha || dtM>=fecha) return true;
+  if (dtM>=fecha) return http.status;
+  if (dtC) dtC = getStrFecha(dtC);
+  if (dtM) dtM = getStrFecha(dtM);
+  console.log("date:          "+dtC+"\nlast-modified: "+dtM+"\n"+url);
+  return -http.status;
 }
 
 String.prototype.hashCode = function() {
@@ -196,11 +237,21 @@ class WhenUrlExist {
     constructor(id, url, time) {
         if (time == null) time = 5000;
         this.id = id;
-        this.url = url;
         this.time = time;
         this.opt = null;
         this.intentos = 1;
         this.start = new Date();
+        this.url = url;
+        this.status = null;
+        if (url.startsWith("/")) url = document.location.origin + url;
+        console.log("WhenUrlExist para "+url);
+        /*
+        if (this.url.endsWith(".json")) {
+          var fecha = new Date();
+          fecha.setHours(0,0,0,0);
+          this.url=this.url+"?dt="+fecha.getTime();
+        }
+        */
         this.opt={
           url: this.url,
           type: "GET",
@@ -213,7 +264,7 @@ class WhenUrlExist {
     fire(opt) {
       console.log(this.intentos+" "+this.id+" -> "+this.tiempo(true))
       if (opt!=null) this.opt = Object.assign({}, opt, this.opt);
-      if (isUrlOnline(this.url)) {
+      if (this.testUrl()) {
         return $.ajax(this.opt).always(function(){
           this.when_url_exist.clear();
         });
@@ -228,25 +279,19 @@ class WhenUrlExist {
       if (TimeoutIDS[this.id]) clearTimeout(TimeoutIDS[this.id]);
     };
     tiempo(to_string) {
-      var timeDiff = new Date() - this.start;
-      timeDiff /= 1000;
-      var seconds = Math.round(timeDiff);
-      if (!to_string) return seconds;
-      if (seconds==1) return "un segundo";
-      if (seconds<60) return seconds+" segundos"
-      var m = Math.floor(seconds/60);
-      var s = seconds - (m*60);
-      if (m==1) m="un minuto";
-      else m=m+" minutos";
-      if (s<2) return m;
-      return m+" y "+s+" segundos";
-    }
+      return intervalo(this.start, to_string);
+    };
+    testUrl() {
+      var method = null; //this.status == 404?'GET':'HEAD';
+      this.status = isUrlOnline(this.url, 200, null, method);
+      return this.status == 200;
+    };
 }
 
 function my_ajax(url, opt) {
   if (!url) return $.ajax(opt);
   opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null);
-  if (isUrlOnline(url)) return opt.when_url_exist.fire(opt);
+  if (opt.when_url_exist.testUrl()) return opt.when_url_exist.fire(opt);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
     //if (textStatus!="timeout") return;
     if (this.when_url_exist) {

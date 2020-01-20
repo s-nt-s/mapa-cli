@@ -153,7 +153,7 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
     id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1Ijoia2lkdHVuZXJvIiwiYSI6ImNqeTBjeG8zaTAwcWYzZG9oY2N1Z3VnazgifQ.HKixpk5HNX-svbNYxYSpsw'
+    accessToken: 'pk.eyJ1IjoiZGF0YWlhIiwiYSI6ImNrNWdmazA4bjA2cGczanBib2F4MDNxd3EifQ.ScOIk2EYiQ9qYWBWJmjB2w'
 }).addTo(mymap);
 mymap.addLayer(layerProvincias());
 centerMap();
@@ -608,6 +608,16 @@ $("form").submit(function(e) {
       data: form.serialize(), // serializes the form's elements.
       form: form,
       success: function(data, textStatus, jqXHR) {
+          if (typeof data == "object") {
+             if (data["__timestamp__"]) {
+               var d=new Date(0)
+               d.setUTCSeconds(data["__timestamp__"]);
+               console.log("Recuperado json de "+getStrFecha(d)+" [hace "+intervalo(d, true)+"]");
+            }
+            if (data["__timespent__"]) {
+              console.log("Timepo de servidor: "+seconds_to_string(data["__timespent__"]));
+            }
+          }
           this.form.data("submitted").apply(this, arguments);
           var btn = this.form.find("input[type=submit]");
           btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
