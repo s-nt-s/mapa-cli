@@ -41,11 +41,7 @@ function getPthFecha(dt) {
   return s;
 }
 
-function intervalo(start, to_string) {
-  var timeDiff = new Date() - start;
-  timeDiff /= 1000;
-  var seconds = Math.round(timeDiff);
-  if (!to_string) return seconds;
+function seconds_to_string(seconds) {
   if (seconds==1) return "un segundo";
   if (seconds<60) return seconds+" segundos"
   var m = Math.floor(seconds/60);
@@ -61,6 +57,14 @@ function intervalo(start, to_string) {
   else m=m+" minutos";
   if (s<2) return h+m;
   return h+m+" y "+s+" segundos";
+}
+
+function intervalo(start, to_string) {
+  var timeDiff = new Date() - start;
+  timeDiff /= 1000;
+  var seconds = Math.round(timeDiff);
+  if (!to_string) return seconds;
+  return seconds_to_string(seconds);
 }
 
 

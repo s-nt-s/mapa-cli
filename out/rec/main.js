@@ -622,10 +622,15 @@ $("form").submit(function(e) {
       data: form.serialize(), // serializes the form's elements.
       form: form,
       success: function(data, textStatus, jqXHR) {
-          if (typeof data == "object" && data["__timestamp__"]) {
-              var d=new Date(0)
-              d.setUTCSeconds(data["__timestamp__"]);
-              console.log("Recuperado json de "+getStrFecha(d)+" [hace "+intervalo(d, true)+"]");
+          if (typeof data == "object") {
+             if (data["__timestamp__"]) {
+               var d=new Date(0)
+               d.setUTCSeconds(data["__timestamp__"]);
+               console.log("Recuperado json de "+getStrFecha(d)+" [hace "+intervalo(d, true)+"]");
+            }
+            if (data["__timespent__"]) {
+              console.log("Timepo de servidor: "+seconds_to_string(data["__timespent__"]));
+            }
           }
           this.form.data("submitted").apply(this, arguments);
           var btn = this.form.find("input[type=submit]");
