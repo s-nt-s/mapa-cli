@@ -26,6 +26,16 @@
   <label for="Ridge" class="hide">Reg. Ridge (α):</label><input type="number" id="Ridge" name="ridge">
 </fieldset>
 
+<fieldset class="fOneField">
+  <legend>Rango temporal</legend>
+  <label for="rango_temporal" class="hide">Rango temporal:</label><select id="rango_temporal" name="rango_temporal[]" required multiple="multiple">
+      <option/>
+      {% for y in range(2006, 2018) %}
+        <option value="{{y}}">{{y}}</option>
+      {% endfor %}
+  </select>
+</fieldset>
+
 <input data-defval="Predecir" type="submit" value="Predecir">
 
 </form>

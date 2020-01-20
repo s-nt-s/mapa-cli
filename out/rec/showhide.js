@@ -1,27 +1,14 @@
 function showhide(ok, ko) {
-  var eq;
-  var show = $([]);
-  ko.filter("[data-hide]").each(function(){
-    eq = $(this).data("hide");
-    show = show.add(eq);
-  });
-  ok.filter("[data-show]").each(function(){
-    eq = $(this).data("show");
-    show = show.add(eq);
-  });
-  var hide = $([]);
-  ok.filter("[data-hide]").each(function(){
-    eq = $(this).data("hide");
-    hide = hide.add(eq);
-    show = show.not(eq);
-  });
-  ko.filter("[data-show]").each(function(){
-    eq = $(this).data("show");
-    hide = hide.add(eq);
-  });
-  hide = hide.not(show);
-  show.removeClass("hidebyinput").find(".disablebyinput").prop("disabled", false).removeClass("disablebyinput");
-  hide.addClass("hidebyinput").find("select, input, label").not(":disabled").prop("disabled", true).addClass("disablebyinput")
+  var ok_show = ok.joinJqData("show");
+  var ko_show = ko.joinJqData("hide");
+  var ok_hide = ok.joinJqData("hide");
+  var ko_hide = ko.joinJqData("show");
+
+  var hide = ko_hide.not(ok_show).add(ok_hide);
+  var show = ko_show.not(ok_hide).add(ok_show);
+
+  show.removeClass("hidebyinput").filter(".disablebyinput").prop("disabled", false).removeClass("disablebyinput");
+  hide.addClass("hidebyinput").filter("select, input, label").not(":disabled").prop("disabled", true).addClass("disablebyinput");
 }
 
 $(document).ready(function(){
@@ -33,13 +20,19 @@ $(document).ready(function(){
     if(hide) {
       var sel = p.find(hide);
       sel = sel.add(sel.getLabel());
-      sel.each(function(){var t=$(this); if (t.closest("greyinhide").length) t.addClass("greyinhide")});
+      sel.each(function(){
+        var t=$(this);
+        if (t.closest(".greyinhide").length) t.addClass("greyinhide")
+      });
       t.data("hide", sel.add(sel.getLabel()));
     }
     if(show) {
       var sel = p.find(show);
       sel = sel.add(sel.getLabel());
-      sel.each(function(){var t=$(this); if (t.closest("greyinhide").length) t.addClass("greyinhide")});
+      sel.each(function(){
+        var t=$(this);
+        if (t.closest(".greyinhide").length) t.addClass("greyinhide")
+      });
       t.data("show", sel);
     }
   });
