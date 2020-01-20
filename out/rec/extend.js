@@ -29,7 +29,7 @@ Array.prototype.diff = function(o) {
 }
 
 function getStrFecha(dt) {
-  if (dt==null) dt =  new Date();
+  if (dt==null) dt = new Date();
   var s = dt.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit',minute:'2-digit'});
   s = s.replace(/[^ \d:\/\._]+/g, "");
   return s;
@@ -208,10 +208,12 @@ function isUrlOnline(url, status, fecha, method) {
   }
   var dtC = http.getResponseHeader("date");
   var dtM = http.getResponseHeader("last-modified");
-  var dtC = dtC?new Date(dtC):null;
-  var dtM = dtM?new Date(dtM):null;
+  dtC = dtC?new Date(dtC):null;
+  dtM = dtM?new Date(dtM):null;
   //if (dtC>=fecha || dtM>=fecha) return true;
   if (dtM>=fecha) return http.status;
+  if (dtC) dtC = getStrFecha(dtC);
+  if (dtM) dtM = getStrFecha(dtM);
   console.log("date:          "+dtC+"\nlast-modified: "+dtM+"\n"+url);
   return -http.status;
 }
