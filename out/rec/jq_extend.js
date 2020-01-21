@@ -11,18 +11,26 @@ jQuery.fn.extend({
       eq = eq.add($(element).data(dt));
     });
     return eq;
+  },
+  find_in_parents: function(sel) {
+    var i, r;
+    var prs = $(this).parents();
+    for (i=0; i<prs.length; i++) {
+      r=prs.eq(i).find(sel);
+      if (r.length) return r;
+    }
+    return $([]);
   }
 });
 
 $(document).ready(function(){
-  ["desplaza", "opuesto", "obligatorio", "opcional", "marcar", "desmarcar"].forEach(function(k){
+  ["desplaza", "opuesto", "obligatorio", "opcional", "marcar", "desmarcar", "fire-change", "marca-if"].forEach(function(k){
     var eq = $("*[data-"+k+"]");
     var i, t;
     for (i=0; i<eq.length; i++) {
       t = eq.eq(i);
       var sel=t.data(k);
-      var target = t.closest("fieldset").find(sel);
-      if (target.length==0) target = t.closest("form").find(sel);
+      var target = t.find_in_parents(sel);
       t.data(k, target);
     }
   })

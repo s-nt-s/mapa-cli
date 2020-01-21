@@ -66,6 +66,8 @@ def parse(html, *args, **kargv):
                     if name not in names and not i.attrs.get("checked"):
                         i.attrs["checked"] = "checked"
                     names.add(name)
+                if i.name == "select" and "fullsize" in i.attrs.get("class", "") and "size" not in i.attrs:
+                    i.attrs["size"] = len(i.select(":scope *"))
 
                 if not id:
                     continue

@@ -1,4 +1,4 @@
-function showhide(ok, ko) {
+function showhide(ok, ko, root) {
   var ok_show = ok.joinJqData("show");
   var ko_show = ko.joinJqData("hide");
   var ok_hide = ok.joinJqData("hide");
@@ -7,6 +7,11 @@ function showhide(ok, ko) {
   var hide = ko_hide.not(ok_show).add(ok_hide);
   var show = ko_show.not(ok_hide).add(ok_show);
 
+  if (root) {
+    var h = root = root.joinJqData("hide");
+    hide = hide.add(h.not(show));
+  }
+
   show.removeClass("hidebyinput").filter(".disablebyinput").prop("disabled", false).removeClass("disablebyinput");
   hide.addClass("hidebyinput").filter("select, input, label").not(":disabled").prop("disabled", true).addClass("disablebyinput");
 }
@@ -14,11 +19,10 @@ function showhide(ok, ko) {
 $(document).ready(function(){
   var eq = $("*[data-show],*[data-hide]").each(function(){
     var t=$(this);
-    var p=t.closest("fieldset");
     var hide=t.data("hide");
     var show=t.data("show");
     if(hide) {
-      var sel = p.find(hide);
+      var sel = t.find_in_parents(hide);
       sel = sel.add(sel.getLabel());
       sel.each(function(){
         var t=$(this);
@@ -27,7 +31,7 @@ $(document).ready(function(){
       t.data("hide", sel.add(sel.getLabel()));
     }
     if(show) {
-      var sel = p.find(show);
+      var sel = t.find_in_parents(show);
       sel = sel.add(sel.getLabel());
       sel.each(function(){
         var t=$(this);
@@ -41,7 +45,7 @@ $(document).ready(function(){
     var o = t.find("option");
     var ok = o.filter(":selected");
     var ko = o.not(":selected");
-    showhide(o.filter(":selected"), o.not(":selected"));
+    showhide(o.filter(":selected"), o.not(":selected"),t);
   });
   eq.filter("input[type=checkbox], input[type=radio]").change(function(){
     var o = $(this);
@@ -85,6 +89,8 @@ $(document).ready(function(){
   }).change();
   $("select[data-marcar],select[data-desmarcar]").change(function() {
     var t=$(this);
+    var cond = t.data("marca-if");
+    if (cond && cond.length && !cond.is(":checked")) return;
     var marcar = t.data("marcar") || $([]);
     var desmrc = t.data("desmarcar") || $([]);
     t.find("option[data-marcar]:selected").each(function(){
@@ -92,6 +98,9 @@ $(document).ready(function(){
     })
     desmrc.not(marcar).filter(":checked").prop("checked", false).change();
     marcar.not(":checked").prop("checked", true).change();
+  }).change();
+  $("*[data-fire-change]").change(function() {
+    $(this).data("fire-change").change();
   }).change();
   $(".fRangos input[type=range]").bind("change input",function(){
       var v = Number(this.value);
