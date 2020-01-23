@@ -12,8 +12,19 @@ function showhide(ok, ko, root) {
     hide = hide.add(h.not(show));
   }
 
-  show.removeClass("hidebyinput").filter(".disablebyinput").prop("disabled", false).removeClass("disablebyinput");
-  hide.addClass("hidebyinput").filter("select, input, label").not(":disabled").prop("disabled", true).addClass("disablebyinput");
+  show.add(show.find(".hidebyinput")).removeClass("hidebyinput");
+  show.add(show.find(".disablebyinput")).filter(".disablebyinput").prop("disabled", false).removeClass("disablebyinput");
+  hide.addClass("hidebyinput");
+  hide.add(hide.find("select, input, label")).filter("select, input, label").not(":disabled").prop("disabled", true).addClass("disablebyinput");
+
+  show.add(hide).parents("[data-count]").each(function(){
+    var t=$(this);
+    var count = t.find(t.data("count")).length
+    t.attr("class").split(/\s+/).forEach(function(c){
+      if (c.startsWith("items_")) t.removeClass(c);
+    });
+    t.addClass("items_"+count)
+  })
 }
 
 $(document).ready(function(){
@@ -45,7 +56,7 @@ $(document).ready(function(){
     var o = t.find("option");
     var ok = o.filter(":selected");
     var ko = o.not(":selected");
-    showhide(o.filter(":selected"), o.not(":selected"),t);
+    showhide.apply(t, [o.filter(":selected"), o.not(":selected"),t]);
   });
   eq.filter("input[type=checkbox], input[type=radio]").change(function(){
     var o = $(this);
@@ -54,7 +65,7 @@ $(document).ready(function(){
       var x = o.closest("fieldset").find("input[name='"+nm+"']");
       if (x.length) o = x;
     }
-    showhide(o.filter(":checked"), o.not(":checked"))
+    showhide.apply(o, [o.filter(":checked"), o.not(":checked")]);
   });
   eq.change();
   $("*[data-desplaza]").change(function(){
@@ -122,4 +133,62 @@ $(document).ready(function(){
       }
       ch.change();
   })
+
+  $(".multirango").each(function(){
+      var rgs=$(this).find("input[type=range]");
+      var tt=rgs.length-1;
+      rgs.each(function(i, elem) {
+          var t=$(elem);
+          var _min = Number(t.attr("min"));
+          var _max = Number(t.attr("max"));
+          var _step= Number(t.attr("step"));
+          t.data("min", _min+(_step*i));
+          t.data("max", _max-(_step*(tt-i)));
+     });
+     rgs.bind("input",function(e){
+          var v = Number(this.value);
+          var i=$(this);
+          var _min=i.data("min");
+          var _max=i.data("max");
+          if (_min>=v || _max>=v) return true;
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          this.value=(_min>v)?_min:_max;
+          return false;
+      })
+  });
+  $("input[type=range]").each(function(){
+    var sp = $("span.count."+this.id);
+    var i = $(this);
+    i.data("span", sp);
+    i.bind("change input",function(){
+      $(this).data("span").text(this.value);
+      $(this).data("span").filter("[data-add]").each(function(){
+          var t=$(this);
+          var n = parseInt(t.text(), 10);
+          if (!Number.isNaN(n)) t.text(n+t.data("add"));
+      });
+    }).change();
+  });
+  $("input[type=checkbox]:not(.opcional)").map(function(){return this.name}).get().uniq().forEach(function(n){
+    var i;
+    var forms=$("form");
+    for (i=0; i<forms.length;i++) {
+      var chk=forms.eq(i).find("input[name='"+n+"']:not(.opcional)");
+      if (chk.length<2) continue;
+      chk.data("group", chk);
+      chk.change(function(){
+        var group=$(this).data("group");
+        if (group.filter(":checked").length==0) {
+          group.eq(0).prop("required", true);
+          group[0].setCustomValidity("Debe seleccionar al menos un elemento de esta lista");
+        } else{
+          group.eq(0).prop("required", false);
+          group[0].setCustomValidity("");
+        }
+      });
+      chk.eq(0).change();
+    }
+  });
 })

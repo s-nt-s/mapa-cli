@@ -1,13 +1,11 @@
-<form id="fPrediccion" name="prediccion" action="{{API_ENDPOINT}}predecir" method="POST" data-resultado="Resultado Predicción">
+<form id="fSocialPrediccion" name="prediccion" action="{{API_ENDPOINT}}predecir" method="POST" data-resultado="Resultado Predicción" data-idprefix="social_prediccion_">
 <input type="hidden" name="store_in" value="" class="store_in"/>
 <h1 class="sidebar-header">
   Predicción de Incendios
   <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
   <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
 </h1>
-  {% with pre="pr_" %}
   {% include 'common/social_param.html' %}
-  {% endwith %}
   <fieldset class="fTemporal">
     <legend>Rango temportal</legend>
       <label for="yBgn">Año de inicio para el modelo:</label> <input type="number" name="ini" id="yBgn" placeholder="2006" value="2006" min="2006" data-desplaza=".y_fin_modelo"><br/>

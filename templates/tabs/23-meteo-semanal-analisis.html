@@ -6,15 +6,9 @@
   <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
 </h1>
 
-<fieldset class="fOneField">
-  <legend>Target</legend>
-  <label for="Target" class="hide">Target:</label><select id="Target" name="target" required>
-      <option/>
-      <option value="0">Superficie quemada</option>
-      <option value="1">Número de incendios</option>
-      <option value="2">Ambos</option>
-  </select>
-</fieldset>
+{% include 'snippet/zona.html' %}
+
+{% include 'common/meteo_target.html' %}
 
 <fieldset>
   <legend>Ventana</legend>
@@ -23,12 +17,13 @@
   <input id="target_previos" name="target_previos" type="checkbox"> <label for="target_previos">Considerar targets previos</label>
 </fieldset>
 
-<fieldset class="fLabelInput">
+
+<fieldset class="fLabelInput meteo_predictores">
   <legend>Predictores</legend>
   {% include 'common/meteo_param.html' %}
+  <button type="button" name="set_meteo_param_val">Rellenar con datos del año pasado</button>
 </fieldset>
 
-
-<input data-defval="Predecir" type="submit" value="Predecir">
+<input type="submit" value="Predecir">
 
 </form>

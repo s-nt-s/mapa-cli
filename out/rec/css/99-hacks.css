@@ -1,0 +1,3 @@
+#crear-modelo-semana-provincia .meteo_predictores input[type=checkbox]:checked + label {
+  opacity: 1 !important;
+}

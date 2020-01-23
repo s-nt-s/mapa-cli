@@ -98,66 +98,6 @@ function toWin(txt) {
   return txt;
 }
 
-$(document).ready(function() {
-    $(".multirango").each(function(){
-        var rgs=$(this).find("input[type=range]");
-        var tt=rgs.length-1;
-        rgs.each(function(i, elem) {
-            var t=$(elem);
-            var _min = Number(t.attr("min"));
-            var _max = Number(t.attr("max"));
-            var _step= Number(t.attr("step"));
-            t.data("min", _min+(_step*i));
-            t.data("max", _max-(_step*(tt-i)));
-       });
-       rgs.bind("input",function(e){
-            var v = Number(this.value);
-            var i=$(this);
-            var _min=i.data("min");
-            var _max=i.data("max");
-            if (_min>=v || _max>=v) return true;
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            this.value=(_min>v)?_min:_max;
-            return false;
-        })
-    });
-    $("input[type=range]").each(function(){
-      var sp = $("span.count."+this.id);
-      var i = $(this);
-      i.data("span", sp);
-      i.bind("change input",function(){
-        $(this).data("span").text(this.value);
-        $(this).data("span").filter("[data-add]").each(function(){
-            var t=$(this);
-            var n = parseInt(t.text(), 10);
-            if (!Number.isNaN(n)) t.text(n+t.data("add"));
-        });
-      }).change();
-    });
-    $("input[type=checkbox]").map(function(){return this.name}).get().uniq().forEach(function(n){
-      var i;
-      var forms=$("form");
-      for (i=0; i<forms.length;i++) {
-        var chk=forms.eq(i).find("input[name='"+n+"']");
-        if (chk.length<2) continue;
-        chk.data("group", chk);
-        chk.change(function(){
-          var group=$(this).data("group");
-          if (group.filter(":checked").length==0) {
-            group.eq(0).prop("required", true);
-            group[0].setCustomValidity("Debe seleccionar al menos un elemento de esta lista");
-          } else{
-            group.eq(0).prop("required", false);
-            group[0].setCustomValidity("");
-          }
-        });
-        chk.eq(0).change();
-      }
-    });
-});
-
 function ieDownloadEvent() {
   if (!window.top.navigator.msSaveOrOpenBlob) return;
   var re_base64 = /^data:(.+);base64,(.+)/;

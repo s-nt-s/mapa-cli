@@ -160,13 +160,13 @@ centerMap();
 L.control.sidebar('sidebar').addTo(mymap);
 
 // maximum, value, placeholder
-set_max("#ttEnd,#prTest,#yEnd", meta_info["p4_year"], meta_info["egif_year"], meta_info["egif_year"]);
-set_max("#prEnd,#yBgn", meta_info["p4_year"]-1, meta_info["egif_year"]-1, meta_info["egif_year"]-1);
-set_max("#prBng", meta_info["p4_year"]-2);
+set_max(".ttEnd,.prTest,.yEnd", meta_info["p4_year"], meta_info["egif_year"], meta_info["egif_year"]);
+set_max(".prEnd,.yBgn", meta_info["p4_year"]-1, meta_info["egif_year"]-1, meta_info["egif_year"]-1);
+set_max(".prBng", meta_info["p4_year"]-2);
 if (meta_info["p4_year"]>meta_info["egif_year"]) {
 	$(".fTemporal,.dbToda,.dbPersonalizada").append("<p>(*) Tenga en cuenta que solo hay datos EGIF consolidados hasta "+meta_info["egif_year"]+", por lo tanto, cualquier rango que supere ese año trabajará con datos incompletos.</p>");
 }
-$("#fPrediccion").data("submitted", function(data, textStatus, jqXHR) {
+$("#fSocialPrediccion").data("submitted", function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (textStatus!="success") return false;
     this.form.find("input[type=submit]").attr("disabled", true).val("Renderizando...");
@@ -414,14 +414,14 @@ Incendios;${obj.inc_usados}
     $("#resultado .content").html(html);
     ieDownloadEvent();
     var tResultado = $("#tResultado");
-    tResultado.text($("#fPrediccion").data("resultado") || tResultado.data("default"))
+    tResultado.text($("#fSocialPrediccion").data("resultado") || tResultado.data("default"))
     var i = $("#iResultado").show().find("i");
     if (!$("#resultado .content").is(":visible")) i.click();
 
     $("#limpiar").show().find("a").show();
     return true;
 })
-$("#fAnalisis").data("submitted", function(data, textStatus, jqXHR) {
+$("#fSocialAnalisis").data("submitted", function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (typeof obj == "object") {
       var html = `<ul class='big rAnalisis'>
@@ -509,7 +509,7 @@ $("#fAnalisis").data("submitted", function(data, textStatus, jqXHR) {
     $("#resultado .content").html(obj);
     ieDownloadEvent();
     var tResultado = $("#tResultado");
-    tResultado.text($("#fAnalisis").data("resultado") || tResultado.data("default"))
+    tResultado.text($("#fSocialAnalisis").data("resultado") || tResultado.data("default"))
     var i = $("#iResultado").show().find("i");
     if (!$("#resultado .content").is(":visible")) i.click();
     return true;

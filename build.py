@@ -36,6 +36,8 @@ def parse(html, *args, **kargv):
         prefix = wrapper.attrs["data-idprefix"]
         for item in wrapper.select(":scope *[id]"):
             id = item.attrs["id"]
+            if item.name in ("input", "select") and not item.attrs.get("name"):
+                item.attrs["name"] = id
             ni = prefix+id
             for label in wrapper.select(":scope *[for='"+id+"']"):
                 label.attrs["for"]=ni
@@ -77,7 +79,7 @@ def parse(html, *args, **kargv):
                     if i.name == "select" and i.attrs.get("multiple"):
                         lb = (
                             lb or "")+". Manten pulsada la tecla control para seleccionar varias opciones"
-                        lb.rstrip(". ")
+                        lb = lb.rstrip(". ")
                     if lb:
                         i.attrs["title"] = lb
                 else:
@@ -112,7 +114,7 @@ def parse(html, *args, **kargv):
 
     # Guardar texto de tipos de entrenamiento
     entrenamiento = {}
-    for op in soup.find("select", attrs={"id": "tEntrenamiento"}).findAll("option"):
+    for op in soup.select("select.tEntrenamiento option"):
         txt = op.get_text().strip().rstrip(".")
         if txt:
             entrenamiento[op.attrs["value"]] = txt

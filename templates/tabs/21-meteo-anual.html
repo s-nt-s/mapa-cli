@@ -6,20 +6,11 @@
   <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
 </h1>
 
-<fieldset>
-  <legend>Target</legend>
-  <label for="Target" class="hide">Target:</label>
-  <select id="Target" name="target" required data-desmarcar=".anual_predictores input[type='checkbox']" style="width: 100%;" data-marca-if=".set_meteo_param" class="target_meteo">
-      <option/>
-      <option value="0" data-marcar=".predic_super[type='checkbox']">Superficie quemada</option>
-      <option value="1" data-marcar=".predic_incen[type='checkbox']">Número de incendios</option>
-      <option value="2" data-marcar=".predic_super[type='checkbox'], .predic_incen[type='checkbox']">Ambos</option>
-  </select>
-  <input type="checkbox" name="set_meteo_param" id="set_meteo_param" value="1" class="set_meteo_param" data-fire-change=".target_meteo" data-hide=".anual_predictores input[type='checkbox']">
-  <label for="set_meteo_param">Usar <u>solo</u> predictores óptimos para el target seleccionado</label>
-</fieldset>
+{% include 'snippet/zona.html' %}
 
-<fieldset class="fLabelInput anual_predictores">
+{% include 'common/meteo_target.html' %}
+
+<fieldset class="fLabelInput meteo_predictores">
   <legend>Predictores</legend>
   {% include 'common/meteo_param.html' %}
   <button type="button" name="set_meteo_param_val">Rellenar con datos del año pasado</button>
@@ -30,36 +21,38 @@
   <label for="Ridge" class="hide">Reg. Ridge (α):</label><input type="number" id="Ridge" name="ridge">
 </fieldset>
 
-<select id="predecir_o_analizar" data-hide="div.grupo_predecir_o_analizar > *" class="fullwidth">
+<select id="predecir_o_analizar" data-hide="div.grupo_predecir_o_analizar fieldset, div.grupo_predecir_o_analizar > input" class="fullwidth">
   <option/>
   <option data-show=".grupo_predecir">Predecir</option>
   <option data-show=".grupo_analizar">Analizar</option>
 </select>
 
 <div class="grupo_predecir_o_analizar">
-  <fieldset class="fOneField grupo_predecir grupo_analizar">
-    <legend>Años para crear el modelo</legend>
-    <label for="rango_temporal" class="hide">Años para crear el modelo:</label>
-    <select id="rango_temporal" name="rango_temporal[]" required multiple="multiple" data-opuesto=".rango_temporal_evaluar" class="fullsize">
-        {% for y in range(2006, now.year) %}
-          <option value="{{y}}">{{y}}</option>
-        {% endfor %}
-    </select>
-  </fieldset>
+  <div class="grupo_predecir_o_analizar_fieldsets" data-count="fieldset:not(.hidebyinput)">
+    <fieldset class="fOneField grupo_predecir grupo_analizar">
+      <legend>Años para crear el modelo</legend>
+      <label for="rango_temporal" class="hide">Años para crear el modelo:</label>
+      <select id="rango_temporal" name="rango_temporal[]" required multiple="multiple" data-opuesto=".rango_temporal_evaluar" class="fullsize">
+          {% for y in range(2006, now.year) %}
+            <option value="{{y}}">{{y}}</option>
+          {% endfor %}
+      </select>
+    </fieldset>
 
-  <fieldset class="fOneField grupo_analizar">
-    <legend>Años para evaluar el modelo</legend>
-    <label for="rango_temporal_evaluar" class="hide">Años para evaluar el modelo:</label>
-    <select id="rango_temporal_evaluar" name="rango_temporal_evaluar[]" required multiple="multiple" class="rango_temporal_evaluar fullsize">
-        {% for y in range(2006, now.year) %}
-          <option value="{{y}}">{{y}}</option>
-        {% endfor %}
-    </select>
-  </fieldset>
+    <fieldset class="fOneField grupo_analizar">
+      <legend>Años para evaluar el modelo</legend>
+      <label for="rango_temporal_evaluar" class="hide">Años para evaluar el modelo:</label>
+      <select id="rango_temporal_evaluar" name="rango_temporal_evaluar[]" required multiple="multiple" class="rango_temporal_evaluar fullsize">
+          {% for y in range(2006, now.year) %}
+            <option value="{{y}}">{{y}}</option>
+          {% endfor %}
+      </select>
+    </fieldset>
+  </div>
 
-  <input class="grupo_predecir" data-defval="Predecir" type="submit" value="Predecir" formaction="{{API_ENDPOINT}}anual_pais_predecir" data-opcional=".rango_temporal_evaluar">
+  <input class="grupo_predecir" type="submit" value="Predecir" formaction="{{API_ENDPOINT}}anual_pais_predecir" data-opcional=".rango_temporal_evaluar">
 
-  <input class="grupo_analizar" data-defval="Analizar" type="submit" value="Analizar" formaction="{{API_ENDPOINT}}anual_pais_analizar" data-obligatorio=".rango_temporal_evaluar">
+  <input class="grupo_analizar" type="submit" value="Analizar" formaction="{{API_ENDPOINT}}anual_pais_analizar" data-obligatorio=".rango_temporal_evaluar">
 </div>
 
 </form>

@@ -24,20 +24,6 @@ var TXT={
   "detalle": {
     "importancia": "Devolver informaci\u00f3n adicional sobre la importancia de los par\u00e1metros en la predicci\u00f3n realizada. Esto puede incrementar el tiempo de calculo en varios minutos."
   },
-  "temporalidad": {
-    "tepri": "con temporalidad",
-    "prpri": "con temporalidad",
-    "temax": "con temporalidad",
-    "temed": "con temporalidad",
-    "tevar": "con temporalidad",
-    "vevie": "con temporalidad",
-    "ravie": "con temporalidad",
-    "prmax": "con temporalidad",
-    "prmin": "con temporalidad",
-    "hurel": "con temporalidad",
-    "hrsol": "con temporalidad",
-    "prmed": "con temporalidad"
-  },
   "zonas": {
     "ESP": "Espa\u00f1a",
     "15": "A Coru\u00f1a",

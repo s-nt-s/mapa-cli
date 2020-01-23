@@ -157,6 +157,14 @@ select.fullsize {
 
 
 
+.grupo_predecir_o_analizar_fieldsets.items_2 {
+  column-count: 2;
+}
+.grupo_predecir_o_analizar_fieldsets.items_2 > fieldset {
+ margin: 0;
+}
+
+
 /*** POPUP ***/
 #popup {
     display: none;
