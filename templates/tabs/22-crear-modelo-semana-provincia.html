@@ -27,7 +27,7 @@
     <legend>Años para crear el modelo</legend>
     <label for="rango_temporal" class="hide">Años para crear el modelo:</label>
     <select id="rango_temporal" name="rango_temporal[]" required multiple="multiple" data-opuesto=".rango_temporal_evaluar" class="fullsize">
-        {% for y in range(2006, now.year) %}
+        {% for y in range(1999, now.year) %}
           <option value="{{y}}">{{y}}</option>
         {% endfor %}
     </select>

@@ -57,7 +57,7 @@ def parse(html, *args, **kargv):
                 if id and not i.attrs.get("name"):
                     i.attrs["name"] = id
                 # Todo obligatorio menos radio y checkbox
-                if tp not in ("radio", "checkbox"):
+                if tp not in ("radio", "checkbox") and "opcional" not in i.attrs.get("class", ""):
                     i.attrs["required"] = "required"
                 # Todo checkeado menos fDetalle
                 if tp == "checkbox" and not i.attrs.get("checked") and id_fls != "fDetalle":
