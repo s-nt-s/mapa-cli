@@ -29,8 +29,9 @@
 </select>
 
 <div class="grupo_predecir_o_analizar">
+<div class="meteo_modelo_years" data-count="fieldset:not(.hidebyinput)">
   <div class="grupo_predecir_o_analizar_fieldsets" data-count="fieldset:not(.hidebyinput)">
-    <fieldset class="fOneField grupo_predecir grupo_analizar">
+    <fieldset class="fOneField grupo_predecir grupo_analizar meteo_modelo_years">
       <legend>Años para crear el modelo</legend>
       <label for="rango_temporal" class="hide">Años para crear el modelo:</label>
       <select id="rango_temporal" name="rango_temporal[]" required multiple="multiple" data-opuesto=".rango_temporal_evaluar" class="fullsize">
@@ -49,6 +50,7 @@
           {% endfor %}
       </select>
     </fieldset>
+  </div>
   </div>
 
   <input class="grupo_predecir" type="submit" value="Predecir" formaction="{{API_ENDPOINT}}anual_pais_predecir" data-opcional=".rango_temporal_evaluar">
