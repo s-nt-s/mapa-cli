@@ -8,14 +8,18 @@ function showhide(ok, ko, root) {
   var show = ko_show.not(ok_hide).add(ok_show);
 
   if (root) {
-    var h = root = root.joinJqData("hide");
+    var h = root.joinJqData("hide");
     hide = hide.add(h.not(show));
   }
 
   show.add(show.find(".hidebyinput")).removeClass("hidebyinput");
   show.add(show.find(".disablebyinput")).filter(".disablebyinput").prop("disabled", false).removeClass("disablebyinput");
   hide.addClass("hidebyinput");
-  hide.add(hide.find("select, input, label")).filter("select, input, label").not(":disabled").prop("disabled", true).addClass("disablebyinput");
+  hide.add(hide.find("select, input, label")).filter("select, input, label").not(":disabled").filter(
+    function() {
+      return $(this).closest(".notDisabled").length==0;
+    }
+  ).prop("disabled", true).addClass("disablebyinput");
 
   show.add(hide).parents("[data-count]").each(function(){
     var t=$(this);
@@ -33,7 +37,7 @@ $(document).ready(function(){
     var hide=t.data("hide");
     var show=t.data("show");
     if(hide) {
-      var sel = t.find_in_parents(hide);
+      var sel = t.find_in_parents_with_comma(hide);
       sel = sel.add(sel.getLabel());
       sel.each(function(){
         var t=$(this);
@@ -42,7 +46,7 @@ $(document).ready(function(){
       t.data("hide", sel.add(sel.getLabel()));
     }
     if(show) {
-      var sel = t.find_in_parents(show);
+      var sel = t.find_in_parents_with_comma(show);
       sel = sel.add(sel.getLabel());
       sel.each(function(){
         var t=$(this);
@@ -51,7 +55,7 @@ $(document).ready(function(){
       t.data("show", sel);
     }
   });
-  eq.filter("option").closest("select").change(function(){
+  eq.filter("option").closest("select").add(eq.filter("select")).change(function(){
     var t = $(this);
     var o = t.find("option");
     var ok = o.filter(":selected");

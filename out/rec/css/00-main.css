@@ -321,7 +321,7 @@ fieldset.fOneField input, fieldset.fOneField select {
 fieldset.fOneField input[type=number] {
   width: 90%;
 }
-fieldset.fLabelInput label {
+.fLabelInput label {
   display: inline-block;
   min-width: 17em;
 }

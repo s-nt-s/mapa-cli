@@ -1,4 +1,11 @@
-<form id="fMeteoAnalisis" name="predicion_semana_provincia" action="{{API_ENDPOINT}}predicion_semana_provincia" method="POST" data-resultado="Resultado Análisis" data-idprefix="predicion_semana_provincia_">
+<form
+  id="fMeteoAnalisis"
+  name="predicion_semana_provincia"
+  action="{{API_ENDPOINT}}predicion_semana_provincia"
+  method="POST"
+  data-resultado="Resultado Análisis"
+  data-idprefix="predicion_semana_provincia_"
+>
 
 <h1 class="sidebar-header">
   <span>Predicción semanal-provincial</span>
@@ -6,9 +13,16 @@
   <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
 </h1>
 
-{% include 'snippet/zona.html' %}
-
-{% include 'common/meteo_target.html' %}
+<fieldset class="fOneField">
+  <legend>Target</legend>
+  <label for="Target" class="hide">Target:</label>
+  <select id="Target" name="target" required style="width: 100%;" class="target_meteo">
+      <option/>
+      <option value="0">Superficie quemada</option>
+      <option value="1">Número de incendios</option>
+      <option value="2">Ambos</option>
+  </select>
+</fieldset>
 
 <fieldset>
   <legend>Ventana</legend>
@@ -18,10 +32,26 @@
 </fieldset>
 
 
-<fieldset class="fLabelInput meteo_predictores">
-  <legend>Predictores</legend>
-  {% include 'common/meteo_param.html' %}
-  <button type="button" name="set_meteo_param_val">Rellenar con datos del año pasado</button>
+<fieldset data-delete="input.chk">
+  <legend>Modificar predictores</legend>
+  <p>
+    <label for="zona">Provincia:</label>
+    <select id="zona" data-hide=".meteo_predictores" class="opcional">
+      <option/>
+      {% for p in provincias %}
+         <option value="{{p.ID}}" data-show=".predictores_{{p.ID}}">{{p.nombre}}</option>
+      {% endfor %}
+    </select>
+  </p>
+  {% for p in provincias %}
+  <div class="fLabelInput meteo_predictores predictores_{{p.ID}} notDisabled opcional">
+    {% include 'common/meteo_param.html' %}
+  </div>
+  {% endfor %}
+  <p>
+  (*) Para cada provincia se usarán los valores proporcionados por la aemet,
+  a no ser que se sobreescriban usando este panel.
+  </p>
 </fieldset>
 
 

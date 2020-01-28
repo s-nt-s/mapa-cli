@@ -31,6 +31,12 @@ def parse(html, *args, **kargv):
     html = re.sub(r"<br/>(\s*</)", r"\1", html).strip()
     soup = bs4.BeautifulSoup(html, 'lxml')
 
+    # Eliminar elementos
+    for n in soup.select("*[data-delete]"):
+        d = n.attrs["data-delete"]
+        for i in n.select(d):
+            i.extract()
+
     # Añadir prefijos a los ids
     for wrapper in soup.select("*[data-idprefix]"):
         prefix = wrapper.attrs["data-idprefix"]
@@ -97,6 +103,10 @@ def parse(html, *args, **kargv):
                         obj = TXT.get(name, {})
                         obj[value] = lb
                         TXT[name] = obj
+
+    for i in soup.select(".opcional select, .opcional input"):
+        if "required" in i.attrs:
+            del i.attrs["required"]
 
     # Guardar value inicial
     att = "data-defval"

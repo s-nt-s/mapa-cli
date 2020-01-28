@@ -20,7 +20,17 @@ jQuery.fn.extend({
       if (r.length) return r;
     }
     return $([]);
-  }
+  },
+  find_in_parents_with_comma: function(sel) {
+    var sels = sel.split(/,/);
+    if (sels.length<2) return this.find_in_parents(sel);
+    var r = $([]);
+    var i;
+    for (i=0;i<sels.length; i++) {
+      r = r.add(this.find_in_parents(sels[i]))
+    }
+    return r;
+  },
 });
 
 $(document).ready(function(){
@@ -30,7 +40,7 @@ $(document).ready(function(){
     for (i=0; i<eq.length; i++) {
       t = eq.eq(i);
       var sel=t.data(k);
-      var target = t.find_in_parents(sel);
+      var target = t.find_in_parents_with_comma(sel);
       t.data(k, target);
     }
   })

@@ -1,0 +1,68 @@
+<h1 class="sidebar-header">
+  <span>Usar modelo semanal-provincial</span>
+  <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+  <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+<form id="fMeteoUsarModeloSemanaProvincia" name="usar_modelo_semana_provincia" action="{{API_ENDPOINT}}usar_modelo_semana_provincia" method="POST" data-resultado="Resultado Análisis" data-idprefix="usar_modelo_semana_provincia_">
+  <fieldset>
+    <legend>
+      <label for="meteo_semanal_modelos" class="hide">Modelo:</label>
+      <select id="meteo_semanal_modelos" name="meteo_semanal_modelos" data-hide=".acc_modelo_seleccionado" data-fire-change=".predecir_o_analizar">
+          <option value=""  data-show=".msg_lista_modelo" data-hide=".modelo_seleccionado">Seleccione modelo a usar</option>
+          <option value="1" data-show=".modelo_seleccionado,.acc_modelo_seleccionado">Modelo 1</option>
+          <option value="0" data-show=".refrescar_modelo" data-hide=".modelo_seleccionado">-- Refrescar lista de modelos --</option>
+      </select>
+    </legend>
+    <p class="msg_lista_modelo">
+      Ha de seleccionar un modelo para poder continuar
+    </p>
+    <p class="refrescar_modelo">
+      Cargando lista de modelos...<br/>
+      Espere unos segundos.
+    </p>
+    <div class="modelo_seleccionado">
+      {{lipsum(n=1)}}
+    </div>
+  </fieldset>
+
+  <div class="acc_modelo_seleccionado">
+
+
+  <select id="predecir_o_analizar" data-hide="div.grupo_predecir_o_analizar fieldset, div.grupo_predecir_o_analizar > input, .egifWarning" class="fullwidth predecir_o_analizar">
+    <option/>
+    <option data-show=".grupo_predecir">Predecir</option>
+    <option data-show=".grupo_analizar">Analizar</option>
+  </select>
+
+  <div class="grupo_predecir_o_analizar">
+  <div class="meteo_modelo_years" data-count="fieldset:not(.hidebyinput)">
+    <div class="grupo_predecir_o_analizar_fieldsets" data-count="fieldset:not(.hidebyinput)">
+      <fieldset class="fOneField grupo_predecir grupo_analizar meteo_modelo_years">
+        <legend>Años para crear el modelo</legend>
+        <label for="rango_temporal" class="hide">Años para crear el modelo:</label>
+        <select id="rango_temporal" name="rango_temporal[]" required multiple="multiple" class="fullsize">
+            {% for y in range(1999, now.year) %}
+              <option value="{{y}}">{{y}}</option>
+            {% endfor %}
+        </select>
+      </fieldset>
+
+      <fieldset class="fOneField grupo_analizar">
+        <legend>Años para evaluar el modelo</legend>
+        <label for="rango_temporal_evaluar" class="hide">Años para evaluar el modelo:</label>
+        <select id="rango_temporal_evaluar" name="rango_temporal_evaluar[]" required multiple="multiple" class="rango_temporal_evaluar fullsize">
+            {% for y in range(1999, now.year) %}
+              <option value="{{y}}">{{y}}</option>
+            {% endfor %}
+        </select>
+      </fieldset>
+    </div>
+    </div>
+
+    <input class="grupo_predecir" type="submit" value="Predecir" formaction="{{API_ENDPOINT}}anual_pais_predecir" data-opcional=".rango_temporal_evaluar">
+
+    <input class="grupo_analizar" type="submit" value="Analizar" formaction="{{API_ENDPOINT}}anual_pais_analizar" data-obligatorio=".rango_temporal_evaluar">
+  </div>
+
+  </div>
+</form>

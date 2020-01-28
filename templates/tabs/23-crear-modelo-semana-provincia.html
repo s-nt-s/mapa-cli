@@ -1,43 +1,46 @@
 <form
-  id="fMeteoAnalisis"
-  name="anual_pais"
-  action="{{API_ENDPOINT}}anual_pais"
+  id="fMeteoCrearModeloSemanaProvincia"
+  name="crear_modelo_semana_provincia"
+  action="{{API_ENDPOINT}}crear_modelo_semana_provincia"
   method="POST"
   data-resultado="Resultado Análisis"
-  data-idprefix="meteo_anual_"
+  data-idprefix="crear_modelo_semana_provincia_"
+  data-delete="option.target_ambos"
 >
 
 <h1 class="sidebar-header">
-  <span>Predicción o análisis verano</span>
+  <span>Crear modelo semanal-provincial</span>
   <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
   <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
 </h1>
 
+<fieldset class="fOneField">
+  <legend>Nombre del modelo</legend>
+  <label for="nombre_del_modelo" class="hide">Nombre del modelo:</label>
+  <input id="nombre_del_modelo" name="nombre_del_modelo" required type="text">
+</fieldset>
+
 {% include 'snippet/zona.html' %}
+
+<fieldset>
+  <legend>Ventana</legend>
+  <label for="ventana_size">Tamaño ventana:</label>
+  <input id="ventana_size" name="ventana_size" required type="number" min="0" max="4" value="3"><br/>
+</fieldset>
 
 {% include 'common/meteo_target.html' %}
 
-<fieldset class="fLabelInput meteo_predictores">
+<fieldset class="fLabelInput meteo_predictores" style="margin-bottom:16px;">
   <legend>Predictores</legend>
-  {% include 'common/meteo_param.html' %}
-  <button type="button" name="set_meteo_param_val">Rellenar con datos del año pasado</button>
+  <input id="target_previos" name="target_previos" type="checkbox"> <label for="target_previos">Considerar número de incendios previos</label>
+  {% include 'common/meteo_param_temporalidad.html' %}
 </fieldset>
 
-<fieldset class="fOneField">
-  <legend>Reg. Ridge (α)</legend>
-  <label for="Ridge" class="hide">Reg. Ridge (α):</label><input type="number" id="Ridge" name="ridge" class="opcional"><br/>
-  <span>(*) dejar vacio para que el servidor calcule y use el valor optimo.</span>
-</fieldset>
 
-<select id="predecir_o_analizar" data-hide="div.grupo_predecir_o_analizar fieldset, div.grupo_predecir_o_analizar > input, .egifWarning" class="fullwidth">
-  <option/>
-  <option data-show=".grupo_predecir">Predecir</option>
-  <option data-show=".grupo_analizar">Analizar</option>
-</select>
 
 <div class="grupo_predecir_o_analizar">
-<div class="meteo_modelo_years" data-count="fieldset:not(.hidebyinput)">
-  <div class="grupo_predecir_o_analizar_fieldsets" data-count="fieldset:not(.hidebyinput)">
+<div class="meteo_modelo_years items_2">
+  <div class="grupo_predecir_o_analizar_fieldsets items_2">
     <fieldset class="fOneField grupo_predecir grupo_analizar meteo_modelo_years">
       <legend>Años para crear el modelo</legend>
       <label for="rango_temporal" class="hide">Años para crear el modelo:</label>
@@ -59,10 +62,9 @@
     </fieldset>
   </div>
   </div>
-
-  <input class="grupo_predecir" type="submit" value="Predecir" formaction="{{API_ENDPOINT}}anual_pais_predecir" data-opcional=".rango_temporal_evaluar">
-
-  <input class="grupo_analizar" type="submit" value="Analizar" formaction="{{API_ENDPOINT}}anual_pais_analizar" data-obligatorio=".rango_temporal_evaluar">
 </div>
+
+
+<input type="submit" value="Crear modelo">
 
 </form>
