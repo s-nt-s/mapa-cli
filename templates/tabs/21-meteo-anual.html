@@ -1,7 +1,7 @@
 <form
   id="fMeteoAnalisis"
   name="anual_pais"
-  action="{{API_ENDPOINT}}anual_pais"
+  action="{{API_ENDPOINT}}analisis_o_predecir_anual"
   method="POST"
   data-resultado="Resultado Análisis"
   data-idprefix="meteo_anual_"
@@ -60,9 +60,9 @@
   </div>
   </div>
 
-  <input class="grupo_predecir" type="submit" value="Predecir" formaction="{{API_ENDPOINT}}anual_pais_predecir" data-opcional=".rango_temporal_evaluar">
+  <input class="grupo_predecir" type="submit" value="Predecir" formaction="{{API_ENDPOINT}}predicion_anual" data-opcional=".rango_temporal_evaluar">
 
-  <input class="grupo_analizar" type="submit" value="Analizar" formaction="{{API_ENDPOINT}}anual_pais_analizar" data-obligatorio=".rango_temporal_evaluar">
+  <input class="grupo_analizar" type="submit" value="Analizar" formaction="{{API_ENDPOINT}}analisis_anual" data-obligatorio=".rango_temporal_evaluar">
 </div>
 
 </form>

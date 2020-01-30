@@ -1,3 +1,10 @@
+function joinJQ(arr) {
+  var i;
+  var c = arr[0];
+  for (i=1; i<arr.length; i++) c=c.add(arr[i]);
+  return c;
+}
+
 function showhide(ok, ko, root) {
   var ok_show = ok.joinJqData("show");
   var ko_show = ko.joinJqData("hide");
@@ -32,6 +39,7 @@ function showhide(ok, ko, root) {
 }
 
 $(document).ready(function(){
+  var fCg = [];
   var eq = $("*[data-show],*[data-hide]").each(function(){
     var t=$(this);
     var hide=t.data("hide");
@@ -55,14 +63,14 @@ $(document).ready(function(){
       t.data("show", sel);
     }
   });
-  eq.filter("option").closest("select").add(eq.filter("select")).change(function(){
+  fCg[fCg.length] = eq.filter("option").closest("select").add(eq.filter("select")).change(function(){
     var t = $(this);
     var o = t.find("option");
     var ok = o.filter(":selected");
     var ko = o.not(":selected");
     showhide.apply(t, [o.filter(":selected"), o.not(":selected"),t]);
   });
-  eq.filter("input[type=checkbox], input[type=radio]").change(function(){
+  fCg[fCg.length] = eq.filter("input[type=checkbox], input[type=radio]").change(function(){
     var o = $(this);
     var nm = o.attr("name");
     if (nm) {
@@ -71,8 +79,7 @@ $(document).ready(function(){
     }
     showhide.apply(o, [o.filter(":checked"), o.not(":checked")]);
   });
-  eq.change();
-  $("*[data-desplaza]").change(function(){
+  fCg[fCg.length] = $("*[data-desplaza]").change(function(){
     var v = parseInt(this.value, 10);
     if (Number.isNaN(v)) return;
     v = v+1;
@@ -81,8 +88,8 @@ $(document).ready(function(){
     e.attr("min", v);
     var x = parseInt(e.val(), 10);
     if (Number.isNaN(x) || x<v) e.val(v).change();
-  }).change();
-  $("*[data-opuesto]").not("select").change(function(){
+  });
+  fCg[fCg.length] = $("*[data-opuesto]").not("select").change(function(){
     var v = parseInt(this.value, 10);
     if (Number.isNaN(v)) return;
     var e=$(this).data("opuesto");
@@ -91,8 +98,8 @@ $(document).ready(function(){
     var mx = parseInt(mx, 10);
     if (Number.isNaN(mx)) return;
     e.val(mx-v).change();
-  }).change();
-  $("select[data-opuesto]").change(function(){
+  });
+  fCg[fCg.length] = $("select[data-opuesto]").change(function(){
     var t=$(this);
     var e=t.data("opuesto");
     if (!e || !e.length) return;
@@ -101,8 +108,8 @@ $(document).ready(function(){
     e.find("option").prop("disabled", false).filter(function(index, element){
       return (v.includes(element.value))
     }).prop("disabled", true).prop("selected", false);
-  }).change();
-  $("select[data-marcar],select[data-desmarcar]").change(function() {
+  });
+  fCg[fCg.length] = $("select[data-marcar],select[data-desmarcar]").change(function() {
     var t=$(this);
     var cond = t.data("marca-if");
     if (cond && cond.length && !cond.is(":checked")) return;
@@ -113,11 +120,17 @@ $(document).ready(function(){
     })
     desmrc.not(marcar).filter(":checked").prop("checked", false).change();
     marcar.not(":checked").prop("checked", true).change();
-  }).change();
-  $("*[data-fire-change]").change(function() {
+  });
+  fCg[fCg.length] = $("input[data-bloquear]").change(function() {
+    var t=$(this);
+    var blq = t.is(":checked");
+    var chk = t.data("bloquear").prop("readonly", blq).filter("[type=checkbox],[type=radio]").removeAttr("onclick");
+    if (blq) chk.attr("onclick", "return false;");
+  });
+  fCg[fCg.length] = $("*[data-fire-change]").change(function() {
     $(this).data("fire-change").change();
-  }).change();
-  $(".fRangos input[type=range]").bind("change input",function(){
+  });
+  fCg[fCg.length] = $(".fRangos input[type=range]").bind("change input",function(){
       var v = Number(this.value);
       var i=$(this);
       var ch=$([])
@@ -166,14 +179,14 @@ $(document).ready(function(){
     var sp = $("span.count."+this.id);
     var i = $(this);
     i.data("span", sp);
-    i.bind("change input",function(){
+    fCg[fCg.length] = i.bind("change input",function(){
       $(this).data("span").text(this.value);
       $(this).data("span").filter("[data-add]").each(function(){
           var t=$(this);
           var n = parseInt(t.text(), 10);
           if (!Number.isNaN(n)) t.text(n+t.data("add"));
       });
-    }).change();
+    });
   });
   $("input[type=checkbox]:not(.opcional)").map(function(){return this.name}).get().uniq().forEach(function(n){
     var i;
@@ -192,7 +205,8 @@ $(document).ready(function(){
           group[0].setCustomValidity("");
         }
       });
-      chk.eq(0).change();
+      fCg[fCg.length] = chk.eq(0);
     }
   });
+  joinJQ(fCg).change();
 })

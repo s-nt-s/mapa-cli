@@ -34,7 +34,7 @@ jQuery.fn.extend({
 });
 
 $(document).ready(function(){
-  ["desplaza", "opuesto", "obligatorio", "opcional", "marcar", "desmarcar", "fire-change", "marca-if"].forEach(function(k){
+  ["desplaza", "opuesto", "obligatorio", "opcional", "marcar", "desmarcar", "fire-change", "marca-if", "bloquear"].forEach(function(k){
     var eq = $("*[data-"+k+"]");
     var i, t;
     for (i=0; i<eq.length; i++) {

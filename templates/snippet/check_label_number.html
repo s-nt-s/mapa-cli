@@ -1,4 +1,4 @@
-<input type="checkbox" value="1" title="Habilita {{label}}" name="{{check_name}}" data-show="input[name='{{id}}']" class="{{class}} chk">
+<input type="checkbox" value="{{id}}" title="Habilita {{label}}" name="{{check_name}}[]" data-show="input[name='{{id}}']" class="{{class}} chk">
 <label for="{{id}}" class="{{class}}">{{label}}:</label>
 {% if val_min is defined and val_max is defined %}
   <input type="number" name="{{id}}" id="{{id}}" value="" min="{{val_min}}" max="{{val_max}}" class="{{class}}">
