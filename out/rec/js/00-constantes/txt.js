@@ -21,8 +21,19 @@ var TXT={
     "C5": "C5 - Causas desconocidas",
     "C6": "C6 - Incendios reproducidos"
   },
-  "detalle": {
-    "importancia": "Devolver informaci\u00f3n adicional sobre la importancia de los par\u00e1metros en la predicci\u00f3n realizada. Esto puede incrementar el tiempo de calculo en varios minutos."
+  "check_meteo_param": {
+    "tepri": "Temperatura de la primavera",
+    "prpri": "Precipitaci\u00f3n de la primavera",
+    "temax": "Temperatura m\u00e1xima",
+    "temed": "Temperatura media",
+    "tevar": "Variaci\u00f3n de temperatura",
+    "vevie": "Viento",
+    "ravie": "Racha de viento",
+    "prmax": "Presi\u00f3n atmosf\u00e9rica m\u00e1xima",
+    "prmin": "Presi\u00f3n atmosf\u00e9rica m\u00ednima",
+    "hurel": "Humedad relativa",
+    "hrsol": "Horas de sol",
+    "prmed": "Precipitaciones"
   },
   "zonas": {
     "ESP": "Espa\u00f1a",
@@ -82,5 +93,9 @@ var TXT={
   "entrenamiento": {
     "dbToda": "Toda la base de datos",
     "dbPersonalizada": "Personalizada"
+  },
+  "canana_verano_target": {
+    "0": "Superficie quemada",
+    "1": "N\u00famero de incendios"
   }
 };

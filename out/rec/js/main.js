@@ -67,7 +67,7 @@ function selectProvincia(e) {
   e.originalEvent.stopImmediatePropagation();
   var p = e.layer.feature.geometry.properties;
   var zonas = $("select[name='zona[]']").eq(0);
-  selected=p.i && zonas.val().indexOf(p.i)>=0;
+  var selected=p.i && zonas.val().indexOf(p.i)>=0;
   selected = !selected;
   if (selected) {
     zonas.find("option[value='"+p.i+"']").prop("selected", true);
@@ -82,7 +82,7 @@ function layerProvincias(old) {
       style: function(f, l) {
         var fp = f.properties;
         var gp = f.geometry.properties;
-        selected=gp.i && $("select[name='zona[]']:eq(0)").val().indexOf(gp.i)>=0;
+        var selected=gp.i && $("select[name='zona[]']:eq(0)").val().indexOf(gp.i)>=0;
         var color=(selected)?"blue":"green";
         return {
           "color": color,
@@ -113,7 +113,7 @@ function layerProvincias(old) {
       e.originalEvent.stopImmediatePropagation();
       var p = e.layer.feature.geometry.properties;
       var zonas = $("select[name='zona[]']").eq(0);
-      selected=p.i && zonas.val().indexOf(p.i)>=0;
+      var selected=p.i && zonas.val().indexOf(p.i)>=0;
       selected = !selected;
       zonas.find("option").prop("selected", false);
       if (selected) {
@@ -327,7 +327,6 @@ $("#fSocialPrediccion").data("submitted", function(data, textStatus, jqXHR) {
     html = html + "<ul>";
     var strAhora = getStrFecha();
     html = html + `
-      </li>
       <li>Región: ${zonas}</li>
       <li>Causas: ${causas}</li>
       <li>Radio de influencia: ${obj.input.radio} km</li>
@@ -477,7 +476,6 @@ $("#fSocialAnalisis").data("submitted", function(data, textStatus, jqXHR) {
       }
       var strAhora = getStrFecha();
       html = html + `
-        </li>
         <li>Región: ${zonas}</li>
         <li>Causas: ${causas}</li>
         <li>Radio de influencia: ${obj.input.radio} km</li>
@@ -545,16 +543,6 @@ $(".sidebar-close").click(function(){
   $("#sidebar").removeClass("expanded");
 })
 
-$("select.oneGroup").change(function(){
-  var t=$(this);
-  var arr=t.data("slc") || [];
-  if (arr.length>0 && arr.length<t.val().length) {
-    var diff=t.val().diff(arr);
-    var opt = t.find("option[value='"+diff[0]+"']").closest("optgroup");
-    t.find("optgroup").not(opt).find("option").prop("selected", false);
-  }
-  t.data("slc", t.val());
-})
 $("select[name='zona[]']").change(function(){
   var aVals=$(this).val();
   var other=$("select[name='zona[]']").not(this);

@@ -200,13 +200,23 @@ $(document).ready(function(){
         if (group.filter(":checked").length==0) {
           group.eq(0).prop("required", true);
           group[0].setCustomValidity("Debe seleccionar al menos un elemento de esta lista");
-        } else{
+        } else {
           group.eq(0).prop("required", false);
           group[0].setCustomValidity("");
         }
       });
       fCg[fCg.length] = chk.eq(0);
     }
+  });
+  fCg[fCg.length] = $("select.oneGroup").change(function(){
+    var t=$(this);
+    var arr=t.data("slc") || [];
+    if (arr.length>0 && arr.length<t.val().length) {
+      var diff= t.val().diff(arr);
+      var opt = t.find("option[value='"+diff[0]+"']").closest("optgroup");
+      t.find("optgroup").not(opt).find("option").prop("selected", false);
+    }
+    t.data("slc", t.val());
   });
   joinJQ(fCg).change();
 })

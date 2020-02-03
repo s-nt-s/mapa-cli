@@ -49,7 +49,6 @@ def parse(html, *args, **kargv):
                 label.attrs["for"]=ni
             item.attrs["id"]=ni
 
-    TXT = {}
     for form in soup.findAll("form"):
         names = set()
         for fls in form.findAll("fieldset"):
@@ -79,6 +78,7 @@ def parse(html, *args, **kargv):
 
                 if not id:
                     continue
+
                 # label && !title ---> title = label
                 if i.attrs.get("title") is None:
                     lb = get_label(soup, id)
@@ -94,16 +94,6 @@ def parse(html, *args, **kargv):
                     if lb and not lb.attrs.get("title") and lb.get_text().strip() != i.attrs.get("title"):
                         lb.attrs["title"] = i.attrs.get("title")
 
-                # Guardar texto de grupos radio/checkbox
-                name = i.attrs.get("name")
-                if name and name.endswith("[]") and tp in ("radio", "checkbox"):
-                    value, lb = i.attrs.get("value"), get_label(soup, id)
-                    if None not in (value, lb) and "" not in (value, lb):
-                        name = name[:-2]
-                        obj = TXT.get(name, {})
-                        obj[value] = lb
-                        TXT[name] = obj
-
     for i in soup.select(".opcional select, .opcional input"):
         if "required" in i.attrs:
             del i.attrs["required"]
@@ -115,23 +105,35 @@ def parse(html, *args, **kargv):
         if v and att not in i.attrs:
             i.attrs[att] = v
 
-    # Guardar texto de las zonas
-    zonas = {}
-    for op in soup.find("select", attrs={"name": "zona[]"}).findAll("option"):
-        txt = op.get_text().strip()
-        if txt:
-            zonas[op.attrs["value"]] = txt
+    TXT = {}
+    # Guardar texto de grupos radio/checkbox
+    for tp in ("radio", "checkbox"):
+        for i in soup.select("input[type='"+tp+"']"):
+            name = i.attrs.get("name")
+            id = i.attrs.get("id")
+            if id and name and name.endswith("[]"):
+                value, lb = i.attrs.get("value"), get_label(soup, id)
+                if None not in (value, lb) and "" not in (value, lb):
+                    name = name[:-2]
+                    obj = TXT.get(name, {})
+                    obj[value] = lb
+                    TXT[name] = obj
 
-    # Guardar texto de tipos de entrenamiento
-    entrenamiento = {}
-    for op in soup.select("select.tEntrenamiento option"):
-        txt = op.get_text().strip().rstrip(".")
-        if txt:
-            entrenamiento[op.attrs["value"]] = txt
+    # Guardar textos de los selects
+    for i in soup.select("select[data-txt]"):
+        s_txt={}
+        for o in i.select("option[value]"):
+            txt = o.get_text().strip().rstrip(".")
+            if txt:
+                s_txt[o.attrs["value"]] = txt
+        TXT[i.attrs["data-txt"]] = s_txt
 
-    TXT["zonas"] = zonas
-    TXT["entrenamiento"] = entrenamiento
-    create_script("out/rec/txt.js", indent=2, TXT=TXT)
+    for k, v in list(TXT.items()):
+        if len(set(v.values()))==1:
+            del TXT[k]
+
+    #create_script("out/rec/txt.js", indent=2, TXT=TXT)
+    create_script("out/rec/js/00-constantes/txt.js", indent=2, TXT=TXT)
 
     return soup
 

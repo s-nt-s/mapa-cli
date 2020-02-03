@@ -1,3 +1,5 @@
+ON_ENDPOINT={}
+
 $(document).ready(function(){
   var submit = $("input[type='submit']");
   submit.filter("[data-obligatorio]").click(function() {
@@ -60,7 +62,10 @@ $(document).ready(function(){
                 console.log("Timepo de servidor: "+seconds_to_string(data["__timespent__"]));
               }
             }
-            this.form.data("submitted").apply(this, arguments);
+
+            var my_event = getFormEvent.apply(this, arguments);
+            if (my_event) my_event.apply(this, arguments);
+
             var btn = this.form.find("input[type=submit]");
             btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
         }
@@ -68,3 +73,13 @@ $(document).ready(function(){
       my_ajax(_url, settings);
   });
 });
+
+function getFormEvent() {
+  var my_event = this.form.data("submitted")
+  if (my_event) return my_event;
+  var key = null;
+  key = this.url.split("/")
+  key = key[key.length-1].toLowerCase();
+  console.log("Buscando evento para "+this.url+" ["+key+"]");
+  return ON_ENDPOINT[key];
+}
