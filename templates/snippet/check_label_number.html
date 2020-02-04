@@ -1,12 +1,12 @@
 <input type="checkbox" value="{{id}}" title="Habilita {{label}}" name="{{check_name}}[]" data-show="input[name='{{id}}']" class="{{class}} chk">
 <label for="{{id}}" class="{{class}}">{{label}}:</label>
 {% if val_min is defined and val_max is defined %}
-  <input type="number" name="{{id}}" id="{{id}}" value="" min="{{val_min}}" max="{{val_max}}" class="{{class}}">
+  <input type="number" name="{{id}}" id="{{id}}" value="" min="{{val_min}}" max="{{val_max}}" class="{{class}}" step="{{step or 1}}" style="width: {{width or 5}}em">
 {% elif val_min is defined %}
-  <input type="number" name="{{id}}" id="{{id}}" value="" min="{{val_min}}" class="{{class}}">
+  <input type="number" name="{{id}}" id="{{id}}" value="" min="{{val_min}}" class="{{class}}" step="{{step or 1}}" style="width: {{width or 5}}em">
 {% elif val_max is defined %}
-  <input type="number" name="{{id}}" id="{{id}}" value="" max="{{val_max}}" class="{{class}}">
+  <input type="number" name="{{id}}" id="{{id}}" value="" max="{{val_max}}" class="{{class}}" step="{{step or 1}}" style="width: {{width or 5}}em">
 {% else %}
-  <input type="number" name="{{id}}" id="{{id}}" value="" class="{{class}}">
+  <input type="number" name="{{id}}" id="{{id}}" value="" class="{{class}}" step="{{step or 1}}" style="width: {{width or 5}}em">
 {% endif %}
 <br/>

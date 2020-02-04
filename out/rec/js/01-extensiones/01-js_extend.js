@@ -171,6 +171,10 @@ String.prototype.hashCode = function() {
   return hash;
 };
 
+String.prototype.toCapitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
 TimeoutIDS={}
 
 class WhenUrlExist {
@@ -238,4 +242,66 @@ function my_ajax(url, opt) {
       this.when_url_exist.fire(this);
     }
   });
+}
+
+
+function spanNumber(v, decimales) {
+  if (v==null || v==="") return "";
+  if (decimales != null) {
+    var d = Math.pow(10, decimales)
+    v = Math.round(v*d)/d;
+  }
+  var sig="sig_cero";
+  if(v<0) sig="neg";
+  else if (v>0) sig="pos";
+  v=v.toString();
+  var sp = v.split(/\./);
+  var dc = sp.length==2?sp[1].length:0;
+  var en = sp[0].length;
+  v = `<span class='bfr'></span><span class="nm en${en} dc${dc} ${sig}">${v}</span><span class='aft'></span>`
+  return v;
+}
+
+function buildTable(table_class, row_size, cels) {
+  var t = `
+    <table class='${table_class}'>
+    <thead>
+      <tr>`;
+  var i, th, td, txt;
+  for (i=0; i<cels.length; i++) {
+    td = cels[i];
+    if (typeof td != "object") {
+      txt = td;
+      td = {}
+      if (i>=row_size) {
+          th = cels[i % row_size];
+          if (typeof th == "object") td = th;
+      }
+      td.txt = txt
+    }
+    if (i == row_size) {
+      t = t + `
+      </tr>
+    </thead>
+    <tbody>
+      <tr>`;
+    }
+    t = t + "\n       ";
+    if (i<row_size) {
+      t = t + `<th class='${td.class || ''}'>${td.txt}</th>`;
+    } else {
+      t = t + `<td class='${td.class || ''}'>${td.txt}</td>`;
+    }
+    if (((i+1) % row_size == 0) && !(i==0 || i == row_size)) {
+      t = t + `
+      </tr>`;
+    }
+  }
+  if (cels.length>row_size) {
+    t = t + `
+    <tbody>
+  </table>`;
+  }
+  t = t.replace(/\s*class=''/g, "");
+  return t;
 }

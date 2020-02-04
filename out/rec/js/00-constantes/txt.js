@@ -94,7 +94,7 @@ var TXT={
     "dbToda": "Toda la base de datos",
     "dbPersonalizada": "Personalizada"
   },
-  "canana_verano_target": {
+  "capana_verano_target": {
     "0": "Superficie quemada",
     "1": "N\u00famero de incendios"
   }

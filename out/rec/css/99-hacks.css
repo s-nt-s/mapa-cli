@@ -2,10 +2,14 @@
   opacity: 1 !important;
 }
 
-
 .items_1 > .egifWarning {
   display: none;
 }
 .items_2 > fieldset > .egifWarning {
   display: none;
+}
+
+th.transparente {
+  border: none;
+  background-color: white;
 }

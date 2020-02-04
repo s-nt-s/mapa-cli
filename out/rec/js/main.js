@@ -26,19 +26,6 @@ function riesgoTxt(v) {
   if (v==3) return "muy alto";
 }
 
-function spanNumber(v) {
-  if (v==null || v==="") return "";
-  var sig="sig_cero";
-  if(v<0) sig="neg";
-  else if (v>0) sig="pos";
-  v=v.toString();
-  var sp = v.split(/\./);
-  var dc = sp.length==2?sp[1].length:0;
-  var en = sp[0].length;
-  v = `<span class='bfr'></span><span class="nm en${en} dc${dc} ${sig}">${v}</span><span class='aft'></span>`
-  return v;
-}
-
 function toUrl(url, txt, title) {
   var s_url=url.split(/:\/\//)[1];
   if (!txt) txt = s_url;
@@ -200,7 +187,7 @@ $("#fSocialPrediccion").data("submitted", function(data, textStatus, jqXHR) {
           TXT.municipios[f.properties.i]=f.properties.n;
           var hide = rsg.orden.length?"":"hide";
           var html=["<h1>"+f.properties.n+"</h1>", "<p>Riesgo <b>"+v+"</b></p>",
-            `<table class='ordper'>
+            `<table class='numbers dosDecimales'>
               <thead>
                 <tr>
                   <th title='Orden de influencia'><abbr title='Orden de importancia'>#</abbr></th>
@@ -294,7 +281,7 @@ $("#fSocialPrediccion").data("submitted", function(data, textStatus, jqXHR) {
     var html = `
     <p class='avoidMd'>Haga click con el botón secundario en los municipios que desee comparar para agregarlos a la tabla que ve aquí abajo.</p>
     <h2>Influencia de características</h2>
-    <table class='ordper' id='preTable'>
+    <table class='numbers dosDecimales tableScroll' id='preTable'>
       <thead>
         <tr class='hide avoidMd modelogeneral'>
           <th colspan='3' style='text-align: center'>Modelo general</th>
@@ -425,14 +412,14 @@ Incendios;${obj.inc_usados}
 $("#fSocialAnalisis").data("submitted", function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (typeof obj == "object") {
-      var html = `<ul class='big rAnalisis'>
+      var html = `<ul class='big dosEnteros dosDecimales'>
         <li title='Precisión de la predicción probabilística (sin tener en cuenta ningún parámetro)'><code>${spanNumber(obj.baseline)}%</code> <b>baseline</b></li>
         <li title='Precisión de la predicción con los parámetros seleccionados'><code>${spanNumber(obj.accuracy)}%</code> <b>accuracy</b></li>
         <li title='Aporte bruto de la predicción con parámetros'><code>${spanNumber(obj.improvement)}%</code> <b>mejora</b></li>
         <li title='Porcentaje de la ocurrencia de incencios explicada por el modelo'><code>${spanNumber(obj.cargaexplicativa)}%</code> <b>carga explicativa</b></li>
       </ul>
       <h2>Influencia de características</h2>
-      <table class='ordper'>
+      <table class='numbers dosDecimales'>
         <thead>
           <tr>
             <th title='Orden de importancia'><abbr title='Orden de importancia'>#</abbr></th>
@@ -517,7 +504,7 @@ $("#fSocialAnalisis").data("submitted", function(data, textStatus, jqXHR) {
 $("#resultado").bind("mouseenter", function() {
   if ($(".sidebar-contract").is(":visible")) return;
   var dv=$("#sidebar");
-  var tb=dv.find("#preTable:visible");
+  var tb=dv.find(".tableScroll:visible");
   if (tb.length==0) {
     dv.css("width", "");
     return;

@@ -184,37 +184,20 @@ body.showPopup > #popup {
   font-weight: 700;
   font-size: 1.2em;
 }
-table.ordper {
+table.numbers {
   white-space: nowrap;
 }
-table.ordper tr > * {
+table.numbers tr > * {
   text-align: right;
 }
-table.ordper tr > .txt {
+table.numbers tr > .txt {
   text-align: left;
-}
-table.ordper span.nm.dc0:after {
-  content: ".00"
-}
-
-table.ordper span.nm.dc1:after {
-  content: "0"
 }
 div.sidebar-pane code {
   font-size: 1.3em;
 }
-
 ul.big {
   font-size: 1.3em;
-}
-ul.rAnalisis span.dc0:after {
-  content: ".00"
-}
-ul.rAnalisis span.dc1:after {
-  content: "0"
-}
-ul.rAnalisis span.en1:before {
-  content: " "
 }
 
 a.aButton {
@@ -227,10 +210,11 @@ a.aButton button {
   font-weight: 700;
 }
 
-#resultado #preTable {
+.tableScroll {
   width: 100%;
   overflow-x: auto;
   display: block;
+  padding-left: 0.5px;
 }
 
 #sidebar:not(.collapsed).expanded{
@@ -324,4 +308,15 @@ fieldset.fOneField input[type=number] {
 .fLabelInput label {
   display: inline-block;
   min-width: 17em;
+}
+
+
+.dosDecimales span.nm.dc0:after {
+  content: ".00"
+}
+.dosDecimales span.nm.dc1:after {
+  content: "0"
+}
+.dosEnteros span.en1:before {
+  content: " "
 }
