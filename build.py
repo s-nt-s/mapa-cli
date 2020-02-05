@@ -128,6 +128,17 @@ def parse(html, *args, **kargv):
                 s_txt[o.attrs["value"]] = txt
         TXT[i.attrs["data-txt"]] = s_txt
 
+    for i in soup.select("span[data-txt]"):
+        txt = i.get_text().strip()
+        key = i.attrs["data-txt"]
+        key = key.strip().split(None, 1)
+        if len(key)==1:
+            TXT[key[0]]=txt
+        else:
+            obj = TXT.get(key[0], {})
+            obj[key[1]]=txt
+            TXT[key[0]] = obj
+
     for k, v in list(TXT.items()):
         if len(set(v.values()))==1:
             del TXT[k]

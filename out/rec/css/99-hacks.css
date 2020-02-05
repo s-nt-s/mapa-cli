@@ -13,3 +13,13 @@ th.transparente {
   border: none;
   background-color: white;
 }
+
+.prediccion li.annos_modelo {
+  display: none;
+}
+
+td .unidades {
+  display: inline-block;
+  min-width: 2em;
+  text-align: left;
+}

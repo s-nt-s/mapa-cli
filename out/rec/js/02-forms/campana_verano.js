@@ -1,7 +1,8 @@
 function getNivelTxt(n) {
-  if (n>1) return "muy alto";
-  if (n<0) return "bajo"
-  return "alto";
+  if (n==1) return "muy alto";
+  if (n==0) return "alto";
+  if (n==-1) return "bajo"
+  return "";
 }
 function getTargetUnidad(t, v) {
   if (v==1) {
@@ -22,11 +23,9 @@ function showResultado(html, label) {
   if (!$("#resultado .content").is(":visible")) i.click();
   $("#limpiar").show().find("a").show();
 }
-function getUnidades(p) {
-  return "";
-}
 
-function inputToHtml(obj) {
+function inputToHtml(obj, _class) {
+  if (!_class) _class='';
   var i, t, c, v;
   var zonas = obj.input.zona.map(function(k) { return TXT.zonas[k] })
   zonas = zonas.join(", ");
@@ -41,12 +40,12 @@ function inputToHtml(obj) {
   }
   var html=`
   <h2>Datos del entrenamiento</h2>
-  <ul>
+  <ul class='${_class}'>
     <li>Región: ${zonas}</li>
     <li>Target: ${TXT.capana_verano_target[obj.input.target]}</li>
     <li>Reg. Ridge (α): ${spanNumber(obj.alpha_ridge,2)}</li>
-    <li>Años modelo: ${mode}</li>
-    <li class='hide'>Años evaluciaón: ${evlu}</li>
+    <li class="annos_modelo">Años modelo: ${mode}</li>
+    <li>Años evaluciaón: ${evlu}</li>
     <li class='hide'>Predictores:
       <ul>
         ${pred}
@@ -63,8 +62,7 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (textStatus!="success") return false;
 
-    var i, c, p;
-    var cels=null;
+    var i, c, p, table, cels;
     var html="";
 
     html = html + `
@@ -92,8 +90,10 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
       cels.push(`<code>${spanNumber(obj.prediccion[i], 2)}</code>`);
       cels.push(`<code>${spanNumber(obj.valor_real[i], 2)}</code>`);
     }
-    html = html + buildTable("numbers"+(obj.input.target==0?" dosDecimales":""), 3, cels);
 
+    table = buildTable("numbers"+(obj.input.target==0?" dosDecimales":""), 3, cels);
+    table = table.replace("<thead>", "<thead><tr><th ></th><th colspan='2' style='text-align: center;'>"+getTargetUnidad(obj.input.target).toCapitalize()+"</th></tr>");
+    html = html + table;
 
     cels = [
       {"class":"txt", "txt": "Predictor"}, "Valor usado",
@@ -105,16 +105,16 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     for (c=0; c<obj.predictores.length;c++) {
       p = obj.predictores[c];
       cels.push(TXT.check_meteo_param[p]);
-      cels.push(`<code>${obj.input[p]}</code> <span class='unidades'>${getUnidades(p)}</span>`);
+      cels.push(`<code>${obj.input[p]}</code> <span class='unidades'>${TXT.unidad[p]}</span>`);
       for (i=0; i<obj.annos.length; i++) {
         cels.push(`<code>${spanNumber(obj.coeficientes[i][c], 2)}</code>`);
       }
     }
-    var table = buildTable("numbers dosDecimales tableScroll", row_size, cels);
-    table = table.replace("<thead>", "<thead><tr><th class='transparente' colspan='2'></th><th colspan='"+(obj.annos.length)+"' style='text-align: center;'>Coeficiente</th></tr>");
+    table = buildTable("numbers dosDecimales tableScroll", row_size, cels);
+    table = table.replace("<thead>", "<thead><tr><th colspan='2'></th><th colspan='"+(obj.annos.length)+"' style='text-align: center;'>Coeficiente</th></tr>");
     html = html + table;
 
-    html = html + inputToHtml(obj)
+    html = html + inputToHtml(obj, "analisis")
 
     showResultado(html, "Resultado análisis anual");
 
@@ -135,11 +135,11 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
     ];
     for (var [key, value] of Object.entries(obj.coeficientes)) {
       cels.push(TXT.check_meteo_param[key]);
-      cels.push(`<code>${obj.input[key]}</code> <span class='unidades'>${getUnidades(key)}</span>`);
+      cels.push(`<code>${obj.input[key]}</code> <span class='unidades'>${TXT.unidad[key]}</span>`);
       cels.push(`<code>${spanNumber(value, 2)}</code>`);
     }
     html = html + buildTable("numbers", 3, cels);
-    html = html + inputToHtml(obj);
+    html = html + inputToHtml(obj, "prediccion");
 
     html = html + "<p>Años del modelo y "+(obj.input.target==0?"las hectareas quemadas":"el número de incendios")+" en dicho año:</p>";
 

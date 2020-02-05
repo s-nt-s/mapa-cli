@@ -97,5 +97,19 @@ var TXT={
   "capana_verano_target": {
     "0": "Superficie quemada",
     "1": "N\u00famero de incendios"
+  },
+  "unidad": {
+    "tepri": "\u00b0C",
+    "prpri": "mm",
+    "temax": "\u00b0C",
+    "temed": "\u00b0C",
+    "tevar": "\u00b0C",
+    "vevie": "m/s",
+    "ravie": "m/s",
+    "prmax": "hPa",
+    "prmin": "hPa",
+    "hurel": "%",
+    "hrsol": "h",
+    "prmed": "mm"
   }
 };

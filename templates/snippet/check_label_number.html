@@ -9,4 +9,7 @@
 {% else %}
   <input type="number" name="{{id}}" id="{{id}}" value="" class="{{class}}" step="{{step or 1}}" style="width: {{width or 5}}em">
 {% endif %}
+{% if unidad is defined %}
+  <span data-txt="unidad {{id}}">{{unidad}}</span>
+{% endif %}
 <br/>

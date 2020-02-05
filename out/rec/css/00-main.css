@@ -214,7 +214,6 @@ a.aButton button {
   width: 100%;
   overflow-x: auto;
   display: block;
-  padding-left: 0.5px;
 }
 
 #sidebar:not(.collapsed).expanded{
@@ -307,7 +306,7 @@ fieldset.fOneField input[type=number] {
 }
 .fLabelInput label {
   display: inline-block;
-  min-width: 17em;
+  min-width: 16em;
 }
 
 
