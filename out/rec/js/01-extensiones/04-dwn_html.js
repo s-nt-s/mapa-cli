@@ -3,7 +3,7 @@ function html_to_md(elms, opt) {
   if (opt.level==null) opt.level=0;
   if (typeof elms == "string") elms = $("<div>"+elms+"</div>").find(">*");
   elms = elms.clone().not(".avoidMd");
-  elms.find(".avoidMd").add().remove();
+  elms.find(".avoidMd").remove();
   var i,c, d;
   var html='';
   elms.each(function(){
@@ -30,8 +30,8 @@ function html_to_md(elms, opt) {
       html = html + "\n";
       var wdt=null;
       var t = $(this);
-      var isOrdper = t.is(".ordper");
-      var alg = t.find(".txt").length>0;
+      var isDosDecimales = t.is(".dosDecimales");
+      var alg = t.find(".txt").length>0 || t.is(".numbers");
       var trs = t.find("tr");
       for (i=0; i<trs.length; i++) {
         var _wdt= trs.eq(i).find("td,th").map(function(j, e){return e.textContent.trim().length})
@@ -59,7 +59,7 @@ function html_to_md(elms, opt) {
         for (c=0;c<tds.length;c++) {
           var td = tds.eq(c);
           var txt = td.text().trim();
-          if (isOrdper && c==tds.length-1) {
+          if (isDosDecimales && c==tds.length-1) {
             if (td.find(".dc1").length) txt = txt + " ";
             else if (td.find(".dc0").length) txt = txt + "   ";
           }

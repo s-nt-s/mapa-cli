@@ -12,8 +12,21 @@ function getTargetUnidad(t, v) {
   if (t==0) return "hectáreas";
   return "incendios";
 }
-function showResultado(html, label) {
+function showResultado(html, label, descarga) {
   if (!html) html='';
+  if (descarga) {
+      var strAhora = getStrFecha();
+      var md = html_to_md(`<h1>${label} ${strAhora}</h1>${html}`);
+      md = md.replace(/℃/g, "*").replace(/°/g, "*").replace(/\s*\(α\)/g, "").replace(/\*CC/g, "*C");
+      var _md = btoa(toWin(md));
+      //var _csv = btoa(toWin(csv));
+      var strAhora = getPthFecha();
+      html = html + `
+      <p class='avoidDwn'>
+        <a class="aButton" download="${descarga}_${strAhora}.txt" href="data:text/plain;base64,`+_md+`" class="button"><button>Descargar resumen (txt)</button></a>
+      </p>
+      `;
+  }
   $("#loading").hide();
   $("#resultado .content").html(html);
   ieDownloadEvent();
@@ -46,7 +59,7 @@ function inputToHtml(obj, _class) {
     <li>Reg. Ridge (α): ${spanNumber(obj.alpha_ridge,2)}</li>
     <li class="annos_modelo">Años modelo: ${mode}</li>
     <li>Años evaluciaón: ${evlu}</li>
-    <li class='hide'>Predictores:
+    <li class='hide avoidMd'>Predictores:
       <ul>
         ${pred}
       </ul>
@@ -56,6 +69,37 @@ function inputToHtml(obj, _class) {
   html = html.replace(/^.*\bnull\b.*$/gm, "");
   return html;
 }
+
+$(document).ready(function() {
+  $("button[name='set_meteo_param_val']").click(function(){
+    var t=$(this).closest("form");
+    var z=t.find("select[name='zona[]']").val();
+    var isSpain=(z.length==1)?(z[0]=="ESP"):false;
+    var obj={}
+    var v, k;
+    for (const [key, value] of Object.entries(meta_info["ultimo_meteo"])) {
+      if (isSpain || z.includes(key)) {
+        for (const [prm, val] of Object.entries(value)) {
+          v = obj[prm] || [];
+          v.push(val);
+          obj[prm] = v;
+        }
+      }
+    }
+    var _getSum = function getSum(total, num) {return total + num;}
+    for (const [key, value] of Object.entries(obj)) {
+      k = PARAMS_SERVER_CLIENT[key] || key;
+      v = value.reduce(_getSum, 0) / value.length;
+      v = Math.round(v*100)/100;
+      obj[k] = v;
+    }
+    t.find(".meteo_predictores input[type=number]").each(function(){
+      var e=$(this);
+      var v = obj[e.attr("name")];
+      if (v!=null) e.val(v);
+    })
+  })
+});
 
 
 ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
@@ -92,7 +136,7 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     }
 
     table = buildTable("numbers"+(obj.input.target==0?" dosDecimales":""), 3, cels);
-    table = table.replace("<thead>", "<thead><tr><th ></th><th colspan='2' style='text-align: center;'>"+getTargetUnidad(obj.input.target).toCapitalize()+"</th></tr>");
+    table = table.replace("<thead>", "<thead><tr class='avoidMd'><th></th><th colspan='2' style='text-align: center;'>"+getTargetUnidad(obj.input.target).toCapitalize()+"</th></tr>");
     html = html + table;
 
     cels = [
@@ -111,12 +155,12 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
       }
     }
     table = buildTable("numbers dosDecimales tableScroll", row_size, cels);
-    table = table.replace("<thead>", "<thead><tr><th colspan='2'></th><th colspan='"+(obj.annos.length)+"' style='text-align: center;'>Coeficiente</th></tr>");
+    table = table.replace("<thead>", "<thead><tr class='avoidMd'><th colspan='2'></th><th colspan='"+(obj.annos.length)+"' style='text-align: center;'>Coeficiente</th></tr>");
     html = html + table;
 
     html = html + inputToHtml(obj, "analisis")
 
-    showResultado(html, "Resultado análisis anual");
+    showResultado(html, "Resultado análisis anual", "analisis");
 
     return true
 }
@@ -152,7 +196,8 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
     }
     html = html + buildTable("numbers", 2, cels);
 
-    showResultado(html, "Resultado predicción anual");
+
+    showResultado(html, "Resultado predicción anual", "prediccion");
 
     return true;
 }
