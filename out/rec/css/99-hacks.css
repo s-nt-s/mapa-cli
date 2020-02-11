@@ -23,3 +23,7 @@ td .unidades {
   min-width: 2em;
   text-align: left;
 }
+
+div.canvas_wrapper {
+  /*max-height: 500px;*/
+}

@@ -70,6 +70,46 @@ function inputToHtml(obj, _class) {
   return html;
 }
 
+function reorderAnalisisChart(btn) {
+  btn = $(btn);
+  var myChart = $("#myChart").data("chart");
+  var points=[];
+  var i;
+  for (i=0; i<myChart.data.labels.length; i++) {
+    points.push({
+        "label": myChart.data.labels[i],
+        "predi": myChart.data.datasets[0].data[i],
+        "varel": myChart.data.datasets[1].data[i]
+    })
+  }
+  var _text = null;
+  var _sort = null;
+  if (btn.data("order")) {
+    _sort = function(a, b) {
+      var x = a.varel - b.varel;
+      if (x!=0) return -x;
+      return a.label - b.label;
+    }
+    _text = "Ordenar por año";
+  } else {
+    _sort = function(a, b) {
+      return a.label - b.label;
+    }
+    _text = "Ordenar por valor real";
+  }
+  points = points.sort(_sort);
+  var p;
+  for (i=0; i<points.length; i++) {
+    p = points[i];
+    myChart.data.labels[i] = p.label;
+    myChart.data.datasets[0].data[i] = p.predi;
+    myChart.data.datasets[1].data[i] = p.varel;
+  }
+  myChart.update();
+  btn.text(_text);
+  btn.data("order", !btn.data("order"))
+}
+
 $(document).ready(function() {
   $("button[name='set_meteo_param_val']").click(function(){
     var t=$(this).closest("form");
@@ -106,7 +146,7 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (textStatus!="success") return false;
 
-    var i, c, p, table, cels;
+    var i, c, p, table, cels, v;
     var html="";
 
     html = html + `
@@ -116,6 +156,9 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
         <li title=''><code>${spanNumber(obj.mae, 2)}</code> <b>error medio</b></li>
         <li title='Porcentaje explicado por el modelo'><code>${spanNumber(obj.cargaexplicativa, 2)}%</code> <b>carga explicativa</b></li>
       </ul>
+    `;
+    if (obj.pvalor != null) {
+    html = html + `
       <h2>Acierto relativo</h2>
       <ul class='big dosEnteros dosDecimales'>
         <li title=''><code>${spanNumber(obj.spearman, 2)}</code> <b>spearman</b></li>
@@ -123,21 +166,37 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
         <li title=''>Nivel de significancia ${getNivelTxt(obj.nivel_significativo)}</li>
       </ul>
     `;
+    }
 
     html = html + "<h2>Predicción vs realidad</h2>"
 
     cels = [
       "Año", "Predicción", "Valor real"
     ];
+    var prediccion=[];
+    var valor_real=[];
+    var max_value=obj.prediccion[0];
+    var min_value=obj.prediccion[0];
     for (i=0; i<obj.annos.length; i++) {
+      p = Math.round(obj.prediccion[i]*100)/100
+      v = Math.round(obj.valor_real[i]*100)/100;
+      max_value = Math.max(max_value, p, v);
+      min_value = Math.min(min_value, p, v);
+      prediccion.push(p);
+      valor_real.push(v);
       cels.push(obj.annos[i]);
       cels.push(`<code>${spanNumber(obj.prediccion[i], 2)}</code>`);
       cels.push(`<code>${spanNumber(obj.valor_real[i], 2)}</code>`);
     }
 
     table = buildTable("numbers"+(obj.input.target==0?" dosDecimales":""), 3, cels);
-    table = table.replace("<thead>", "<thead><tr class='avoidMd'><th></th><th colspan='2' style='text-align: center;'>"+getTargetUnidad(obj.input.target).toCapitalize()+"</th></tr>");
-    html = html + table;
+    table = table.replace("<thead>", "<thead><tr><th></th><th colspan='2' style='text-align: center;'>"+getTargetUnidad(obj.input.target).toCapitalize()+"</th></tr>");
+    html = html + table + `
+      <div class="canvas_wrapper">
+        <canvas id="myChart"></canvas>
+      </div>
+      <button onclick="reorderAnalisisChart(this)" data-order="1">Ordenar por valor real</button>
+    `;
 
     cels = [
       {"class":"txt", "txt": "Predictor"}, "Valor usado",
@@ -155,13 +214,69 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
       }
     }
     table = buildTable("numbers dosDecimales tableScroll", row_size, cels);
-    table = table.replace("<thead>", "<thead><tr class='avoidMd'><th colspan='2'></th><th colspan='"+(obj.annos.length)+"' style='text-align: center;'>Coeficiente</th></tr>");
+    table = table.replace("<thead>", "<thead><tr><th colspan='2'></th><th colspan='"+(obj.annos.length)+"' style='text-align: center;'>Coeficiente</th></tr>");
     html = html + table;
 
     html = html + inputToHtml(obj, "analisis")
 
     showResultado(html, "Resultado análisis anual", "analisis");
 
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var dat = {
+        type: 'bar',
+        data: {
+            labels: obj.annos,
+            datasets: [{
+                label: "Predicción",
+                data: prediccion,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            },{
+                label: "Valor real",
+                data: valor_real,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+  					title: {
+  						display: true,
+  						text: getTargetUnidad(obj.input.target).toCapitalize()
+  					},
+  					tooltips: {
+  						mode: 'index',
+  						intersect: false
+  					},
+  					responsive: true,
+  					scales: {
+  						xAxes: [{
+  							stacked: true,
+  						}],
+  						yAxes: [{
+                ticks: {
+                    /*max: Math.ceil(max_value),*/
+                    beginAtZero: true
+                }
+  						}]
+  					},
+            onResize: function(ch, sz)  {
+              var div = $(ch.canvas).closest("div.canvas_wrapper");
+              if (div.length == 0) return;
+              var max_height = $("#sidebar").height() - 300;
+              if (sz.height>max_height) {
+                var ratio = sz.width / sz.height;
+                var max_width = max_height * ratio;
+                div.css("width", max_width+"px");
+              }
+              else div.css("width", "");
+            }
+  			}
+    };
+    var myChart = new Chart(ctx, dat);
+    myChart.options.scales.yAxes[0].ticks.max = myChart.scales["y-axis-0"].max;
+    $("#myChart").data("chart", myChart);
     return true
 }
 ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
@@ -182,7 +297,7 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
       cels.push(`<code>${obj.input[key]}</code> <span class='unidades'>${TXT.unidad[key]}</span>`);
       cels.push(`<code>${spanNumber(value, 2)}</code>`);
     }
-    html = html + buildTable("numbers", 3, cels);
+    html = html + buildTable("numbers dosDecimales", 3, cels);
     html = html + inputToHtml(obj, "prediccion");
 
     html = html + "<p>Años del modelo y "+(obj.input.target==0?"las hectareas quemadas":"el número de incendios")+" en dicho año:</p>";

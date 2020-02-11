@@ -4,7 +4,7 @@ function html_to_md(elms, opt) {
   if (typeof elms == "string") elms = $("<div>"+elms+"</div>").find(">*");
   elms = elms.clone().not(".avoidMd");
   elms.find(".avoidMd").remove();
-  var i,c, d;
+  var i,c,d,j;
   var html='';
   elms.each(function(){
     html = html + "\n";
@@ -30,11 +30,19 @@ function html_to_md(elms, opt) {
       html = html + "\n";
       var wdt=null;
       var t = $(this);
-      var isDosDecimales = t.is(".dosDecimales");
+      if (t.is(".dosDecimales")) {
+        t.find(".dc1").each(function(){
+          this.textContent = this.textContent.trim()+"_";
+        })
+        t.find(".dc0").each(function(){
+          this.textContent = this.textContent.trim()+"___";
+        })
+      }
       var alg = t.find(".txt").length>0 || t.is(".numbers");
       var trs = t.find("tr");
-      for (i=0; i<trs.length; i++) {
-        var _wdt= trs.eq(i).find("td,th").map(function(j, e){return e.textContent.trim().length})
+      var _tr = trs.filter(function(){return $(this).find("*[colspan]").length==0});
+      for (i=0; i<_tr.length; i++) {
+        var _wdt= _tr.eq(i).find("td,th").map(function(j, e){return e.textContent.trim().length})
         if (!wdt) wdt=_wdt;
         else {
           for (c=0;c<wdt.length;c++) wdt[c]=Math.max(wdt[c],_wdt[c]);
@@ -56,22 +64,29 @@ function html_to_md(elms, opt) {
           }
           html = html + "\n|";
         }
+        var desfase = 0;
         for (c=0;c<tds.length;c++) {
           var td = tds.eq(c);
           var txt = td.text().trim();
-          if (isDosDecimales && c==tds.length-1) {
-            if (td.find(".dc1").length) txt = txt + " ";
-            else if (td.find(".dc0").length) txt = txt + "   ";
+          var td_wdt=wdt[desfase+c];
+          var colspan = parseInt(td.attr("colspan"));
+          if (!isNaN(colspan) && colspan>1) {
+            for(j=1; j<colspan; j++) td_wdt = td_wdt + wdt[c+j]+3;
+            desfase = desfase + colspan -1;
           }
-          while (txt.length<wdt[c]) {
-            if (alg && !td.is(".txt")) txt = " "+txt;
-            else txt = txt+" ";
+          while (txt.length<td_wdt) {
+            if (td.css("text-align") == "center") {
+              if (txt.length % 2) txt = " "+txt;
+              else txt = txt+" ";
+            } else {
+              if (alg && !td.is(".txt")) txt = " "+txt;
+              else txt = txt+" ";
+            }
           }
-          html = html + " " + txt+" |";
+          html = html + " " + txt.replace("_", " ")+" |";
         }
         html = html + "\n";
       }
-
       html = html + "\n";
     }
   })
