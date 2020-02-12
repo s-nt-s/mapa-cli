@@ -70,45 +70,52 @@ function inputToHtml(obj, _class) {
   return html;
 }
 
+function datoToPoints() {
+  var data = arguments[0].data;
+  var points=[];
+  var i, c, point;
+  for (i=0; i<data.labels.length; i++) {
+    point = {"label":data.labels[i]};
+    for (c=1; c<arguments.length; c++) {
+      point[arguments[c]] = data.datasets[c-1].data[i];
+    }
+    points.push(point)
+  }
+  return points;
+}
+
+function pointToData(points) {
+  var data={}
+  var k, i, p;
+  for (k in points[0]) data[k]=[];
+  for (i=0;i<points.length;i++) {
+    p=points[i];
+    for (k in p) {
+      data[k].push(p[k]);
+    }
+  }
+  return data;
+}
+
 function reorderAnalisisChart(btn) {
   btn = $(btn);
   btn.prop("disabled", true);
   var myChart = $("#myChart").data("chart");
-  var points=[];
-  var i;
-  for (i=0; i<myChart.data.labels.length; i++) {
-    points.push({
-        "label": myChart.data.labels[i],
-        "predi": myChart.data.datasets[0].data[i],
-        "varel": myChart.data.datasets[1].data[i]
-    })
-  }
   var _text = null;
-  var _sort = null;
-  if (btn.data("order")) {
-    _sort = function(a, b) {
-      var x = a.varel - b.varel;
-      if (x!=0) return -x;
-      return a.label - b.label;
-    }
+  var _ordr = btn.data("order");
+  if (_ordr) {
     _text = "Ordenar por año";
+    _ordr = myChart.options.data_order[_ordr];
   } else {
-    _sort = function(a, b) {
-      return a.label - b.label;
-    }
     _text = "Ordenar por valor real";
+    _ordr = myChart.options.data_order[_ordr];
   }
-  points = points.sort(_sort);
-  var p;
-  for (i=0; i<points.length; i++) {
-    p = points[i];
-    myChart.data.labels[i] = p.label;
-    myChart.data.datasets[0].data[i] = p.predi;
-    myChart.data.datasets[1].data[i] = p.varel;
-  }
+  myChart.data.labels = _ordr.label;
+  myChart.data.datasets[0].data = _ordr.predi;
+  myChart.data.datasets[1].data = _ordr.varel;
   myChart.update();
   btn.text(_text);
-  btn.data("order", !btn.data("order"));
+  btn.data("order", (btn.data("order") + 1) % 2);
   btn.prop("disabled", false);
 }
 
@@ -278,6 +285,15 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     };
     var myChart = new Chart(ctx, dat);
     myChart.options.scales.yAxes[0].ticks.max = myChart.scales["y-axis-0"].max;
+    var points = datoToPoints(myChart, "predi", "varel");
+    myChart.options.data_order = [
+      pointToData(points.sort(function(a, b) {return a.label - b.label;})),
+      pointToData(points.sort(function(a, b) {
+        var x = a.varel - b.varel;
+        if (x!=0) return -x;
+        return a.label - b.label;
+      }))
+    ]
     $("#myChart").data("chart", myChart);
     return true
 }
