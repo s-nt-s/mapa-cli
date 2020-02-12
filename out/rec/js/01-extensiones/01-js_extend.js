@@ -28,6 +28,28 @@ Array.prototype.diff = function(o) {
   return arr;
 }
 
+function toUrl(url, txt, title) {
+  var s_url=url.split(/:\/\//)[1];
+  if (!txt) txt = s_url;
+  if (title==null) title = " title='"+s_url+"'";
+  return `<a href="${url}"${title}>${txt}</a>`;
+}
+
+function setIfNull(e, a, v) {
+	if (v && !e.attr(a)) e.attr(a, v);
+}
+
+function set_max(selector, maximum, value, placeholder) {
+  var es = $(selector);
+  var i,e;
+  for (i=0;i<es.length;i++) {
+    e = es.eq(i);
+    setIfNull(e, "placeholder", placeholder);
+    setIfNull(e, "value", value);
+    setIfNull(e, "max", maximum);
+  }
+}
+
 function getStrFecha(dt) {
   if (dt==null) dt = new Date();
   var s = dt.toLocaleDateString("es-ES", {month: '2-digit', year: 'numeric', day: '2-digit', hour:'2-digit',minute:'2-digit'});

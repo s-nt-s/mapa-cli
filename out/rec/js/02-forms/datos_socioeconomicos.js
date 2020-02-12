@@ -1,24 +1,3 @@
-var now=new Date();
-var currentYear=now.getFullYear();
-var mymap;
-var layers={}
-var marcas=null;
-var _debug_mode=false;
-
-var myweb = window.location.href;
-myweb = myweb.substr(document.location.protocol.length+2)
-if (myweb.endsWith("/")) myweb = myweb.substr(0, myweb.length-1);
-
-var sidebar_observer = new MutationObserver(function(mutations) {
-  mutations.forEach(function(mutation) {
-    if (mutation.attributeName === "class") {
-      elem = $(mutation.target);
-      if (elem.is(".collapsed")) elem.removeClass("expanded");
-      if (elem.is(".expanded")) elem.css("width", "");
-    }
-  });
-});
-
 function riesgoTxt(v) {
   if (v==0) return "bajo";
   if (v==1) return "medio";
@@ -26,139 +5,13 @@ function riesgoTxt(v) {
   if (v==3) return "muy alto";
 }
 
-function toUrl(url, txt, title) {
-  var s_url=url.split(/:\/\//)[1];
-  if (!txt) txt = s_url;
-  if (title==null) title = " title='"+s_url+"'";
-  return `<a href="${url}"${title}>${txt}</a>`;
-}
 
-function setIfNull(e, a, v) {
-	if (v && !e.attr(a)) e.attr(a, v);
-}
-
-function set_max(selector, maximum, value, placeholder) {
-  var es = $(selector);
-  var i,e;
-  for (i=0;i<es.length;i++) {
-    e = es.eq(i);
-    setIfNull(e, "placeholder", placeholder);
-    setIfNull(e, "value", value);
-    setIfNull(e, "max", maximum);
-  }
-}
-
-function selectProvincia(e) {
-  e.originalEvent.preventDefault();
-  e.originalEvent.stopPropagation();
-  e.originalEvent.stopImmediatePropagation();
-  var p = e.layer.feature.geometry.properties;
-  var zonas = $("select[name='zona[]']").eq(0);
-  var selected=p.i && zonas.val().indexOf(p.i)>=0;
-  selected = !selected;
-  if (selected) {
-    zonas.find("option[value='"+p.i+"']").prop("selected", true);
-  } else {
-    zonas.find("option[value='"+p.i+"']").prop("selected", false);
-  }
-  zonas.change();
-}
-
-function layerProvincias(old) {
-  var ly = L.geoJSON(geoprovincias, {
-      style: function(f, l) {
-        var fp = f.properties;
-        var gp = f.geometry.properties;
-        var selected=gp.i && $("select[name='zona[]']:eq(0)").val().indexOf(gp.i)>=0;
-        var color=(selected)?"blue":"green";
-        return {
-          "color": color,
-          "weight": 5,
-          "opacity": 0.10
-        }
-      },
-      onEachFeature: function(f, l) {
-        l.bindTooltip(f.properties.n);
-      }
-    }
-  );
-  ly.on({
-    mouseover: function(e) {
-      e.layer.setStyle({opacity: 1});
-    },
-    mouseout: function(e) {
-      layers.provincias.resetStyle(e.layer);
-    },
-    click: function(e){
-      var ctrl = (e && e.originalEvent && e.originalEvent.ctrlKey);
-      if (ctrl) {
-        selectProvincia.apply(this, arguments);
-        return;
-      }
-      e.originalEvent.preventDefault();
-      e.originalEvent.stopPropagation();
-      e.originalEvent.stopImmediatePropagation();
-      var p = e.layer.feature.geometry.properties;
-      var zonas = $("select[name='zona[]']").eq(0);
-      var selected=p.i && zonas.val().indexOf(p.i)>=0;
-      selected = !selected;
-      zonas.find("option").prop("selected", false);
-      if (selected) {
-        zonas.find("option[value='"+p.i+"']").prop("selected", true);
-      }
-      zonas.change();
-    },
-    contextmenu: function(e) {
-      selectProvincia.apply(this, arguments);
-    }
-  });
-  ly.selected=[];
-  layers.provincias=ly;
-  return ly;
-}
-
-function centerMap(ly) {
-  var bounds = (ly || layers.provincias).getBounds();
-  if (Object.keys(bounds).length) {
-    var bottom = Math.floor($(".leaflet-bottom.leaflet-right").height());
-    var left = Math.floor($("#sidebar").width()/3);
-    var opt = {"paddingTopLeft": [left, 0], "paddingBottomRight": [bottom, bottom]};
-    //alert(JSON.stringify(opt, null, 2));
-    mymap.fitBounds(bounds, opt);
-  }
-  else mymap.setView([40.4165000, -3.7025600], 6)
-}
-
-$(document).ready(function() {
-/** INI READY **/
-// $(".sidebar-pane").each(function(){
-//   observer.observe(this, {attributes: true});
-// });
-sidebar_observer.observe(document.getElementById("sidebar"), {attributes: true});
-mymap = L.map("map");
-L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoiZGF0YWlhIiwiYSI6ImNrNWdmazA4bjA2cGczanBib2F4MDNxd3EifQ.ScOIk2EYiQ9qYWBWJmjB2w'
-}).addTo(mymap);
-mymap.addLayer(layerProvincias());
-centerMap();
-L.control.sidebar('sidebar').addTo(mymap);
-
-// maximum, value, placeholder
-set_max(".ttEnd,.prTest,.yEnd", meta_info["p4_year"], meta_info["egif_year"], meta_info["egif_year"]);
-set_max(".prEnd,.yBgn", meta_info["p4_year"]-1, meta_info["egif_year"]-1, meta_info["egif_year"]-1);
-set_max(".prBng", meta_info["p4_year"]-2);
-if (meta_info["p4_year"]>meta_info["egif_year"]) {
-	$(".fTemporal,.dbToda,.dbPersonalizada,.meteo_modelo_years")
-  .append("<p class='egifWarning'>(*) Tenga en cuenta que solo hay datos EGIF consolidados hasta "+meta_info["egif_year"]+", por lo tanto, cualquier rango que supere ese año trabajará con datos incompletos.</p>")
-  .change();
-}
-$("#fSocialPrediccion").data("submitted", function(data, textStatus, jqXHR) {
+ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
+    ON_ENDPOINT["predecir"]=ON_ENDPOINT["__predecir"];
     var obj = data;//.status?objForm(form):data;
     if (textStatus!="success") return false;
     this.form.find("input[type=submit]").attr("disabled", true).val("Renderizando...");
+    //$("#resultado .ld_footer").removeClass("hide").text("Renderizando");
     if (layers.municipios) mymap.removeLayer(layers.municipios);
     layers.municipios={"riesgos":data}
     TXT["municipios"]={}
@@ -407,9 +260,27 @@ Incendios;${obj.inc_usados}
     if (!$("#resultado .content").is(":visible")) i.click();
 
     $("#limpiar").show().find("a").show();
+    restoreForm(this.form);
     return true;
-})
-$("#fSocialAnalisis").data("submitted", function(data, textStatus, jqXHR) {
+}
+ON_ENDPOINT["predecir"]=function(data, textStatus, jqXHR) {
+  if (typeof geomunicipios != "undefined") {
+    return ON_ENDPOINT["__predecir"].apply(this, arguments);
+  }
+  //$("#resultado .ld_footer").removeClass("hide").text("Renderizando");
+  $.ajax({
+    url: myroot+"/geo/municipios.js",
+    dataType: "script",
+    cache: true,
+    origin: [this, arguments],
+    success: function() {
+      return ON_ENDPOINT["__predecir"].apply(this.origin[0], this.origin[1]);
+    }
+  });
+  return true;
+}
+
+ON_ENDPOINT["analisis"]=function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (typeof obj == "object") {
       var html = `<ul class='big dosEnteros dosDecimales'>
@@ -500,80 +371,4 @@ $("#fSocialAnalisis").data("submitted", function(data, textStatus, jqXHR) {
     var i = $("#iResultado").show().find("i");
     if (!$("#resultado .content").is(":visible")) i.click();
     return true;
-});
-$("#resultado").bind("mouseenter", function() {
-  if ($(".sidebar-contract").is(":visible")) return;
-  var dv=$("#sidebar");
-  var tb=dv.find(".tableScroll:visible");
-  if (tb.length==0) {
-    dv.css("width", "");
-    return;
-  }
-  var wd = Math.max(tb.width(), tb[0].scrollWidth);
-  var wR = dv.find("#resultado").width();
-  if (wd<=wR) {
-    dv.css("width", "");
-    return;
-  }
-  wd = wd + (dv.width()-wR)+15;
-  wd = Math.min(wd, $("body").innerWidth()-30);
-  if (wd<=dv.width()) {
-    dv.css("width", "");
-    return;
-  }
-  dv.css("width", wd);
-}).bind("mouseleave", function() {
-  if ($(".sidebar-contract").is(":visible")) return;
-  $("#sidebar").css("width", "");
-});
-$(".sidebar-close").click(function(){
-  $("#sidebar").removeClass("expanded");
-})
-
-$("select[name='zona[]']").change(function(){
-  var aVals=$(this).val();
-  var other=$("select[name='zona[]']").not(this);
-  var bVals=other.eq(0).val();
-  other.val(aVals);
-  var df = aVals.diff(bVals);
-  layers.provincias.eachLayer(function(l){
-    var p = l.feature.geometry.properties;
-    if (p.i && df.indexOf(p.i)>=0) {
-      layers.provincias.resetStyle(l);
-    }
-  })
-})
-
-$("select[name='zona[]'],select.oneGroup").change();
-$("button.cerrar").click(function(){
-    $("body").removeClass("showPopup");
-});
-
-
-$("#limpiar a").bind("click", function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    $("#limpiar").hide();
-    var rst = $("#iResultado");
-    if (rst.is(".active")) rst.find("i").click();
-    rst.hide();
-    if (layers.municipios) mymap.removeLayer(layers.municipios);
-    if (layers.provincias) mymap.removeLayer(layers.provincias)
-    mymap.addLayer(layerProvincias(layers.provincias));
-    centerMap();
-    return false;
-})
-
-$(".sidebar-expand").click(function(){
-  var dv=$("#sidebar");
-  dv.addClass("expanded");
-})
-
-$(".sidebar-contract").click(function(){
-  var dv=$("#sidebar");
-  dv.removeClass("expanded");
-})
-
-/** FIN READY **/
-})
+}

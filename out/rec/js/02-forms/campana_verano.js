@@ -72,6 +72,7 @@ function inputToHtml(obj, _class) {
 
 function reorderAnalisisChart(btn) {
   btn = $(btn);
+  btn.prop("disabled", true);
   var myChart = $("#myChart").data("chart");
   var points=[];
   var i;
@@ -107,7 +108,8 @@ function reorderAnalisisChart(btn) {
   }
   myChart.update();
   btn.text(_text);
-  btn.data("order", !btn.data("order"))
+  btn.data("order", !btn.data("order"));
+  btn.prop("disabled", false);
 }
 
 $(document).ready(function() {

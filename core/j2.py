@@ -41,9 +41,6 @@ class Jnj2():
         if parse:
             html = parse(html, **kwargs)
             html = str(html)
-        if self.post:
-            html = self.post(html, **kwargs)
-            html = str(html)
 
         if self.javascript or self.css:
             soup = bs4.BeautifulSoup(html, 'lxml')
@@ -60,6 +57,10 @@ class Jnj2():
                 if r.attrs.get("data-autoinsert"):
                     r.extract()
             html = str(soup)
+
+        if self.post:
+            html = self.post(html, **kwargs)
+            html = str(html)
 
         destino = self.destino + destino
         directorio = os.path.dirname(destino)

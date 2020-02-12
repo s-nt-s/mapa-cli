@@ -1,3 +1,13 @@
+var sidebar_observer = new MutationObserver(function(mutations) {
+  mutations.forEach(function(mutation) {
+    if (mutation.attributeName === "class") {
+      elem = $(mutation.target);
+      if (elem.is(".collapsed")) elem.removeClass("expanded");
+      if (elem.is(".expanded")) elem.css("width", "");
+    }
+  });
+});
+
 function joinJQ(arr) {
   var i;
   var c = arr[0];
@@ -39,6 +49,59 @@ function showhide(ok, ko, root) {
 }
 
 $(document).ready(function(){
+  /** SIDEBAR */
+  sidebar_observer.observe(document.getElementById("sidebar"), {attributes: true});
+  $(".sidebar-expand").click(function(){
+    var dv=$("#sidebar");
+    dv.addClass("expanded");
+  });
+  $(".sidebar-contract").click(function(){
+    var dv=$("#sidebar");
+    dv.removeClass("expanded");
+  });
+  $("#resultado").bind("mouseenter", function() {
+    if ($(".sidebar-contract").is(":visible")) return;
+    var dv=$("#sidebar");
+    var tb=dv.find(".tableScroll:visible");
+    if (tb.length==0) {
+      dv.css("width", "");
+      return;
+    }
+    var wd = Math.max(tb.width(), tb[0].scrollWidth);
+    var wR = dv.find("#resultado").width();
+    if (wd<=wR) {
+      dv.css("width", "");
+      return;
+    }
+    wd = wd + (dv.width()-wR)+15;
+    wd = Math.min(wd, $("body").innerWidth()-30);
+    if (wd<=dv.width()) {
+      dv.css("width", "");
+      return;
+    }
+    dv.css("width", wd);
+  }).bind("mouseleave", function() {
+    if ($(".sidebar-contract").is(":visible")) return;
+    $("#sidebar").css("width", "");
+  });
+  $(".sidebar-close").click(function(){
+    $("#sidebar").removeClass("expanded");
+  })
+  $("#limpiar a").bind("click", function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      $("#limpiar").hide();
+      var rst = $("#iResultado");
+      if (rst.is(".active")) rst.find("i").click();
+      rst.hide();
+      if (layers.municipios) mymap.removeLayer(layers.municipios);
+      if (layers.provincias) mymap.removeLayer(layers.provincias)
+      mymap.addLayer(layerProvincias(layers.provincias));
+      centerMap();
+      return false;
+  })
+  /* ONCHANGE */
   var fCg = [];
   var eq = $("*[data-show],*[data-hide]").each(function(){
     var t=$(this);
@@ -219,4 +282,13 @@ $(document).ready(function(){
     t.data("slc", t.val());
   });
   joinJQ(fCg).change();
+  /* VALUES */
+  set_max(".ttEnd,.prTest,.yEnd", meta_info["p4_year"], meta_info["egif_year"], meta_info["egif_year"]);
+  set_max(".prEnd,.yBgn", meta_info["p4_year"]-1, meta_info["egif_year"]-1, meta_info["egif_year"]-1);
+  set_max(".prBng", meta_info["p4_year"]-2);
+  if (meta_info["p4_year"]>meta_info["egif_year"]) {
+  	$(".fTemporal,.dbToda,.dbPersonalizada,.meteo_modelo_years")
+    .append("<p class='egifWarning'>(*) Tenga en cuenta que solo hay datos EGIF consolidados hasta "+meta_info["egif_year"]+", por lo tanto, cualquier rango que supere ese año trabajará con datos incompletos.</p>")
+    .change();
+  }
 })

@@ -25,6 +25,7 @@ $(document).ready(function(){
       if (this.__submited) $(this.__submited).val("Cargando...");
       else sb.val("Cargando...");
       var resultado=$("#resultado");
+      //resultado.find(".ld_footer").addClass("hide").text("");
       resultado.find(".content").html("");
       resultado.find("#loading").show();
       var tResultado = $("#tResultado");
@@ -66,13 +67,17 @@ $(document).ready(function(){
             var my_event = getFormEvent.apply(this, arguments);
             if (my_event) my_event.apply(this, arguments);
 
-            var btn = this.form.find("input[type=submit]");
-            btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
+            restoreForm(this.form);
         }
       };
       my_ajax(_url, settings);
   });
 });
+
+function restoreForm(form) {
+  var btn = form.find("input[type=submit]");
+  btn.prop("disabled", false).each(function(){this.value=$(this).data("defval");});
+}
 
 function getFormEvent() {
   var my_event = this.form.data("submitted")
