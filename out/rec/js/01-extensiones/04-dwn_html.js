@@ -83,7 +83,7 @@ function html_to_md(elms, opt) {
               else txt = txt+" ";
             }
           }
-          html = html + " " + txt.replace("_", " ")+" |";
+          html = html + " " + txt.replace(/_/g, " ")+" |";
         }
         html = html + "\n";
       }

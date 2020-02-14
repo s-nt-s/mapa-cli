@@ -1,3 +1,55 @@
+function setBarChar(id, title, labels, dataset) {
+    var elem = document.getElementById(id)
+    var ctx = elem.getContext('2d');
+    var dat = {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: dataset
+        },
+        options: {
+            title: {
+              display: title!=null,
+              text: title,
+            },
+            tooltips: {
+              mode: 'index',
+              intersect: false
+            },
+            responsive: true,
+            scales: {
+              xAxes: [{
+                stacked: true,
+              }],
+              yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+              }]
+            },
+            onResize: function(ch, sz)  {
+              var div = $(ch.canvas).closest("div.canvas_wrapper");
+              if (div.length == 0) return;
+              var max_height = $("#sidebar").height() - 300;
+              if (sz.height>max_height) {
+                var ratio = sz.width / sz.height;
+                var max_width = max_height * ratio;
+                div.css("width", max_width+"px");
+              }
+              else div.css("width", "");
+            }
+        }
+    };
+    var i;
+    for (i=0; i<dataset.length && !dat.options.legend;i++) {
+      if (dataset[i].label==null) dat.options.legend={display:false};
+    }
+    var myChart = new Chart(ctx, dat);
+    if (dataset.length>1) myChart.options.scales.yAxes[0].ticks.max = myChart.scales["y-axis-0"].max;
+    $(elem).data("chart", myChart);
+    return myChart;
+}
+
 function getNivelTxt(n) {
   if (n==1) return "muy alto";
   if (n==0) return "alto";
@@ -72,12 +124,19 @@ function inputToHtml(obj, _class) {
 
 function datoToPoints() {
   var data = arguments[0].data;
+
+  var backgroundColor, borderColor;
   var points=[];
-  var i, c, point;
+  var i, c, point, field;
   for (i=0; i<data.labels.length; i++) {
     point = {"label":data.labels[i]};
     for (c=1; c<arguments.length; c++) {
-      point[arguments[c]] = data.datasets[c-1].data[i];
+      field = arguments[c];
+      point[field] = data.datasets[c-1].data[i];
+      backgroundColor = data.datasets[c-1].backgroundColor;
+      borderColor = data.datasets[c-1].borderColor;
+      if (Array.isArray(backgroundColor)) point[field+"_backgroundColor"] = backgroundColor[i];
+      if (Array.isArray(borderColor)) point[field+"_borderColor"] = borderColor[i];
     }
     points.push(point)
   }
@@ -97,8 +156,13 @@ function pointToData(points) {
   return data;
 }
 
-function reorderAnalisisChart(btn) {
+function reorderVeranoChart(btn) {
   btn = $(btn);
+  var defTxt = btn.data("deftxt");
+  if (!defTxt) {
+    defTxt = btn.text().trim()
+    btn.data("deftxt", defTxt);
+  }
   btn.prop("disabled", true);
   var myChart = $("#myChart").data("chart");
   var _text = null;
@@ -107,12 +171,24 @@ function reorderAnalisisChart(btn) {
     _text = "Ordenar por año";
     _ordr = myChart.options.data_order[_ordr];
   } else {
-    _text = "Ordenar por valor real";
+    _text = defTxt;
     _ordr = myChart.options.data_order[_ordr];
   }
+  var dt;
+  var index=0;
   myChart.data.labels = _ordr.label;
-  myChart.data.datasets[0].data = _ordr.predi;
-  myChart.data.datasets[1].data = _ordr.varel;
+  if (_ordr.predi) {
+    dt = myChart.data.datasets[index++]
+    dt.data = _ordr.predi;
+    if (_ordr.predi_backgroundColor) dt.backgroundColor = _ordr.predi_backgroundColor;
+    if (_ordr.predi_borderColor) dt.borderColor = _ordr.predi_borderColor;
+  }
+  if (_ordr.varel) {
+    dt = myChart.data.datasets[index++]
+    dt.data = _ordr.varel;
+    if (_ordr.varel_backgroundColor) dt.backgroundColor = _ordr.varel_backgroundColor;
+    if (_ordr.varel_borderColor) dt.borderColor = _ordr.varel_borderColor;
+  }
   myChart.update();
   btn.text(_text);
   btn.data("order", (btn.data("order") + 1) % 2);
@@ -151,6 +227,7 @@ $(document).ready(function() {
 });
 
 
+
 ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (textStatus!="success") return false;
@@ -184,13 +261,9 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     ];
     var prediccion=[];
     var valor_real=[];
-    var max_value=obj.prediccion[0];
-    var min_value=obj.prediccion[0];
     for (i=0; i<obj.annos.length; i++) {
       p = Math.round(obj.prediccion[i]*100)/100
       v = Math.round(obj.valor_real[i]*100)/100;
-      max_value = Math.max(max_value, p, v);
-      min_value = Math.min(min_value, p, v);
       prediccion.push(p);
       valor_real.push(v);
       cels.push(obj.annos[i]);
@@ -204,7 +277,7 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
       <div class="canvas_wrapper">
         <canvas id="myChart"></canvas>
       </div>
-      <button onclick="reorderAnalisisChart(this)" data-order="1">Ordenar por valor real</button>
+      <button onclick="reorderVeranoChart(this)" data-order="1">Ordenar por valor real</button>
     `;
 
     cels = [
@@ -230,61 +303,19 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
 
     showResultado(html, "Resultado análisis anual", "analisis");
 
-    var ctx = document.getElementById('myChart').getContext('2d');
-    var dat = {
-        type: 'bar',
-        data: {
-            labels: obj.annos,
-            datasets: [{
-                label: "Predicción",
-                data: prediccion,
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            },{
-                label: "Valor real",
-                data: valor_real,
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-  					title: {
-  						display: true,
-  						text: getTargetUnidad(obj.input.target).toCapitalize()
-  					},
-  					tooltips: {
-  						mode: 'index',
-  						intersect: false
-  					},
-  					responsive: true,
-  					scales: {
-  						xAxes: [{
-  							stacked: true,
-  						}],
-  						yAxes: [{
-                ticks: {
-                    /*max: Math.ceil(max_value),*/
-                    beginAtZero: true
-                }
-  						}]
-  					},
-            onResize: function(ch, sz)  {
-              var div = $(ch.canvas).closest("div.canvas_wrapper");
-              if (div.length == 0) return;
-              var max_height = $("#sidebar").height() - 300;
-              if (sz.height>max_height) {
-                var ratio = sz.width / sz.height;
-                var max_width = max_height * ratio;
-                div.css("width", max_width+"px");
-              }
-              else div.css("width", "");
-            }
-  			}
-    };
-    var myChart = new Chart(ctx, dat);
-    myChart.options.scales.yAxes[0].ticks.max = myChart.scales["y-axis-0"].max;
+    var myChart = setBarChar('myChart', getTargetUnidad(obj.input.target).toCapitalize(), obj.annos, [{
+          label: "Predicción",
+          data: prediccion,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+      },{
+          label: "Valor real",
+          data: valor_real,
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+    }]);
     var points = datoToPoints(myChart, "predi", "varel");
     myChart.options.data_order = [
       pointToData(points.sort(function(a, b) {return a.label - b.label;})),
@@ -294,7 +325,6 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
         return a.label - b.label;
       }))
     ]
-    $("#myChart").data("chart", myChart);
     return true
 }
 ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
@@ -315,7 +345,13 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
       cels.push(`<code>${obj.input[key]}</code> <span class='unidades'>${TXT.unidad[key]}</span>`);
       cels.push(`<code>${spanNumber(value, 2)}</code>`);
     }
-    html = html + buildTable("numbers dosDecimales", 3, cels);
+    html = html + buildTable("numbers dosDecimales", 3, cels) + `
+      <div class="canvas_wrapper">
+        <canvas id="myChart"></canvas>
+      </div>
+      <button onclick="reorderVeranoChart(this)" data-order="1">Ordenar por ${getTargetUnidad(obj.input.target, 30)}</button>
+    `;
+
     html = html + inputToHtml(obj, "prediccion");
 
     html = html + "<p>Años del modelo y "+(obj.input.target==0?"las hectareas quemadas":"el número de incendios")+" en dicho año:</p>";
@@ -323,14 +359,41 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
     cels = [
       "Año", getTargetUnidad(obj.input.target).toCapitalize()
     ]
+    var annos=[];
+    var valre=[];
+    var backgroundColor=[];
+    var borderColor=[];
     for (var [key, value] of Object.entries(obj.valor_real)) {
+      annos.push(key);
+      valre.push(Math.round(value*100)/100);
       cels.push(key);
       cels.push(`<code>${spanNumber(value, 2)}</code>`);
+      backgroundColor.push('rgba(54, 162, 235, 0.2)');
+      borderColor.push('rgba(54, 162, 235, 1)');
     }
-    html = html + buildTable("numbers", 2, cels);
-
+    annos.push("predicción");
+    valre.push(Math.round(obj.prediccion*100)/100);
+    backgroundColor.push('rgba(255, 99, 132, 0.2)');
+    borderColor.push('rgba(255, 99, 132, 1)');
+    html = html + buildTable("numbers dosDecimales", 2, cels);
 
     showResultado(html, "Resultado predicción anual", "prediccion");
 
+    var myChart = setBarChar('myChart', getTargetUnidad(obj.input.target).toCapitalize(), annos, [{
+        label: null,
+        data: valre,
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
+        borderWidth: 1
+    }]);
+    var points = datoToPoints(myChart, "varel");
+    myChart.options.data_order = [
+      pointToData(points.sort(function(a, b) {return a.label - b.label;})),
+      pointToData(points.sort(function(a, b) {
+        var x = a.varel - b.varel;
+        if (x!=0) return -x;
+        return a.label - b.label;
+      }))
+    ]
     return true;
 }
