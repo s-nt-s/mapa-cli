@@ -81,10 +81,19 @@ function restoreForm(form) {
 
 function getFormEvent() {
   var my_event = this.form.data("submitted")
-  if (my_event) return my_event;
+  if (my_event) {
+    console.log("Encontrado evento en formulario "+this.form.attr("id"));
+    return my_event;
+  }
   var key = null;
-  key = this.url.split("/")
+  var url = (this.from_enpoint || this.url);
+  key = url.split("/")
   key = key[key.length-1].toLowerCase();
-  console.log("Buscando evento para "+this.url+" ["+key+"]");
-  return ON_ENDPOINT[key];
+  var r = ON_ENDPOINT[key];
+  if (r) {
+    console.log("Encontrado evento para "+url+" ["+key+"]");
+    return r;
+  }
+  console.log("No se ha encontrado evento ni para formulario "+this.form.attr("id")+" ni para "+url+" ["+key+"]");
+  return r;
 }

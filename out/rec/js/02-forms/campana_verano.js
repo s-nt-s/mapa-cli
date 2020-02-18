@@ -83,7 +83,7 @@ function showResultado(html, label, descarga) {
   $("#resultado .content").html(html);
   ieDownloadEvent();
   var tResultado = $("#tResultado");
-  tResultado.text(label || tResultado.data("default"))
+  tResultado.html(label || tResultado.data("default"))
   var i = $("#iResultado").show().find("i");
   if (!$("#resultado .content").is(":visible")) i.click();
   $("#limpiar").show().find("a").show();
@@ -223,7 +223,24 @@ $(document).ready(function() {
       var v = obj[e.attr("name")];
       if (v!=null) e.val(v);
     })
-  })
+  });
+  $("select[name='predecir_o_analizar']").change(function(){
+    if (!this.value) return;
+    var t = $(this);
+    var predi = t.find_in_parents(".meteo_predictores");
+    var annos = t.find_in_parents("select[name='rango_temporal[]']");
+    if (this.value == "a") {
+      annos.data("min", 10);
+      predi.find(".dospuntos, .unidad").hide();
+      predi.find("input[type='number']").hide().prop("required", false);
+    }
+    else if (this.value == "p") {
+      annos.data("min", 3);
+      predi.find(".dospuntos, .unidad").show();
+      predi.find("input[type='number']").show().prop("required", true);
+    }
+    annos.change();
+  }).change()
 });
 
 
@@ -238,17 +255,17 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     html = html + `
       <h2>Error absoluto</h2>
       <ul class='big dosEnteros dosDecimales'>
-        <li title='Precisión de la predicción probabilística (sin tener en cuenta ningún parámetro)'><code>${spanNumber(obj.baseline, 2)}</code> <b>baseline</b></li>
-        <li title=''><code>${spanNumber(obj.mae, 2)}</code> <b>error medio</b></li>
-        <li title='Porcentaje explicado por el modelo'><code>${spanNumber(obj.cargaexplicativa, 2)}%</code> <b>carga explicativa</b></li>
+        <li title='Error medio  de los valores reales respecto al valor medio'><b>Baseline</b>: <code>${spanNumber(obj.baseline, 2)}</code> ${getTargetUnidad(obj.input.target, obj.baseline).toCapitalize()}</li>
+        <li title='Error medio de los valores reales respecto a las predicciones'><b>Error medio</b>: <code>${spanNumber(obj.mae, 2)}</code> ${getTargetUnidad(obj.input.target, obj.mae).toCapitalize()}</li>
+        <li title='Porcentaje explicado por el modelo'><b>Carga explicativa</b>: <code>${spanNumber(obj.cargaexplicativa, 2)}%</code> </li>
       </ul>
     `;
     if (obj.pvalor != null) {
     html = html + `
       <h2>Acierto relativo</h2>
       <ul class='big dosEnteros dosDecimales'>
-        <li title=''><code>${spanNumber(obj.spearman, 2)}</code> <b>spearman</b></li>
-        <li title=''><code>${spanNumber(obj.pvalor, 2)}</code> <b>p-valor</b></li>
+        <li title='Valor de correlación entre valor real y predicción para los años evaluados'><code>${spanNumber(obj.spearman, 2)}</code> <b>spearman</b></li>
+        <li title='Valor de significancia de la correlación de Spearman'><code>${spanNumber(obj.pvalor, 2)}</code> <b>p-valor</b></li>
         <li title=''>Nivel de significancia ${getNivelTxt(obj.nivel_significativo)}</li>
       </ul>
     `;
@@ -301,7 +318,7 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
 
     html = html + inputToHtml(obj, "analisis")
 
-    showResultado(html, "Resultado análisis anual", "analisis");
+    showResultado(html, "Resultado análisis <abbr title='campaña'>c.</abbr> verano", "analisis");
 
     var myChart = setBarChar('myChart', getTargetUnidad(obj.input.target).toCapitalize(), obj.annos, [{
           label: "Predicción",
@@ -349,7 +366,7 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
       <div class="canvas_wrapper">
         <canvas id="myChart"></canvas>
       </div>
-      <button onclick="reorderVeranoChart(this)" data-order="1">Ordenar por ${getTargetUnidad(obj.input.target, 30)}</button>
+      <button onclick="reorderVeranoChart(this)" data-order="1">Ordenar por ${getTargetUnidad(obj.input.target)}</button>
     `;
 
     html = html + inputToHtml(obj, "prediccion");
@@ -377,7 +394,7 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
     borderColor.push('rgba(255, 99, 132, 1)');
     html = html + buildTable("numbers dosDecimales", 2, cels);
 
-    showResultado(html, "Resultado predicción anual", "prediccion");
+    showResultado(html, "Resultado predicción <abbr title='campaña'>c.</abbr> verano", "prediccion");
 
     var myChart = setBarChar('myChart', getTargetUnidad(obj.input.target).toCapitalize(), annos, [{
         label: null,

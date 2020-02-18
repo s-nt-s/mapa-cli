@@ -29,10 +29,10 @@ function showhide(ok, ko, root) {
     hide = hide.add(h.not(show));
   }
 
-  show.add(show.find(".hidebyinput")).removeClass("hidebyinput");
-  show.add(show.find(".disablebyinput")).filter(".disablebyinput").prop("disabled", false).removeClass("disablebyinput");
+  show.add(show.not(".onlyMe").find(".hidebyinput")).removeClass("hidebyinput");
+  show.add(show.not(".onlyMe").find(".disablebyinput")).filter(".disablebyinput").prop("disabled", false).removeClass("disablebyinput");
   hide.addClass("hidebyinput");
-  hide.add(hide.find("select, input, label")).filter("select, input, label").not(":disabled").filter(
+  hide.add(hide.not(".onlyMe").find("select, input, label")).filter("select, input, label").not(":disabled").filter(
     function() {
       return $(this).closest(".notDisabled").length==0;
     }
@@ -281,14 +281,22 @@ $(document).ready(function(){
     }
     t.data("slc", t.val());
   });
+  fCg[fCg.length] = $("select[data-min]").change(function(){
+    var t=$(this);
+    var m=t.data("min");
+    if (t.find("option:selected").length>=m) this.setCustomValidity("");
+    else this.setCustomValidity("Debe seleccionar al menos "+m+" elementos de esta lista");
+  })
   joinJQ(fCg).change();
   /* VALUES */
   set_max(".ttEnd,.prTest,.yEnd", meta_info["p4_year"], meta_info["egif_year"], meta_info["egif_year"]);
   set_max(".prEnd,.yBgn", meta_info["p4_year"]-1, meta_info["egif_year"]-1, meta_info["egif_year"]-1);
   set_max(".prBng", meta_info["p4_year"]-2);
+  var wrn=$("p.egifWarning");
   if (meta_info["p4_year"]>meta_info["egif_year"]) {
-  	$(".fTemporal,.dbToda,.dbPersonalizada,.meteo_modelo_years")
-    .append("<p class='egifWarning'>(*) Tenga en cuenta que solo hay datos EGIF consolidados hasta "+meta_info["egif_year"]+", por lo tanto, cualquier rango que supere ese año trabajará con datos incompletos.</p>")
-    .change();
+    var txt = "(*) Tenga en cuenta que solo hay datos EGIF consolidados hasta "+meta_info["egif_year"]+", por lo tanto, cualquier rango que supere ese año trabajará con datos incompletos."
+    wrn.text(txt).removeClass("hide");
+  } else {
+    txt.remove();
   }
 })

@@ -73,7 +73,7 @@ function seconds_to_string(seconds) {
   if (m>=60) {
       h = Math.floor(m/60);
       m = m - (h*60);
-      if (h==1) h="1 hora y";
+      if (h==1) h="1 hora y ";
       else h = h+"h y ";
   }
   if (m==1) m="un minuto";
@@ -150,7 +150,8 @@ function ieDownloadEvent() {
 
 function isUrlOnline(url, status, fecha, method) {
   if (method == null) method = 'HEAD';
-  if (status == null) status = 200;
+  if (status == null) status = [200];
+  else if (!Array.isArray(status)) status = [status];
   if (fecha == null) {
     fecha = new Date();
     fecha.setHours(0,0,0,0);
@@ -166,8 +167,8 @@ function isUrlOnline(url, status, fecha, method) {
   http.setRequestHeader('cache-control', 'no-cache, no-store, must-revalidate, post-check=0, pre-check=0');
   http.setRequestHeader('cache-control', 'max-age=0');
   http.send();
-  if (http.status != status) {
-    console.log(http.status+" "+url);
+  if (!status.includes(http.status)) {
+    console.log(http.status+" "+method+" "+url);
     return http.status;
   }
   var dtC = http.getResponseHeader("date");
@@ -178,7 +179,7 @@ function isUrlOnline(url, status, fecha, method) {
   if (dtM>=fecha) return http.status;
   if (dtC) dtC = getStrFecha(dtC);
   if (dtM) dtM = getStrFecha(dtM);
-  console.log("date:          "+dtC+"\nlast-modified: "+dtM+"\n"+url);
+  console.log("date:          "+dtC+"\nlast-modified: "+dtM+"\n"+method+" "+url);
   return -http.status;
 }
 
@@ -200,7 +201,7 @@ String.prototype.toCapitalize = function() {
 TimeoutIDS={}
 
 class WhenUrlExist {
-    constructor(id, url, time) {
+    constructor(id, url, time, from_enpoint) {
         if (time == null) time = 5000;
         this.id = id;
         this.time = time;
@@ -209,6 +210,7 @@ class WhenUrlExist {
         this.start = new Date();
         this.url = url;
         this.status = null;
+        this.ok_status = [200, 304];
         if (url.startsWith("/")) url = document.location.origin + url;
         console.log("WhenUrlExist para "+url);
         /*
@@ -223,7 +225,8 @@ class WhenUrlExist {
           type: "GET",
           dataType: "json",
           when_url_exist: this,
-          data: null
+          data: null,
+          from_enpoint: from_enpoint
         }
         this.clear();
     };
@@ -249,14 +252,14 @@ class WhenUrlExist {
     };
     testUrl() {
       var method = null; //this.status == 404?'GET':'HEAD';
-      this.status = isUrlOnline(this.url, 200, null, method);
-      return this.status == 200;
+      this.status = isUrlOnline(this.url, this.ok_status, null, method);
+      return this.ok_status.includes(this.status);
     };
 }
 
 function my_ajax(url, opt) {
   if (!url) return $.ajax(opt);
-  opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null);
+  opt.when_url_exist = new WhenUrlExist(opt.form.attr("id"), url, null, opt.url);
   if (opt.when_url_exist.testUrl()) return opt.when_url_exist.fire(opt);
   return $.ajax(opt).fail(function(data, textStatus, jqXHR) {
     //if (textStatus!="timeout") return;

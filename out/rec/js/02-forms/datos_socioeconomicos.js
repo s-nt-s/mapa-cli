@@ -57,7 +57,7 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
           var orden = rsg.orden.length?rsg.orden:layers.municipios.riesgos.orden;
           orden.forEach(function(k, index) {
               var pr=TXT.params[k];
-              var vr = vp.hasOwnProperty(k)?vp[k]:"";
+              var vr = (vp && vp.hasOwnProperty(k))?vp[k]:"";
               var v_p = `<code>${spanNumber(rsg.percentil[k])}</code>`
               var v_i = `<code>${spanNumber(rsg.influencia[k])}</code>`;
               html.push(`<tr><td class='ord'>${index+1}</td><td class='txt'>${pr}</td><td><code>${vr}</code></td><td>${v_p}</td><td class="inf ${hide}">${v_i}</td></tr>`);
@@ -116,7 +116,7 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
         layers.municipios.riesgos.orden.forEach(function(k, index) {
             var tr = trs.eq(index);
             var pr=TXT.params[k];
-            var vr = vp.hasOwnProperty(k)?vp[k]:"";
+            var vr = (vp && vp.hasOwnProperty(k))?vp[k]:"";
             var v_p = `<code>${spanNumber(rsg.percentil[k])}</code>`;
             var v_i = `<code>${spanNumber(rsg.influencia[k])}</code>`;
             tr.append(`<td class='mun${p.i}'><code>${vr}</code></td><td class='mun${p.i}'>${v_p}</td><td class='mun${p.i} inf ${hide}'>${v_i}</td>`);
@@ -233,7 +233,7 @@ Incendios;${obj.inc_usados}
         csv = csv+"\n"+(index+1)+";"+pr+";"+v;
         for (m in layers.municipios.riesgos.mun) {
           var vp = valor_parametros[m];
-          var vr = vp.hasOwnProperty(k)?vp[k]:"";
+          var vr = (vp && vp.hasOwnProperty(k))?vp[k]:"";
           csv = csv+";"+vr+";"+layers.municipios.riesgos.mun[m].percentil[k];
           if (infl) csv = csv +";"+layers.municipios.riesgos.mun[m].influencia[k];
         }
@@ -269,7 +269,7 @@ ON_ENDPOINT["predecir"]=function(data, textStatus, jqXHR) {
   }
   //$("#resultado .ld_footer").removeClass("hide").text("Renderizando");
   $.ajax({
-    url: myroot+"/geo/municipios.js",
+    url: myroot+"geo/municipios.js",
     dataType: "script",
     cache: true,
     origin: [this, arguments],
