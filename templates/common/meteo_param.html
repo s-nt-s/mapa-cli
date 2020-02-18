@@ -1,39 +1,39 @@
 <div class="greyinhide">
 {% with check_name='check_meteo_param' %}
 {% with label='Temperatura de la primavera',   unidad='°C', val_min='-90', val_max='75',
-step='0.01', width='7', id='tepri', class='predic_incen'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='tepri', class='predic_incen'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Precipitación de la primavera', unidad='mm', val_min='0',  val_max='400',
-step='0.01', width='7', id='prpri', class='predic_super'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='prpri', class='predic_super'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Temperatura máxima',            unidad='°C', val_min='-15', val_max='75',
-step='0.01', width='7', id='temax', class='predic_super predic_incen'    %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='temax', class='predic_super predic_incen'    %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Temperatura media',             unidad='°C', val_min='-15', val_max='75',
-step='0.01', width='7', id='temed', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='temed', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Variación de temperatura',      unidad='°C', val_min='-15', val_max='75',
-step='0.01', width='7', id='tevar', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='tevar', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Viento',                        unidad='m/s', val_min='0',
-step='0.01', width='7', id='vevie', class='predic_super'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='vevie', class='predic_super'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Racha de viento',               unidad='m/s', val_min='0',
-step='0.01', width='7', id='ravie', class='predic_super'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='ravie', class='predic_super'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Presión atmosférica máxima',    unidad='hPa', val_min='0',
-step='0.01', width='7', id='prmax', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='prmax', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Presión atmosférica mínima',    unidad='hPa', val_min='0',
-step='0.01', width='7', id='prmin', class='predic_super predic_incen'    %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='prmin', class='predic_super predic_incen'    %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Humedad relativa',              unidad='%',   val_min='0',  val_max='100',
-step='0.01', width='7', id='hurel', class='predic_super predic_incen'    %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='hurel', class='predic_super predic_incen'    %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Horas de sol',                  unidad='h',   val_min='0',  val_max='24',
-step='0.01', width='7', id='hrsol', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='hrsol', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 
 {% with label='Precipitaciones',               unidad='mm', val_min='0',  val_max='400',
-step='0.01', width='7', id='prmed', class='predic_incen'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+step='0.01', id='prmed', class='predic_incen'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
 {% endwith %}
 </div>

@@ -229,15 +229,15 @@ $(document).ready(function() {
     var t = $(this);
     var predi = t.find_in_parents(".meteo_predictores");
     var annos = t.find_in_parents("select[name='rango_temporal[]']");
+    predi.removeClass("meteo_predictores_a meteo_predictores_p")
+    predi.addClass("meteo_predictores_"+this.value);
     if (this.value == "a") {
       annos.data("min", 10);
-      predi.find(".dospuntos, .unidad").hide();
-      predi.find("input[type='number']").hide().prop("required", false);
+      predi.find("input[type='number']").prop("required", false);
     }
     else if (this.value == "p") {
       annos.data("min", 3);
-      predi.find(".dospuntos, .unidad").show();
-      predi.find("input[type='number']").show().prop("required", true);
+      predi.find("input[type='number']").prop("required", true);
     }
     annos.change();
   }).change()

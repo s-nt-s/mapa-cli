@@ -27,3 +27,17 @@ td .unidades {
 div.canvas_wrapper {
   /*max-height: 500px;*/
 }
+
+.meteo_predictores_a .lbNumber, .meteo_predictores_a input[type=number], .meteo_predictores_a .unidad {
+  display: none;
+}
+.meteo_predictores_p .lbCheck {
+  display: none;
+}
+.meteo_predictores_p .lbNumber {
+  display: inline-block;
+  min-width: 16em;
+}
+.meteo_predictores_p input[type=number] {
+  width: 7em;
+}
