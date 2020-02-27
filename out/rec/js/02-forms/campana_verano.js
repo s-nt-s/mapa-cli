@@ -443,7 +443,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
       cels.push(`<code>${spanNumber(obj.valor_real[key], obj.input.target==0?2:0)}</code>`);
     }
   }
-  html = html + buildTable("numbers greycero "+(obj.input.target==0?"dosDecimales":""), obj.valor_real?3:2, cels);
+  html = html + buildTable("numbers greycero "+(obj.input.target==0?"dosDecimales":""), obj.input.semana?3:2, cels);
 
   if (!obj.input.semana) {
     html = html + `
