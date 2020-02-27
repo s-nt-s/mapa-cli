@@ -419,31 +419,51 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   var obj = data;//.status?objForm(form):data;
   if (textStatus!="success") return false;
   var html = "";
+  if (obj.mae) {
+    html = html + `
+    <ul>
+      <li><b>Semana</b>: ${obj.input.semana}</li>
+      <li title='Error medio de los valores reales respecto a las predicciones'><b>Error medio</b>: <code>${spanNumber(obj.mae, 2)}</code> ${getTargetUnidad(obj.input.target, obj.mae).toCapitalize()}</li>
+    </ul>
+    `
+  }
 
   var cels=[
     {"class":"txt", "txt": "Provincia"},
     getTargetUnidad(obj.input.target).toCapitalize()
   ]
+  if (obj.valor_real) {
+    cels.push("Valor real");
+  }
 
   for (var [key, value] of Object.entries(obj.prediccion)) {
     cels.push(TXT.zonas[key]);
     cels.push(`<code>${spanNumber(value, obj.input.target==0?2:0)}</code>`);
+    if (obj.valor_real) {
+      cels.push(`<code>${spanNumber(obj.valor_real[key], obj.input.target==0?2:0)}</code>`);
+    }
   }
-  html = html + buildTable("numbers greycero "+(obj.input.target==0?"dosDecimales":""), 2, cels);
-  html = html + `
-    <p class="avoidMd show_hide_cero">
-      <input type='checkbox' onclick="$('tr.is_cero').toggleClass('hide')" id='show_hide_cero'>
-      <label for='show_hide_cero'>
-        Mostrar provincias con predicción igual a <code>0</code>
-      </label>
-    </p>
-  `
+  html = html + buildTable("numbers greycero "+(obj.input.target==0?"dosDecimales":""), obj.valor_real?3:2, cels);
+
+  if (!obj.valor_real) {
+    html = html + `
+      <p class="avoidMd show_hide_cero">
+        <input type='checkbox' onclick="$('tr.is_cero').toggleClass('hide')" id='show_hide_cero'>
+        <label for='show_hide_cero'>
+          Mostrar provincias con predicción igual a <code>0</code>
+        </label>
+      </p>
+    `
+  }
   showResultado(html, "Resultado predicción semanal", "prediccion");
-  var trs = $("#resultado .content table tr:has(span.sig_cero)")
-  if (trs.length) {
-    trs.addClass("is_cero").addClass("hide");
-  } else {
-      $("p.show_hide_cero").remove();
+
+  if (!obj.valor_real) {
+    var trs = $("#resultado .content table tr:has(span.sig_cero)")
+    if (trs.length) {
+      trs.addClass("is_cero").addClass("hide");
+    } else {
+        $("p.show_hide_cero").remove();
+    }
   }
 
   return true;
