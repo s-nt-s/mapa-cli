@@ -419,7 +419,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   var obj = data;//.status?objForm(form):data;
   if (textStatus!="success") return false;
   var html = "";
-  if (obj.mae) {
+  if (obj.input.semana) {
     html = html + `
     <ul>
       <li><b>Semana</b>: ${obj.input.semana}</li>
@@ -439,13 +439,13 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   for (var [key, value] of Object.entries(obj.prediccion)) {
     cels.push(TXT.zonas[key]);
     cels.push(`<code>${spanNumber(value, obj.input.target==0?2:0)}</code>`);
-    if (obj.valor_real) {
+    if (obj.input.semana) {
       cels.push(`<code>${spanNumber(obj.valor_real[key], obj.input.target==0?2:0)}</code>`);
     }
   }
   html = html + buildTable("numbers greycero "+(obj.input.target==0?"dosDecimales":""), obj.valor_real?3:2, cels);
 
-  if (!obj.valor_real) {
+  if (!obj.input.semana) {
     html = html + `
       <p class="avoidMd show_hide_cero">
         <input type='checkbox' onclick="$('tr.is_cero').toggleClass('hide')" id='show_hide_cero'>
@@ -457,7 +457,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   }
   showResultado(html, "Resultado predicción semanal", "prediccion");
 
-  if (!obj.valor_real) {
+  if (!obj.input.semana) {
     var trs = $("#resultado .content table tr:has(span.sig_cero)")
     if (trs.length) {
       trs.addClass("is_cero").addClass("hide");
