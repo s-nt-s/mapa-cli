@@ -41,3 +41,6 @@ div.canvas_wrapper {
 .meteo_predictores_p input[type=number] {
   width: 7em;
 }
+.greycero .sig_cero {
+  opacity: 0.5;
+}
