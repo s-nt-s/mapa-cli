@@ -432,7 +432,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
     {"class":"txt", "txt": "Provincia"},
     getTargetUnidad(obj.input.target).toCapitalize()
   ]
-  if (obj.valor_real) {
+  if (obj.input.semana) {
     cels.push("Valor real");
   }
 
