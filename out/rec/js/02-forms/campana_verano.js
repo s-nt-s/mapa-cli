@@ -241,6 +241,18 @@ $(document).ready(function() {
     }
     annos.change();
   }).change()
+  $("#prediccion-modelo-semana-provincia select[name='zona[]']").change(function() {
+    var slc = $("#prediccion-modelo-semana-provincia .predictor_zona");
+    var val = slc.val()
+    slc.find("option").show();
+    var vals = $(this).val();
+    if (vals.indexOf("ESP")==-1) {
+      slc.find("option").filter(function(){return this.value && vals.indexOf(this.value)==-1}).hide();
+      if (vals.indexOf(val)==-1) {
+        slc.val("").change();
+      }
+    }
+  }).change();
 });
 
 
@@ -419,11 +431,18 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   var obj = data;//.status?objForm(form):data;
   if (textStatus!="success") return false;
   var html = "";
-  if (obj.input.semana) {
+  var isVr = obj.input.semana!=null && obj.valor_real!=null;
+  if (isVr) {
+    var smn = obj.semana_prevision.toFixed(2).replace(".","-W");
+    var title='';
+    if (smn!=obj.input.semana) {
+      title=` title='La semana ${obj.input.semana} no esta disponible así que se usara la semana ${smn}'`
+      smn = smn + ` <strike>${obj.input.semana}</strike>`;
+    }
     html = html + `
     <ul>
-      <li><b>Semana</b>: ${obj.input.semana}</li>
-      <li title='Error medio de los valores reales respecto a las predicciones'><b>Error medio</b>: <code>${spanNumber(obj.mae, 2)}</code> ${getTargetUnidad(obj.input.target, obj.mae).toCapitalize()}</li>
+      <li${title}><b>Semana</b>: ${smn}</li>
+      <li title='Error medio de los valores reales respecto a las predicciones'><b>Error medio</b>: <code>${spanNumber(obj.mae, 2)}</code> ${getTargetUnidad(obj.input.target, obj.mae)}</li>
     </ul>
     `
   }
@@ -432,20 +451,26 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
     {"class":"txt", "txt": "Provincia"},
     getTargetUnidad(obj.input.target).toCapitalize()
   ]
-  if (obj.input.semana) {
+  if (isVr) {
+    cels[cels.length-1]="Predicción"
     cels.push("Valor real");
   }
 
   for (var [key, value] of Object.entries(obj.prediccion)) {
     cels.push(TXT.zonas[key]);
     cels.push(`<code>${spanNumber(value, obj.input.target==0?2:0)}</code>`);
-    if (obj.input.semana) {
-      cels.push(`<code>${spanNumber(obj.valor_real[key], obj.input.target==0?2:0)}</code>`);
+    if (isVr) {
+      var v=obj.valor_real[key];
+      if (v==null) cels.push("");
+      else cels.push(`<code>${spanNumber(v, obj.input.target==0?2:0)}</code>`);
     }
   }
-  html = html + buildTable("numbers greycero "+(obj.input.target==0?"dosDecimales":""), obj.input.semana?3:2, cels);
+  table = buildTable("numbers greycero "+(obj.input.target==0?"dosDecimales":""), isVr?3:2, cels);
+  html = html + table;
 
-  if (!obj.input.semana) {
+  if (isVr) {
+    html = html.replace("<thead>","<thead><tr><th></th><th colspan='2' style='text-align:center'>"+getTargetUnidad(obj.input.target).toCapitalize()+"</th>");
+  } else {
     html = html + `
       <p class="avoidMd show_hide_cero">
         <input type='checkbox' onclick="$('tr.is_cero').toggleClass('hide')" id='show_hide_cero'>
@@ -457,13 +482,32 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   }
   showResultado(html, "Resultado predicción semanal", "prediccion");
 
-  if (!obj.input.semana) {
-    var trs = $("#resultado .content table tr:has(span.sig_cero)")
-    if (trs.length) {
-      trs.addClass("is_cero").addClass("hide");
-    } else {
+  var trs = $("#resultado .content table tbody tr");
+  if (trs.length<2) {
+    $("p.show_hide_cero").remove();
+  } else {
+    if (!isVr) {
+      var trs = trs.filter(":has(span.sig_cero)")
+      if (trs.length) {
+        trs.addClass("is_cero").addClass("hide");
+      } else {
         $("p.show_hide_cero").remove();
+      }
     }
+  }
+
+  var values = Object.entries(obj.prediccion).map(function(k){return k[1]});
+  var fls = getFieldSetRangos({
+    title:"Personalizar mapa",
+    class: "prediccion_semana_provincia_rangos",
+    pre: "<p>Use los siguientes intervalos para personalizar como se muestra la información en el mapa.</p>",
+    min: 0,
+    values: values,
+    rangos: ["Verde", "Amarillo", "Rojo"],
+    unidades: getTargetUnidad(obj.input.target),
+  });
+  if (fls) {
+    $("#resultado .content").append(fls);
   }
 
   return true;

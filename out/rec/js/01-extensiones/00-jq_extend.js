@@ -33,9 +33,10 @@ jQuery.fn.extend({
   },
 });
 
-$(document).ready(function(){
-  ["desplaza", "opuesto", "obligatorio", "opcional", "marcar", "desmarcar", "fire-change", "marca-if", "bloquear"].forEach(function(k){
-    var eq = $("*[data-"+k+"]");
+function mkDataJq(scope) {
+  if (!scope) scope=$("body");
+  ["desplaza", "opuesto", "obligatorio", "opcional", "marcar", "desmarcar", "fire-change", "marca-if", "bloquear", "showvalue"].forEach(function(k){
+    var eq = scope.find("*[data-"+k+"]");
     var i, t;
     for (i=0; i<eq.length; i++) {
       t = eq.eq(i);
@@ -44,4 +45,8 @@ $(document).ready(function(){
       t.data(k, target);
     }
   })
+}
+
+$(document).ready(function(){
+  mkDataJq();
 });

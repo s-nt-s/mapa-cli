@@ -13,6 +13,8 @@
   <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
 </h1>
 
+{% include 'snippet/zona.html' %}
+
 <fieldset class="fOneField">
   <legend>Target</legend>
   <label for="Target" class="hide">Target:</label>
@@ -34,8 +36,8 @@
 <fieldset data-delete="input.chk, .lbCheck">
   <legend>Modificar predictores</legend>
   <p>
-    <label for="zona">Provincia:</label>
-    <select id="zona" data-hide=".meteo_predictores" class="opcional">
+    <label for="predictor_zona">Provincia:</label>
+    <select id="predictor_zona" data-hide=".meteo_predictores" class="opcional predictor_zona">
       <option/>
       {% for p in provincias %}
          <option value="{{p.ID}}" data-show=".predictores_{{p.ID}}">{{p.nombre}}</option>
@@ -62,7 +64,7 @@
   <p>
     Si rellena este campo, en vez de predecirse la semana actual, se simulara una
     <i>predicción</i> para la semana indicada y se comparará el resultado con
-    lo que ocurreo en realidad.
+    lo que ocurrió en realidad.
   </p>
 </fieldset>
 
