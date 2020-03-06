@@ -298,7 +298,7 @@ function mkChangeUi(scope) {
     var val={};
     var arr = r.serializeArray();
     for (i=0; i < arr.length; i++){
-      val[arr[i]['name']] = arr[i]['value'];
+      val[arr[i]['name']] = Number(arr[i]['value']);
     }
     p.trigger("globalchange", [val]);
   })
