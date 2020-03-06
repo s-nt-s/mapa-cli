@@ -502,9 +502,37 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
     class: "prediccion_semana_provincia_rangos",
     pre: "<p>Use los siguientes intervalos para personalizar como se muestra la información en el mapa.</p>",
     min: 0,
+    add: obj.input.target==0?0.01:1,
     values: values,
     rangos: ["Verde", "Amarillo", "Rojo"],
     unidades: getTargetUnidad(obj.input.target),
+    prediccion: obj.prediccion,
+    globalchange: function(event, val){
+      var i, r, a, b, c;
+      console.log(JSON.stringify(val));
+      var grp = {};
+      var rng = Object.entries(val).map(function(k){return [k[1], k[0]]}).sort().map(function (k){return {
+        val:k[0],
+        name:k[1]
+      }})
+      for (i=0; i<rng.length;i++) grp[rng[i].name]=[];
+      var obj = $(this).data("range_config");
+      for (var [key, value] of Object.entries(obj.prediccion)) {
+        key = TXT.zonas[key];
+        var flag = true;
+        for (i=0;flag && i<rng.length;i++) {
+          r = rng[i];
+          if (value>r.val) continue;
+          if (i==0) {
+            grp[r.name].push(key);
+          }
+          else {
+            if (value>rng[i-1].val) grp[r.name].push(key);
+          }
+        }
+      }
+      console.log(JSON.stringify(grp));
+    }
   });
   if (fls) {
     $("#resultado .content").append(fls);

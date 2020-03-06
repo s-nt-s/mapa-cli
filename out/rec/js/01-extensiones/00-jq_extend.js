@@ -31,17 +31,37 @@ jQuery.fn.extend({
     }
     return r;
   },
+  textval: function(val) {
+    var isVal="input,select"
+    if (val==null) {
+      var i = this.eq(0);
+      if (i.is(isVal)) return i.val();
+      return i.text();
+    }
+    var i=this.filter(isVal);
+    i.val(val);
+    this.not(i).text(val);
+    return this;
+  }
 });
 
 function mkDataJq(scope) {
   if (!scope) scope=$("body");
   ["desplaza", "opuesto", "obligatorio", "opcional", "marcar", "desmarcar", "fire-change", "marca-if", "bloquear", "showvalue"].forEach(function(k){
     var eq = scope.find("*[data-"+k+"]");
-    var i, t;
+    var i, t, target;
     for (i=0; i<eq.length; i++) {
       t = eq.eq(i);
       var sel=t.data(k);
-      var target = t.find_in_parents_with_comma(sel);
+      if (k=="showvalue") {
+        var mr = t.closest(".multirango");
+        if (mr.length>0) {
+          target = mr.find(sel);
+          t.data(k, target);
+          continue;
+        }
+      }
+      target = t.find_in_parents_with_comma(sel);
       t.data(k, target);
     }
   })

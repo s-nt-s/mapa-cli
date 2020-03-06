@@ -73,8 +73,10 @@ function getFieldSetRangos(obj) {
     while (v<obj.max && obj.values.length<obj.rangos.length) {obj.values.push(v); v=v+paso}
   }
   if (obj.values.length<1) return null;
+  if (obj.add==null) obj.add=obj.step;
   var fls=$(`<fieldset class="fRangos multirango"><legend>${obj.title}</legend></fieldset>`);
   if (obj.class) fls.addClass(obj.class);
+  if (obj.globalchange) fls.addClass("globalchange");
   if (obj.pre) {
     fls.append(obj.pre);
   }
@@ -84,23 +86,36 @@ function getFieldSetRangos(obj) {
     } else {
       a = obj.values[i-1]+obj.step;
       id = obj.idprefix + "rng" + (i-1)
-      a = `<span class="count ${id}" data-add="${obj.step}">${a}</span>`
+      a = `<span class="count ${id}" data-add="${obj.add}">${a}</span>`
     }
     v = obj.values[i];
     id = obj.idprefix + "rng" + i;
     l = obj.rangos?obj.rangos[i]:("Rango "+(i+1));
     c = "rng_" + l.replace(/\s+/g, "_").toLowerCase();
-    fls.append(`
-      <p class='rng${i} ${c}'>
-        <label for="${id}">${l}:</label> de ${a} a <span class="count ${id}">${v}</span> ${obj.unidades}
-        <input id="${id}" min="${obj.min}" max="${obj.max}" step="${obj.step}" type="range" value="${v}" data-showvalue=".count.${id}">
-      </p>
-    `)
+    if (i<obj.values.length-1) {
+      fls.append(`
+        <p class='rng${i} ${c}'>
+          <label for="${id}">${l}:</label> de ${a} a <span class="count ${id}">${v}</span> ${obj.unidades}
+          <input id="${id}" name="rng${i}" min="${obj.min}" max="${obj.max}" step="${obj.step}" type="range" value="${v}" data-showvalue=".count.${id}">
+        </p>
+      `)
+    } else {
+      var pre=obj.idprefix + "rng" + (i-1);
+      fls.append(`
+        <p class='rng${i} ${c}'>
+          <span class="label">${l}:</span> ${a} ${obj.unidades} o más
+          <!--input type="hidden" id="${id}" name="rng${i}" value="${v}" class="count ${pre} pseudorange" data-add="${obj.add}"-->
+          <input type="hidden" id="${id}" name="rng${i}" value="${obj.max}" class="pseudorange">
+        </p>
+      `)
+    }
     //if (i<obj.values.length) fls.append("<br/>");
   }
   if (obj.post) {
     fls.append(obj.post);
   }
+  if (obj.globalchange) fls.on("globalchange", obj.globalchange);
+  fls.data("range_config", obj);
   var div=$("<div></div>");
   div.append(fls);
   mkDataJq(div);
@@ -237,9 +252,9 @@ function mkChangeUi(scope) {
           return false;
       });
   });
-  fCg[fCg.length] = scope.find(".fRangos input[type=range]").bind("change input",function(){
+  fCg[fCg.length] = scope.find(".multirango input[type=range]").bind("change input",function(){
+      var i=$(this).addClass("changing");
       var v = Number(this.value);
-      var i=$(this);
       var prevVal = i.data("prevVal");
       if (prevVal==null) prevVal = this.defaultValue;
       if (prevVal!=null) prevVal = Number(prevVal);
@@ -270,14 +285,34 @@ function mkChangeUi(scope) {
         }
       }
       ch.change();
+      i.removeClass("changing");
+  })
+  scope.find(".multirango.globalchange input[type=range]").bind("change",function(){
+    var p = $(this).closest(".multirango");
+    var r = p.find("input[type=range],.pseudorange");
+    if (r.not(this).filter(".changing").length) return;
+    var new_val = r.serialize();
+    if (p.val() == new_val) return;
+    p.val(new_val);
+    var i;
+    var val={};
+    var arr = r.serializeArray();
+    for (i=0; i < arr.length; i++){
+      val[arr[i]['name']] = arr[i]['value'];
+    }
+    p.trigger("globalchange", [val]);
   })
 
   fCg[fCg.length] = scope.find("input[type=range][data-showvalue]").bind("change input",function(){
-    $(this).data("showvalue").text(this.value);
-    $(this).data("showvalue").filter("[data-add]").each(function(){
+    var sh = $(this).data("showvalue");
+    sh.textval(this.value);
+    sh.filter("[data-add]").each(function(){
         var t=$(this);
-        var n = parseInt(t.text(), 10);
-        if (!Number.isNaN(n)) t.text(n+t.data("add"));
+        var n = parseInt(t.textval(), 10);
+        if (!Number.isNaN(n)) {
+          n = n+t.data("add")
+          t.textval(n);
+        }
     });
   });
   scope.find("input[type=checkbox]:not(.opcional)").map(function(){return this.name}).get().uniq().forEach(function(n){
