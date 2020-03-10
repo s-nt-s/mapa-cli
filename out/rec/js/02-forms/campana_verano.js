@@ -287,7 +287,9 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     html = html + "<h2>Predicción vs realidad</h2>"
 
     cels = [
-      "Año", "Predicción", "Valor real"
+      {"class": "isSortable isSortedByMe", "txt":"Año"},
+      {"class": "isSortable", "txt":"Predicción"},
+      {"class": "isSortable", "txt":"Valor real"}
     ];
     var prediccion=[];
     var valor_real=[];
@@ -311,7 +313,7 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     `;
 
     cels = [
-      {"class":"txt", "txt": "Predictor"}, "Valor usado",
+      {"class":"txt", "txt": "Predictor"}
     ];
     for (i=0; i<obj.annos.length; i++) {
       cels.push(obj.annos[i])
@@ -320,13 +322,12 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     for (c=0; c<obj.predictores.length;c++) {
       p = obj.predictores[c];
       cels.push(TXT.check_meteo_param[p]);
-      cels.push(`<code>${obj.input[p]}</code> <span class='unidades'>${TXT.unidad[p]}</span>`);
       for (i=0; i<obj.annos.length; i++) {
         cels.push(`<code>${spanNumber(obj.coeficientes[i][c], 2)}</code>`);
       }
     }
     table = buildTable("numbers dosDecimales tableScroll", row_size, cels);
-    table = table.replace("<thead>", "<thead><tr><th colspan='2'></th><th colspan='"+(obj.annos.length)+"' style='text-align: center;'>Coeficiente</th></tr>");
+    table = table.replace("<thead>", "<thead><tr><th colspan='1'></th><th colspan='"+(obj.annos.length)+"' style='text-align: center;'>Coeficiente</th></tr>");
     html = html + table;
 
     html = html + inputToHtml(obj, "analisis")
@@ -387,7 +388,8 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
     html = html + "<p>Años del modelo y "+(obj.input.target==0?"las hectareas quemadas":"el número de incendios")+" en dicho año:</p>";
 
     cels = [
-      "Año", getTargetUnidad(obj.input.target).toCapitalize()
+      {"class": "isSortable isSortedByMe", "txt":"Año"},
+      {"class": "isSortable", "txt":getTargetUnidad(obj.input.target).toCapitalize()}
     ]
     var annos=[];
     var valre=[];
