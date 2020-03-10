@@ -319,3 +319,16 @@ fieldset.fOneField input[type=number] {
 .dosEnteros span.en1:before {
   content: " "
 }
+
+th.isSortable { 
+    cursor: pointer;
+}
+th.isSortable:after {
+  content: " ⇳"
+}
+th.isSortable.isSortedByMe:after {
+  content: " ⇓"
+}
+th.isSortable.isSortedByMe.isReversed:after {
+  content: " ⇑"
+}

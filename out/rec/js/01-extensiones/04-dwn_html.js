@@ -3,7 +3,7 @@ function html_to_md(elms, opt) {
   if (opt.level==null) opt.level=0;
   if (typeof elms == "string") elms = $("<div>"+elms+"</div>").find(">*");
   elms = elms.clone().not(".avoidMd");
-  elms.find(".avoidMd").remove();
+  elms.find(".avoidMd, strike").remove();
   var i,c,d,j;
   var html='';
   elms.each(function(){

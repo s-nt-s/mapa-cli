@@ -42,7 +42,13 @@ jQuery.fn.extend({
     i.val(val);
     this.not(i).text(val);
     return this;
-  }
+  },
+  column: function() {
+    if (this.length!=1 && !this.is("th")) return null;
+    var index=this.closest("tr").find("th").index(this);
+    return this.closest("table").find("tbody tr").find("td:eq("+index+")");
+  },
+  reverse: Array.prototype.reverse,
 });
 
 function mkDataJq(scope) {

@@ -1,3 +1,6 @@
+var mymap=null;
+var layers={}
+
 function selectProvincia(e) {
   e.originalEvent.preventDefault();
   e.originalEvent.stopPropagation();
@@ -14,7 +17,7 @@ function selectProvincia(e) {
   zonas.change();
 }
 
-function layerProvincias(old) {
+function layerProvincias() {
   var ly = L.geoJSON(geoprovincias, {
       style: function(f, l) {
         var fp = f.properties;
@@ -79,18 +82,30 @@ function centerMap(ly) {
   else mymap.setView([40.4165000, -3.7025600], 6)
 }
 
+function clearMap() {
+    mymap.eachLayer(function (layer) {
+        if (layer.options.id != "mapbox.streets") mymap.removeLayer(layer);
+    });
+}
+
+function resetMap() {
+    if (mymap==null) {
+        mymap = L.map("map");
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZGF0YWlhIiwiYSI6ImNrNWdmazA4bjA2cGczanBib2F4MDNxd3EifQ.ScOIk2EYiQ9qYWBWJmjB2w'
+        }).addTo(mymap);
+        L.control.sidebar('sidebar').addTo(mymap);
+    } else clearMap();
+    mymap.addLayer(layerProvincias());
+    centerMap();
+}
+
 $(document).ready(function() {
 /** READY: INI **/
-mymap = L.map("map");
-L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoiZGF0YWlhIiwiYSI6ImNrNWdmazA4bjA2cGczanBib2F4MDNxd3EifQ.ScOIk2EYiQ9qYWBWJmjB2w'
-}).addTo(mymap);
-mymap.addLayer(layerProvincias());
-centerMap();
-L.control.sidebar('sidebar').addTo(mymap);
+resetMap();
 
 $("select[name='zona[]']").change(function(){
   var aVals=$(this).val();

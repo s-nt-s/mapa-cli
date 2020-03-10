@@ -82,6 +82,7 @@ function showResultado(html, label, descarga) {
   $("#loading").hide();
   $("#resultado .content").html(html);
   ieDownloadEvent();
+  mkTableSortable($("#resultado table:has(.isSortable)"));
   var tResultado = $("#tResultado");
   tResultado.html(label || tResultado.data("default"))
   var i = $("#iResultado").show().find("i");
@@ -275,8 +276,8 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     if (obj.pvalor != null) {
     html = html + `
       <h2>Acierto relativo</h2>
-      <ul class='big dosEnteros dosDecimales'>
-        <li title='Valor de correlación entre valor real y predicción para los años evaluados'><code>${spanNumber(obj.spearman, 2)}</code> <b>spearman</b></li>
+      <ul class='big dosEnteros'>
+        <li title='Valor de correlación entre valor real y predicción para los años evaluados'><code>${spanNumber(obj.spearman*100, 0)}%</code> <b>spearman</b></li>
         <li title='Valor de significancia de la correlación de Spearman'><code>${spanNumber(obj.pvalor, 2)}</code> <b>p-valor</b></li>
         <li title=''>Nivel de significancia ${getNivelTxt(obj.nivel_significativo)}</li>
       </ul>
@@ -440,20 +441,28 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
       smn = smn + ` <strike>${obj.input.semana}</strike>`;
     }
     html = html + `
-    <ul>
+    <ul class="dosEnteros">
       <li${title}><b>Semana</b>: ${smn}</li>
       <li title='Error medio de los valores reales respecto a las predicciones'><b>Error medio</b>: <code>${spanNumber(obj.mae, 2)}</code> ${getTargetUnidad(obj.input.target, obj.mae)}</li>
+      <li title='Valor de correlación entre valor real y predicción para los años evaluados'><b>Spearman:</b> <code>${spanNumber(obj.spearman*100, 0)}%</code></li>
     </ul>
+    `
+  } else if (obj.input.semana_actual) {
+    var y = obj.input.semana_actual.split("-W");
+    var s = Number(y[1]);
+    var y = Number(y[0]);
+    html = html + `
+    <p><b>Semana</b>: <span title="Semana ${s}ª del año ${y}">${obj.input.semana_actual}</span></p>
     `
   }
 
   var cels=[
-    {"class":"txt", "txt": "Provincia"},
-    getTargetUnidad(obj.input.target).toCapitalize()
+    {"class":"txt isSortable", "txt": "Provincia"},
+    {"class":"isSortable", "txt": getTargetUnidad(obj.input.target).toCapitalize()}
   ]
   if (isVr) {
-    cels[cels.length-1]="Predicción"
-    cels.push("Valor real");
+    cels[cels.length-1].txt="Predicción"
+    cels.push({"class":"isSortable", "txt": "Valor real"});
   }
 
   for (var [key, value] of Object.entries(obj.prediccion)) {
@@ -507,31 +516,75 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
     rangos: ["Verde", "Amarillo", "Rojo"],
     unidades: getTargetUnidad(obj.input.target),
     prediccion: obj.prediccion,
-    globalchange: function(event, val){
-      var i, r, a, b, c;
-      console.log(JSON.stringify(val));
+    decimales: obj.input.target==0?2:0,
+    globalchange: function(event, rng){
+      var i, r, a, b, c, v;
       var grp = {};
-      var rng = Object.entries(val).map(function(k){return [k[1], k[0]]}).sort().map(function (k){return {
-        val:k[0],
-        name:k[1]
-      }})
       for (i=0; i<rng.length;i++) grp[rng[i].name]=[];
       var obj = $(this).data("range_config");
+      var prov_color={}
       for (var [key, value] of Object.entries(obj.prediccion)) {
-        key = TXT.zonas[key];
         var flag = true;
-        for (i=0;flag && i<rng.length;i++) {
+        for (i=0;!(key in prov_color) && i<rng.length;i++) {
           r = rng[i];
-          if (value>r.val) continue;
+          if (r!=null && value>r) continue;
           if (i==0) {
-            grp[r.name].push(key);
+            prov_color[key]=i;
           }
           else {
-            if (value>rng[i-1].val) grp[r.name].push(key);
+            if (value>rng[i-1]) {
+                prov_color[key]=i;
+            }
           }
         }
+        if (!(key in prov_color)) prov_color[key]=rng.length;
       }
-      console.log(JSON.stringify(grp));
+      var str_prov_color = JSON.stringify(prov_color);
+      var t = $(this);
+      if (t.data("prov_color")==str_prov_color) return;
+
+      clearMap();
+      layers.prediccion_semana_provincia = L.geoJSON(geoprovincias, {
+          style: function(f, l) {
+            var fp = f.properties;
+            var gp = f.geometry.properties;
+            var v=prov_color[gp.i];
+            var color="red";
+            if (v==0) {
+                color="green"
+            } else if (v==1) {
+                color="yellow"
+            }
+            return {
+              "color": color,
+              "weight": 5,
+              "opacity": 0.10
+            }
+          },
+          onEachFeature: function(f, l) {
+            var val = obj.prediccion[f.properties.i];
+            var d = Math.pow(10, obj.decimales)
+            val = Math.round(val*d)/d;
+            val = val+" "+obj.unidades;
+            l.bindTooltip(f.properties.n+" ("+val+")");
+          },
+          filter: function(f, layer) {
+            var fp = f.properties;
+            return fp.i in prov_color;
+          }
+        }
+      );
+      layers.prediccion_semana_provincia.on({
+        mouseover: function(e) {
+          e.layer.setStyle({opacity: 1});
+        },
+        mouseout: function(e) {
+          layers.prediccion_semana_provincia.resetStyle(e.layer);
+        }
+      });
+      mymap.addLayer(layers.prediccion_semana_provincia);
+
+      t.data("prov_color", str_prov_color);
     }
   });
   if (fls) {

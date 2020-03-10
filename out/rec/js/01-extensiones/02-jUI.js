@@ -51,12 +51,12 @@ function showhide(ok, ko, root) {
 
 function getFieldSetRangos(obj) {
   var i, id, v, a, l, c;
-  obj.values = [...new Set(obj.values)].sort();
+  if (obj.values!=null) obj.values = [...new Set(obj.values)].sort(function(a, b){return a-b});
   if (!obj.title) obj.title = "Rangos"
   if (!obj.idprefix) obj.idprefix = "";
   if (obj.step == null) obj.step=1;
   if (obj.min == null) obj.min = Math.ceil(obj.values[0])-obj.step;
-  if (obj.max == null) obj.max = Math.floor(obj.values[obj.values.length-1])+obj.step;
+  if (obj.max == null) obj.max = Math.ceil(obj.values[obj.values.length-1]);
   if (obj.values && obj.values.length) {
     if (obj.values[0]==obj.min) obj.values.shift();
     if (obj.values[obj.values.length-1]==obj.max) obj.values.pop();
@@ -67,10 +67,10 @@ function getFieldSetRangos(obj) {
       obj.rangos=new Array(obj.rangos);
       for (i=0; i<obj.rangos.length;i++) obj.rangos[i]="Rango "+(i+1);
     }
-    var paso = Math.floor((obj.max - obj.min)/(obj.rangos.length+1));
+    var paso = Math.floor((obj.step + obj.max - obj.min)/(obj.rangos.length+1));
     obj.values=[];
     v=obj.min+paso;
-    while (v<obj.max && obj.values.length<obj.rangos.length) {obj.values.push(v); v=v+paso}
+    while (v<=obj.max && obj.values.length<obj.rangos.length) {obj.values.push(v); v=v+paso}
   }
   if (obj.values.length<1) return null;
   if (obj.add==null) obj.add=obj.step;
@@ -105,7 +105,7 @@ function getFieldSetRangos(obj) {
         <p class='rng${i} ${c}'>
           <span class="label">${l}:</span> ${a} ${obj.unidades} o más
           <!--input type="hidden" id="${id}" name="rng${i}" value="${v}" class="count ${pre} pseudorange" data-add="${obj.add}"-->
-          <input type="hidden" id="${id}" name="rng${i}" value="${obj.max}" class="pseudorange">
+          <!--input type="hidden" id="${id}" name="rng${i}" value="" class="pseudorange"-->
         </p>
       `)
     }
@@ -121,6 +121,73 @@ function getFieldSetRangos(obj) {
   mkDataJq(div);
   mkChangeUi(div);
   return fls
+}
+function sort_table_by_me() {
+  var t = $(this);
+  var isReversed = (!t.is(".isSortedByMe") || t.is(".isReversed"));
+  t.closest("tr").find("th").removeClass("isSortedByMe isReversed");
+  t.addClass("isSortedByMe");
+  var table = t.closest("table").find("tbody");
+  var index = t.closest("tr").find("th").index(t);
+  var tdsel = "td:eq("+index+")";
+  var isStr = t.is(".txt");
+  var i=0;
+  var switching = true;
+  var shouldSwitch = false;
+  while (switching) {
+    switching = false;
+    var rows = table.find("tr");
+    for (i = 0; i < (rows.length - 1); i++) {
+      shouldSwitch = false;
+      var rowA = rows.eq(i);
+      var rowB = rows.eq(i+1);
+      var x = rowA.find(tdsel).text().trim();
+      var y = rowB.find(tdsel).text().trim();
+      if (isStr) {
+        x = x.toLowerCase();
+        y = y.toLowerCase();
+      } else {
+        x = Number(x);
+        y = Number(y);
+      }
+      if (x > y) {
+        shouldSwitch = true;
+        rowB.insertBefore(rowA);
+        //table[0].insertBefore(rowB[0], rowA[0]);
+        switching = true;
+        break;
+      }
+    }
+  }
+  if (!isReversed) {
+    t.addClass("isReversed");
+    var trs = table.find("tr");
+    for (i=1;i<=trs.length;i++) {
+      trs.eq(trs.length-i).insertAfter(table.find("tr").last());
+    }
+  } else {
+    t.removeClass("isReversed");
+  }
+}
+
+function mkTableSortable(scope) {
+  if (!scope) scope=$("body");
+  scope = scope.filter("table:has(.isSortable)").add(scope.find("table:has(.isSortable)"));
+  scope.find("thead th.isSortable").each(function(){
+    var t=$(this);
+    var cl = t.column().map(function(){ return this.textContent.trim() })
+    var dif = [...new Set(cl.get())]
+    if (dif.length<2) {
+      t.removeClass("isSortable");
+    }
+  })
+  scope.find("th.isSortable").click(sort_table_by_me).each(function(){
+    if (this.title && this.title.trim().length) {
+        this.title = this.title + " (haz click para ordenar)"
+    } else {
+        this.title = "Haz click para ordenar"
+    }
+  });
 }
 
 function mkChangeUi(scope) {
@@ -291,16 +358,11 @@ function mkChangeUi(scope) {
     var p = $(this).closest(".multirango");
     var r = p.find("input[type=range],.pseudorange");
     if (r.not(this).filter(".changing").length) return;
-    var new_val = r.serialize();
-    if (p.val() == new_val) return;
-    p.val(new_val);
-    var i;
-    var val={};
-    var arr = r.serializeArray();
-    for (i=0; i < arr.length; i++){
-      val[arr[i]['name']] = Number(arr[i]['value']);
-    }
-    p.trigger("globalchange", [val]);
+    var new_val = r.map(function(){return this.value==""?null:Number(this.value)}).get();
+    var str_val = JSON.stringify(new_val);
+    if (p.val() == str_val) return;
+    p.val(str_val);
+    p.trigger("globalchange", [new_val]);
   })
 
   fCg[fCg.length] = scope.find("input[type=range][data-showvalue]").bind("change input",function(){
@@ -401,10 +463,7 @@ $(document).ready(function(){
       var rst = $("#iResultado");
       if (rst.is(".active")) rst.find("i").click();
       rst.hide();
-      if (layers.municipios) mymap.removeLayer(layers.municipios);
-      if (layers.provincias) mymap.removeLayer(layers.provincias)
-      mymap.addLayer(layerProvincias(layers.provincias));
-      centerMap();
+      resetMap();
       return false;
   })
   mkChangeUi();
