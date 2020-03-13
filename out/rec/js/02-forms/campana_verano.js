@@ -225,6 +225,25 @@ $(document).ready(function() {
       if (v!=null) e.val(v);
     })
   });
+
+  $("button[name='set_meteo_param_val_prediccion_semanal']").click(function(){
+    var t=$(this).closest("form");
+    var z=t.find("select[name='predictor_zona']").val();
+    var p_semanal = prediccion_semanal[z];
+    var p_ultimo = meta_info["ultimo_meteo"][z];
+    t = $(this).closest(".meteo_predictores");
+    t.find("input[type=number]").each(function(){
+      var v = null;
+      if (this.name == "tepri" || this.name == "prpri") {
+        v = p_ultimo[PARAMS_CLIENT_SERVER[this.name]];
+      } else {
+        v = p_semanal[this.name];
+      }
+      this.value=v==null?"":Math.round(v*100)/100;;
+    });
+  });
+
+
   $("select[name='predecir_o_analizar']").change(function(){
     if (!this.value) return;
     var t = $(this);
@@ -568,7 +587,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
             var d = Math.pow(10, obj.decimales)
             val = Math.round(val*d)/d;
             val = val+" "+obj.unidades;
-            l.bindTooltip(f.properties.n+" ("+val+")");
+            l.bindTooltip(f.properties.n+"<br/>"+val);
           },
           filter: function(f, layer) {
             var fp = f.properties;
