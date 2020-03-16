@@ -49,6 +49,14 @@ def parse(html, *args, **kargv):
                 label.attrs["for"]=ni
             item.attrs["id"]=ni
 
+    # Añadir prefijos a los nombres
+    for wrapper in soup.select("*[data-nameprefix]"):
+        prefix = wrapper.attrs["data-nameprefix"]
+        for item in wrapper.select(":scope *[name]"):
+            name = item.attrs["name"]
+            name = prefix+name
+            item.attrs["name"]=name
+
     for form in soup.findAll("form"):
         names = set()
         for fls in form.findAll("fieldset"):

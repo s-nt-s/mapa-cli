@@ -45,9 +45,12 @@
     </select>
   </p>
   {% for p in provincias %}
-  <div class="fLabelInput meteo_predictores predictores_{{p.ID}} notDisabled opcional">
+  <div class="fLabelInput meteo_predictores predictores_{{p.ID}} notDisabled opcional"
+       data-idprefix="prov_{{p.ID}}_"
+       data-nameprefix="dict_prediccionsemanal_{{p.ID}}_"
+  >
     {% include 'common/meteo_param.html' %}
-    <button type="button" name="set_meteo_param_val_prediccion_semanal">Rellenar con datos de la aemet</button>
+    <button type="button" class="set_meteo_param_val_prediccion_semanal">Rellenar con datos de la aemet</button>
   </div>
   {% endfor %}
   <p>

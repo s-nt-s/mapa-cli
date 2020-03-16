@@ -226,7 +226,7 @@ $(document).ready(function() {
     })
   });
 
-  $("button[name='set_meteo_param_val_prediccion_semanal']").click(function(){
+  $("button.set_meteo_param_val_prediccion_semanal").click(function(){
     var t=$(this).closest("form");
     var z=t.find("select[name='predictor_zona']").val();
     var p_semanal = prediccion_semanal[z];
@@ -234,10 +234,12 @@ $(document).ready(function() {
     t = $(this).closest(".meteo_predictores");
     t.find("input[type=number]").each(function(){
       var v = null;
-      if (this.name == "tepri" || this.name == "prpri") {
-        v = p_ultimo[PARAMS_CLIENT_SERVER[this.name]];
+      var n = this.name.split("_");
+      n = n[n.length-1];
+      if (n == "tepri" || n == "prpri") {
+        v = p_ultimo[PARAMS_CLIENT_SERVER[n]];
       } else {
-        v = p_semanal[this.name];
+        v = p_semanal[n];
       }
       this.value=v==null?"":Math.round(v*100)/100;;
     });
