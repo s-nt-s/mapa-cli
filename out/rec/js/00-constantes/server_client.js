@@ -9,6 +9,7 @@ PARAMS_CLIENT_SERVER = {
     'tepri': 'prim_tmed',
     'prpri': 'prim_prec',
     'temed': 'tmed',
+    'temin': 'tmin',
     'temax': 'tmax',
     'tevar': 'tdesviacion',
     'vevie': 'velmedia',
