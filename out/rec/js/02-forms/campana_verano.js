@@ -68,7 +68,7 @@ function showResultado(html, label, descarga) {
   if (!html) html='';
   if (descarga) {
       var strAhora = getStrFecha();
-      var md = html_to_md(`<h1>${label} ${strAhora}</h1>${html}`);
+      var md = html_to_md(`<h1>${label}</h1>${html}<p>Ejecuado el ${strAhora}</p>`);
       md = md.replace(/℃/g, "*").replace(/°/g, "*").replace(/\s*\(α\)/g, "").replace(/\*CC/g, "*C");
       var _md = btoa(toWin(md));
       //var _csv = btoa(toWin(csv));
@@ -90,7 +90,7 @@ function showResultado(html, label, descarga) {
   $("#limpiar").show().find("a").show();
 }
 
-function inputToHtml(obj, _class) {
+function inputAnualToHtml(obj, _class) {
   if (!_class) _class='';
   var i, t, c, v;
   var zonas = obj.input.zona.map(function(k) { return TXT.zonas[k] })
@@ -111,7 +111,7 @@ function inputToHtml(obj, _class) {
     <li>Target: ${TXT.capana_verano_target[obj.input.target]}</li>
     <li>Reg. Ridge (α): ${spanNumber(obj.alpha_ridge,2)}</li>
     <li class="annos_modelo">Años modelo: ${mode}</li>
-    <li>Años evaluciaón: ${evlu}</li>
+    <li>Años evaluación: ${evlu}</li>
     <li class='hide avoidMd'>Predictores:
       <ul>
         ${pred}
@@ -351,7 +351,7 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
     table = table.replace("<thead>", "<thead><tr><th colspan='1'></th><th colspan='"+(obj.annos.length)+"' style='text-align: center;'>Coeficiente</th></tr>");
     html = html + table;
 
-    html = html + inputToHtml(obj, "analisis")
+    html = html + inputAnualToHtml(obj, "analisis")
 
     showResultado(html, "Resultado análisis <abbr title='campaña'>c.</abbr> verano", "analisis");
 
@@ -404,7 +404,7 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
       <button onclick="reorderVeranoChart(this)" data-order="1">Ordenar por ${getTargetUnidad(obj.input.target)}</button>
     `;
 
-    html = html + inputToHtml(obj, "prediccion");
+    html = html + inputAnualToHtml(obj, "prediccion");
 
     html = html + "<p>Años del modelo y "+(obj.input.target==0?"las hectareas quemadas":"el número de incendios")+" en dicho año:</p>";
 
@@ -455,7 +455,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   var obj = data;//.status?objForm(form):data;
   if (textStatus!="success") return false;
   var html = "";
-  var isVr = obj.input.semana!=null && obj.valor_real!=null;
+  var isVr = obj.input.semana!=null && obj.semana_prevision!=null;
   if (isVr) {
     var smn = obj.semana_prevision.toFixed(2).replace(".","-W");
     var title='';
@@ -468,22 +468,55 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
       <li${title}><b>Semana</b>: ${smn}</li>
       <li title='Error medio de los valores reales respecto a las predicciones'><b>Error medio</b>: <code>${spanNumber(obj.mae, 2)}</code> ${getTargetUnidad(obj.input.target, obj.mae)}</li>
       <li title='Valor de correlación entre valor real y predicción para los años evaluados'><b>Spearman:</b> <code>${spanNumber(obj.spearman*100, 0)}%</code></li>
-    </ul>
     `
   } else if (obj.input.semana_actual) {
     var y = obj.input.semana_actual.split("-W");
     var s = Number(y[1]);
     var y = Number(y[0]);
     html = html + `
-    <p><b>Semana</b>: <span title="Semana ${s}ª del año ${y}">${obj.input.semana_actual}</span></p>
+    <ul>
+      <li><b>Semana</b>: <span title="Semana ${s}ª del año ${y}">${obj.input.semana_actual}</span></li>
     `
+  } else {
+    html = html + `<ul>`
   }
+  if (obj.input.ventana_size==obj.ventana_size) {
+    html = html + `<li><b>Tamaño de ventana</b>: ${obj.input.ventana_size}</li>`;
+  } else {
+    html = html + `<li><b>Tamaño de ventana</b>: Se solicitó ${obj.input.ventana_size}, pero se ha usado ${obj.ventana_size} por falta de datos</li>`;
+  }
+
+  if (obj.input.incendios_previos==0) {
+    html = html + `<li><b>Considerar incendios previos</b>: NO</li>`;
+  } else {
+    html = html + `<li><b>Considerar incendios previos</b>: `;
+    if (obj.temporalidad_off == false) {
+      html = html + `SI</li>`;
+    } else if (obj.temporalidad_off == true) {
+      html = html + `Se solicitó, pero ha tenido que ser desactivado por no disponer de datos suficientes</li>`;
+    } else {
+      if (obj.temporalidad_off.length==1) {
+        var z=obj.temporalidad_off[0];
+        z = TXT.zonas[z];
+        html = html + `SI, menos en ${z} por falta de datos</li>`;
+      } else {
+        html = html + `SI, menos en: <ul>`;
+        var i,k;
+        for (i=0; i<obj.temporalidad_off.length;i++) {
+          k = obj.temporalidad_off[i];
+          html = html + `<li>${TXT.zonas[k]}</li>`;
+        }
+        html = html + `</ul> por falta de datos</li>`;
+      }
+    }
+  }
+  html = html + `</ul>`;
 
   var cels=[
     {"class":"txt isSortable", "txt": "Provincia"},
     {"class":"isSortable", "txt": getTargetUnidad(obj.input.target).toCapitalize()}
   ]
-  if (isVr) {
+  if (isVr && obj.valor_real) {
     cels[cels.length-1].txt="Predicción"
     cels.push({"class":"isSortable", "txt": "Valor real"});
   }
@@ -491,16 +524,16 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   for (var [key, value] of Object.entries(obj.prediccion)) {
     cels.push(TXT.zonas[key]);
     cels.push(`<code>${spanNumber(value, obj.input.target==0?2:0)}</code>`);
-    if (isVr) {
+    if (isVr && obj.valor_real) {
       var v=obj.valor_real[key];
       if (v==null) cels.push("");
       else cels.push(`<code>${spanNumber(v, obj.input.target==0?2:0)}</code>`);
     }
   }
-  table = buildTable("numbers greycero "+(obj.input.target==0?"dosDecimales":""), isVr?3:2, cels);
+  table = buildTable("numbers greycero "+(obj.input.target==0?"dosDecimales":""), (isVr && obj.valor_real)?3:2, cels);
   html = html + table;
 
-  if (isVr) {
+  if (isVr && obj.valor_real) {
     html = html.replace("<thead>","<thead><tr><th></th><th colspan='2' style='text-align:center'>"+getTargetUnidad(obj.input.target).toCapitalize()+"</th>");
   } else {
     html = html + `
@@ -512,13 +545,14 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
       </p>
     `
   }
+
   showResultado(html, "Resultado predicción semanal", "prediccion");
 
   var trs = $("#resultado .content table tbody tr");
   if (trs.length<2) {
     $("p.show_hide_cero").remove();
   } else {
-    if (!isVr) {
+    if (!(isVr && obj.valor_real)) {
       var trs = trs.filter(":has(span.sig_cero)")
       if (trs.length) {
         trs.addClass("is_cero").addClass("hide");
