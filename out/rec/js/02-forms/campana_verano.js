@@ -275,6 +275,15 @@ $(document).ready(function() {
       }
     }
   }).change();
+  $("input[name=ventana_size]").change(function(){
+    var t=$(this);
+    var c=t.closest("fieldset").find("input[name=incendios_previos]");
+    var v=parseInt(t.val(), 10);
+    if (isNaN(v)) return;
+    c.prop("disabled", v==0);
+    if (v==0) c.prop("checked", false);
+    c.add(c.getLabel()).css("opacity", v==0?0.5:'');
+  }).change();
 });
 
 
