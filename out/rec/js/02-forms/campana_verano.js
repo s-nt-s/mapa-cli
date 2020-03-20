@@ -495,7 +495,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
     html = html + `<li><b>Tamaño de ventana</b>: Se solicitó ${obj.input.ventana_size}, pero se ha usado ${obj.ventana_size} por falta de datos</li>`;
   }
 
-  if (obj.input.incendios_previos==0) {
+  if (obj.input.incendios_previos==null || obj.input.incendios_previos==0) {
     html = html + `<li><b>Considerar incendios previos</b>: NO</li>`;
   } else {
     html = html + `<li><b>Considerar incendios previos</b>: `;

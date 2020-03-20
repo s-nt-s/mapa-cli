@@ -176,13 +176,19 @@ if os.environ.get("JS_PROVINCIAS") and not(provincias and args.local):
     r = requests.get(os.environ["JS_PROVINCIAS"])
     provincias = r.json()
 
+provincias = [p for p in provincias if int(p["ID"])<53]
+
 for t in ("provincias", "municipios"):
     fl = "out/geo/"+t+".js"
     if args.local and os.path.isfile(fl):
         continue
-    url = os.environ.get("GEO_"+t.upper())
-    r = requests.get(url)
-    geojson = r.json()
+    geojson = read_js("data/get/"+t+".json")
+    if geojson is None:
+        url = os.environ.get("GEO_"+t.upper())
+        r = requests.get(url)
+        geojson = r.json()
+    if t == "provincias":
+        geojson['features']=[f for f in geojson['features'] if int(f["properties"]["i"])<53]
     param = {"geo"+t: geojson}
     create_script(fl, indent=None, **param)
 
