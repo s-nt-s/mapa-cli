@@ -574,10 +574,11 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   var values = Object.entries(obj.prediccion).map(function(k){return k[1]});
   var fls = getFieldSetRangos({
     title:"Personalizar mapa",
-    class: "prediccion_semana_provincia_rangos",
-    pre: "<p>Use los siguientes intervalos para personalizar como se muestra la información en el mapa.</p>",
+    class: "prediccion_semana_provincia_rangos"+(obj.input.target==0?" dosDecimales":""),
+    pre: "<p>Use este panel para personalizar como se muestra la información en el mapa.</p>",
     min: 0,
     add: obj.input.target==0?0.01:1,
+    decimales: obj.input.target==0?2:0,
     values: values,
     rangos: ["Verde", "Amarillo", "Rojo"],
     unidades: getTargetUnidad(obj.input.target),
@@ -585,25 +586,30 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
     decimales: obj.input.target==0?2:0,
     globalchange: function(event, rng){
       var i, r, a, b, c, v;
-      var grp = {};
-      for (i=0; i<rng.length;i++) grp[rng[i].name]=[];
-      var obj = $(this).data("range_config");
-      var prov_color={}
-      for (var [key, value] of Object.entries(obj.prediccion)) {
-        var flag = true;
-        for (i=0;!(key in prov_color) && i<rng.length;i++) {
-          r = rng[i];
-          if (r!=null && value>r) continue;
-          if (i==0) {
-            prov_color[key]=i;
-          }
-          else {
-            if (value>rng[i-1]) {
-                prov_color[key]=i;
+      var t = $(this);
+      var obj = t.data("range_config");
+      var prov_color={};
+      if (t.is(".plan_b")) {
+        for (var [key, value] of Object.entries(obj.prediccion)) {
+          prov_color[key]=rng[value];
+        }
+      } else {
+        for (var [key, value] of Object.entries(obj.prediccion)) {
+          var flag = true;
+          for (i=0;!(key in prov_color) && i<rng.length;i++) {
+            r = rng[i];
+            if (r!=null && value>r) continue;
+            if (i==0) {
+              prov_color[key]=i;
+            }
+            else {
+              if (value>rng[i-1]) {
+                  prov_color[key]=i;
+              }
             }
           }
+          if (!(key in prov_color)) prov_color[key]=rng.length;
         }
-        if (!(key in prov_color)) prov_color[key]=rng.length;
       }
       var str_prov_color = JSON.stringify(prov_color);
       var t = $(this);
@@ -624,7 +630,8 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
             return {
               "color": color,
               "weight": 5,
-              "opacity": 0.10
+              "opacity": 0.10,
+              "fillOpacity": 0.4
             }
           },
           onEachFeature: function(f, l) {
@@ -655,6 +662,9 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   });
   if (fls) {
     $("#resultado .content").append(fls);
+  } else {
+    values = [...new Set(obj.values)].sort(function(a, b){return a-b});
+
   }
 
   return true;

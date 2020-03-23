@@ -50,8 +50,12 @@ function showhide(ok, ko, root) {
 
 
 function getFieldSetRangos(obj) {
+  var plan_b=false;
   var i, id, v, a, l, c;
-  if (obj.values!=null) obj.values = [...new Set(obj.values)].sort(function(a, b){return a-b});
+  if (obj.values!=null) {
+    obj.values = [...new Set(obj.values)].sort(function(a, b){return a-b});
+    obj.diff_values = obj.values.slice();
+  }
   if (!obj.title) obj.title = "Rangos"
   if (!obj.idprefix) obj.idprefix = "";
   if (obj.step == null) obj.step=1;
@@ -68,48 +72,73 @@ function getFieldSetRangos(obj) {
       for (i=0; i<obj.rangos.length;i++) obj.rangos[i]="Rango "+(i+1);
     }
     var paso = Math.floor((obj.step + obj.max - obj.min)/(obj.rangos.length+1));
+    if (paso==0) plan_b=true;
     obj.values=[];
     v=obj.min+paso;
     while (v<=obj.max && obj.values.length<obj.rangos.length) {obj.values.push(v); v=v+paso}
+    if (obj.values.length<obj.rangos.length) plan_b=true;
   }
-  if (obj.values.length<1) return null;
+  if (obj.values.length<1) plan_b=true;
   if (obj.add==null) obj.add=obj.step;
+  console.log(JSON.stringify(obj, null, ' '));
   var fls=$(`<fieldset class="fRangos multirango"><legend>${obj.title}</legend></fieldset>`);
   if (obj.class) fls.addClass(obj.class);
   if (obj.globalchange) fls.addClass("globalchange");
   if (obj.pre) {
     fls.append(obj.pre);
   }
-  for (i=0; i<obj.values.length;i++){
-    if (i==0) {
-      a=obj.min;
-    } else {
-      a = obj.values[i-1]+obj.step;
-      id = obj.idprefix + "rng" + (i-1)
-      a = `<span class="count ${id}" data-add="${obj.add}">${a}</span>`
+  if (plan_b) {
+    if (!obj.diff_values || !obj.rangos) return null;
+    var options="";
+    for (i=0; i<obj.rangos.length; i++) {
+      options=options+`<option value='rng${i}'>${obj.rangos[i]}</option>`
     }
-    v = obj.values[i];
-    id = obj.idprefix + "rng" + i;
-    l = obj.rangos?obj.rangos[i]:("Rango "+(i+1));
-    c = "rng_" + l.replace(/\s+/g, "_").toLowerCase();
-    if (i<obj.values.length-1) {
-      fls.append(`
-        <p class='rng${i} ${c}'>
-          <label for="${id}">${l}:</label> de ${a} a <span class="count ${id}">${v}</span> ${obj.unidades}
-          <input id="${id}" name="rng${i}" min="${obj.min}" max="${obj.max}" step="${obj.step}" type="range" value="${v}" data-showvalue=".count.${id}">
+    for (i=0; i<obj.diff_values.length;i++) {
+      id = obj.idprefix + "rng" + i;
+      v = obj.diff_values[i];
+      if (obj.decimales!=null) v = spanNumber(v, obj.decimales);
+      fls.append(`<p>
+        <label for='${id}'><code>${v}</code> ${obj.unidades}:</label>
+        <select id="${id}" name="val${obj.diff_values[i]}">
+          ${options}
+        </select>
         </p>
       `)
-    } else {
-      var pre=obj.idprefix + "rng" + (i-1);
-      fls.append(`
-        <p class='rng${i} ${c}'>
-          <span class="label">${l}:</span> ${a} ${obj.unidades} o más
-          <!--input type="hidden" id="${id}" name="rng${i}" value="${v}" class="count ${pre} pseudorange" data-add="${obj.add}"-->
-          <!--input type="hidden" id="${id}" name="rng${i}" value="" class="pseudorange"-->
-        </p>
-      `)
+      fls.find("select:last").find("option").eq(Math.min(i, obj.rangos.length-1)).prop("selected", true);
+      fls.addClass("plan_b")
     }
-    //if (i<obj.values.length) fls.append("<br/>");
+  } else {
+    for (i=0; i<obj.values.length;i++){
+      if (i==0) {
+        a=obj.min;
+      } else {
+        a = obj.values[i-1]+obj.step;
+        id = obj.idprefix + "rng" + (i-1)
+        a = `<span class="count ${id}" data-add="${obj.add}">${a}</span>`
+      }
+      v = obj.values[i];
+      id = obj.idprefix + "rng" + i;
+      l = obj.rangos?obj.rangos[i]:("Rango "+(i+1));
+      c = "rng_" + l.replace(/\s+/g, "_").toLowerCase();
+      if (i<obj.values.length-1) {
+        fls.append(`
+          <p class='rng${i} ${c}'>
+            <label for="${id}">${l}:</label> de ${a} a <span class="count ${id}">${v}</span> ${obj.unidades}
+            <input id="${id}" name="rng${i}" min="${obj.min}" max="${obj.max}" step="${obj.step}" type="range" value="${v}" data-showvalue=".count.${id}">
+          </p>
+        `)
+      } else {
+        var pre=obj.idprefix + "rng" + (i-1);
+        fls.append(`
+          <p class='rng${i} ${c}'>
+            <span class="label">${l}:</span> ${a} ${obj.unidades} o más
+            <!--input type="hidden" id="${id}" name="rng${i}" value="${v}" class="count ${pre} pseudorange" data-add="${obj.add}"-->
+            <!--input type="hidden" id="${id}" name="rng${i}" value="" class="pseudorange"-->
+          </p>
+        `)
+      }
+      //if (i<obj.values.length) fls.append("<br/>");
+    }
   }
   if (obj.post) {
     fls.append(obj.post);
@@ -359,6 +388,24 @@ function mkChangeUi(scope) {
     var r = p.find("input[type=range],.pseudorange");
     if (r.not(this).filter(".changing").length) return;
     var new_val = r.map(function(){return this.value==""?null:Number(this.value)}).get();
+    var str_val = JSON.stringify(new_val);
+    if (p.val() == str_val) return;
+    p.val(str_val);
+    p.trigger("globalchange", [new_val]);
+  })
+  fCg[fCg.length] = scope.find(".multirango.globalchange.plan_b select").bind("change",function(){
+    var p = $(this).closest(".multirango");
+    var values = p.serializeArray();
+    var i, v, r, vls;
+    var new_val={}
+    for (i=0; i<values.length; i++) {
+      v = values[i];
+      if (!v.name.startsWith("val") || !v.value.startsWith("rng")) continue;
+      r = Number(v.value.substr(3));
+      v = Number(v.name.substr(3));
+      if (isNaN(r) || isNaN(v)) continue;
+      new_val[v]=r;
+    }
     var str_val = JSON.stringify(new_val);
     if (p.val() == str_val) return;
     p.val(str_val);
