@@ -24,12 +24,15 @@ jQuery.fn.extend({
   find_in_parents_with_comma: function(sel) {
     var sels = sel.split(/,/);
     if (sels.length<2) return this.find_in_parents(sel);
-    var r = $([]);
-    var i;
+    var r = [];
+    var i, eq, c;
     for (i=0;i<sels.length; i++) {
-      r = r.add(this.find_in_parents(sels[i]))
+      eq = this.find_in_parents(sels[i]);
+      for (c=0; c<eq.length; c++) {
+        r.push(eq[c]);
+      }
     }
-    return r;
+    return $(r);
   },
   textval: function(val) {
     var isVal="input,select"

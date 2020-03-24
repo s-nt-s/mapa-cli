@@ -277,10 +277,11 @@ $(document).ready(function() {
   }).change();
   $("input[name=ventana_size]").change(function(){
     var t=$(this);
-    var c=t.closest("fieldset").find("input[name=incendios_previos]");
     var v=parseInt(t.val(), 10);
     if (isNaN(v)) return;
+    var c=t.closest("fieldset").find("input[name=incendios_previos]");
     c.prop("disabled", v==0);
+    t.closest("form").find("fieldset.meteo_predictores .con_temporalidad")[v==0?"hide":"show"]();
     if (v==0) c.prop("checked", false);
     c.add(c.getLabel()).css("opacity", v==0?0.5:'');
   }).change();

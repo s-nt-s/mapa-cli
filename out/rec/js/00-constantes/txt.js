@@ -26,14 +26,15 @@ var TXT={
     "prpri": "Precipitaci\u00f3n de la primavera",
     "temax": "Temperatura m\u00e1xima",
     "temed": "Temperatura media",
-    "tevar": "Variaci\u00f3n de temp. med.",
+    "tevar": "Variaci\u00f3n de temp. min.",
     "vevie": "Viento",
     "ravie": "Racha de viento",
     "prmax": "Presi\u00f3n atmosf\u00e9rica m\u00e1xima",
     "prmin": "Presi\u00f3n atmosf\u00e9rica m\u00ednima",
     "hurel": "Humedad relativa",
     "hrsol": "Horas de sol",
-    "prmed": "Precipitaciones"
+    "prmed": "Precipitaciones",
+    "temin": "Temperatura m\u00ednima"
   },
   "zonas": {
     "ESP": "Espa\u00f1a",

@@ -12,6 +12,7 @@ PARAMS_CLIENT_SERVER = {
     'temin': 'tmin',
     'temax': 'tmax',
     'tevar': 'tdesviacion',
+    'tminvar': 'tdesviacion',
     'vevie': 'velmedia',
     'ravie': 'racha',
     'prmax': 'presmax',

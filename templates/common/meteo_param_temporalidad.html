@@ -1,16 +1,29 @@
 <div class="greyinhide">
 {% with check_name='check_meteo_param' %}
-{% with id='tepri', class='predic_incen',              label='Temperatura de la primavera' %}   {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='prpri', class='predic_super',              label='Precipitación de la primavera' %} {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='temax', class='predic_super predic_incen', label='Temperatura máxima' %}            {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='temed', class='',                          label='Temperatura media' %}             {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='tevar', class='',                          label='Variación de <abbr title="temperatura media">temp. med.</abbr>' %}      {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='vevie', class='predic_super',              label='Viento' %}                        {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='ravie', class='predic_super',              label='Racha de viento' %}               {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='prmax', class='',                          label='Presión atmosférica máxima' %}    {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='prmin', class='predic_super predic_incen', label='Presión atmosférica mínima' %}    {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='hurel', class='predic_super predic_incen', label='Humedad relativa' %}              {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='hrsol', class='',                          label='Horas de sol' %}                  {% include 'snippet/check_label_check.html' %}{% endwith %}
-{% with id='prmed', class='predic_incen',              label='Precipitaciones' %}               {% include 'snippet/check_label_check.html' %}{% endwith %}
+
+{% with label='Temperatura de la primavera',
+id='tepri', class='predic_incen'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+
+{% with label='Precipitación de la primavera',
+id='prpri', class='predic_super'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+
+{% with label='Temperatura máxima',
+id='temax', class='predic_super predic_incen'    %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+
+{% with label='Temperatura mínima',
+id='temin', class=''                             %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+
+{% with label='Variación de <abbr title="temperatura minima">temp. min.</abbr>',
+id='tminvar', class=''                           %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+
+{% with label='Viento',
+id='vevie', class='predic_super'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+
+{% with label='Racha de viento',
+id='ravie', class='predic_super'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+
+{% with label='Precipitaciones',
+id='prmed', class='predic_incen'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+
 {% endwith %}
 </div>

@@ -1,6 +1,8 @@
 <input type="checkbox" value="{{id}}" title="Habilita {{label | striptags}}" id="{{id}}" name="{{check_name}}[]" data-show=".temp_{{id}}, .lb_{{id}}" class="{{class}} chk">
 <label for="{{id}}" class="{{class}} lb_{{id}}">{{label | safe }}</label><br/>
+<span class="con_temporalidad">
 &#160;&#160;&#x2937;
 <input type="checkbox" value="{{id}}" title="Usar temporalidad para el predictor {{label | striptags}}" id="temp_{{id}}" name="temporalidad[]" class="opcional {{class}} temp_{{id}}">
 <label for="temp_{{id}}" class="{{class}}">con temporalidad</label>
-<br/>
+</span>
+<br class="con_temporalidad"/>

@@ -20,13 +20,13 @@
   <legend>Ventana</legend>
   <label for="ventana_size">Tamaño ventana:</label>
   <input id="ventana_size" name="ventana_size" required type="number" min="0" max="4" value="3"><br/>
+  <input id="incendios_previos" name="incendios_previos" type="checkbox" value="1"> <label for="incendios_previos">Considerar nº de incendios previos</label>
 </fieldset>
 
 {% include 'common/meteo_target.html' %}
 
 <fieldset class="fLabelInput meteo_predictores" style="margin-bottom:16px;">
   <legend>Predictores</legend>
-  <input id="target_previos" name="target_previos" type="checkbox"> <label for="target_previos">Considerar número de incendios previos</label>
   {% include 'common/meteo_param_temporalidad.html' %}
 </fieldset>
 
