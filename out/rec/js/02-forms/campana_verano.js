@@ -234,9 +234,9 @@ $(document).ready(function() {
     t = $(this).closest(".meteo_predictores");
     t.find("input[type=number]").each(function(){
       var v = null;
-      var n = this.name.split("_");
+      var n = this.name.split(/_\d+_/);
       n = n[n.length-1];
-      if (n == "tepri" || n == "prpri") {
+      if (n == "prim_tmed" || n == "prin_prec") {
         v = p_ultimo[PARAMS_CLIENT_SERVER[n]];
       } else {
         v = p_semanal[n];

@@ -2,28 +2,28 @@
 {% with check_name='check_meteo_param' %}
 
 {% with label='Temperatura de la primavera',
-id='tepri', class='predic_incen'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+id='prim_tmed', class='predic_incen'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
 
 {% with label='Precipitación de la primavera',
-id='prpri', class='predic_super'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+id='prin_prec', class='predic_super'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
 
 {% with label='Temperatura máxima',
-id='temax', class='predic_super predic_incen'    %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+id='temp_maxi', class='predic_super predic_incen'    %}{% include 'snippet/check_label_check.html' %}{% endwith %}
 
 {% with label='Temperatura mínima',
-id='temin', class=''                             %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+id='temp_mini', class=''                             %}{% include 'snippet/check_label_check.html' %}{% endwith %}
 
 {% with label='Variación de <abbr title="temperatura minima">temp. min.</abbr>',
-id='tminvar', class=''                           %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+id='tmin_vari', class=''                           %}{% include 'snippet/check_label_check.html' %}{% endwith %}
 
 {% with label='Viento',
-id='vevie', class='predic_super'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+id='vien_velm', class='predic_super'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
 
 {% with label='Racha de viento',
-id='ravie', class='predic_super'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+id='vien_rach', class='predic_super'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
 
 {% with label='Precipitaciones',
-id='prmed', class='predic_incen'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
+id='prec_medi', class='predic_incen'                 %}{% include 'snippet/check_label_check.html' %}{% endwith %}
 
 {% endwith %}
 </div>

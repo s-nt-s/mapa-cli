@@ -22,19 +22,20 @@ var TXT={
     "C6": "C6 - Incendios reproducidos"
   },
   "check_meteo_param": {
-    "tepri": "Temperatura de la primavera",
-    "prpri": "Precipitaci\u00f3n de la primavera",
-    "temax": "Temperatura m\u00e1xima",
-    "temed": "Temperatura media",
-    "tevar": "Variaci\u00f3n de temp. min.",
-    "vevie": "Viento",
-    "ravie": "Racha de viento",
-    "prmax": "Presi\u00f3n atmosf\u00e9rica m\u00e1xima",
-    "prmin": "Presi\u00f3n atmosf\u00e9rica m\u00ednima",
-    "hurel": "Humedad relativa",
-    "hrsol": "Horas de sol",
-    "prmed": "Precipitaciones",
-    "temin": "Temperatura m\u00ednima"
+    "prim_tmed": "Temperatura de la primavera",
+    "prin_prec": "Precipitaci\u00f3n de la primavera",
+    "temp_maxi": "Temperatura m\u00e1xima",
+    "temp_medi": "Temperatura media",
+    "temp_vari": "Variaci\u00f3n de temp. med.",
+    "vien_velm": "Viento",
+    "vien_rach": "Racha de viento",
+    "pres_maxi": "Presi\u00f3n atmosf\u00e9rica m\u00e1xima",
+    "pres_mini": "Presi\u00f3n atmosf\u00e9rica m\u00ednima",
+    "hume_rela": "Humedad relativa",
+    "hora_sol": "Horas de sol",
+    "prec_medi": "Precipitaciones",
+    "temp_mini": "Temperatura m\u00ednima",
+    "tmin_vari": "Variaci\u00f3n de temp. min."
   },
   "zonas": {
     "ESP": "Espa\u00f1a",
@@ -100,18 +101,19 @@ var TXT={
     "1": "N\u00famero de incendios"
   },
   "unidad": {
-    "tepri": "\u00b0C",
-    "prpri": "mm",
-    "temax": "\u00b0C",
-    "temed": "\u00b0C",
-    "tevar": "\u00b0C",
-    "vevie": "m/s",
-    "ravie": "m/s",
-    "prmax": "hPa",
-    "prmin": "hPa",
-    "hurel": "%",
-    "hrsol": "h",
-    "prmed": "mm",
-    "temin": "\u00b0C"
+    "prim_tmed": "\u00b0C",
+    "prin_prec": "mm",
+    "temp_maxi": "\u00b0C",
+    "temp_medi": "\u00b0C",
+    "temp_vari": "\u00b0C",
+    "vien_velm": "m/s",
+    "vien_rach": "m/s",
+    "pres_maxi": "hPa",
+    "pres_mini": "hPa",
+    "hume_rela": "%",
+    "hora_sol": "h",
+    "prec_medi": "mm",
+    "temp_mini": "\u00b0C",
+    "tmin_vari": "\u00b0C"
   }
 };
