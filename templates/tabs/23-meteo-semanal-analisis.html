@@ -38,7 +38,7 @@
     <fieldset class="fOneField grupo_predecir grupo_analizar meteo_modelo_years">
       <legend>Años para crear el modelo</legend>
       <label for="rango_temporal" class="hide">Años para crear el modelo:</label>
-      <select id="rango_temporal" name="rango_temporal[]" required multiple="multiple" class="fullsize">
+      <select id="rango_temporal" name="rango_temporal[]" required multiple="multiple" class="fullsize" data-min="10">
           {% for y in range(1999, now.year) %}
             <option value="{{y}}">{{y}}</option>
           {% endfor %}
@@ -48,7 +48,7 @@
     <fieldset class="fOneField grupo_analizar">
       <legend>Años para evaluar el modelo</legend>
       <label for="rango_temporal_evaluar" class="hide">Años para evaluar el modelo:</label>
-      <select id="rango_temporal_evaluar" name="rango_temporal_evaluar[]" required multiple="multiple" class="rango_temporal_evaluar fullsize">
+      <select id="rango_temporal_evaluar" name="rango_temporal_evaluar[]" required multiple="multiple" class="rango_temporal_evaluar fullsize" data-min="5">
           {% for y in range(1999, now.year) %}
             <option value="{{y}}">{{y}}</option>
           {% endfor %}
