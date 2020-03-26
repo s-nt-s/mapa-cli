@@ -30,14 +30,14 @@ function html_to_md(elms, opt) {
       html = html + "\n";
       var wdt=null;
       var t = $(this);
-      if (t.is(".dosDecimales")) {
-        t.find(".dc1").each(function(){
-          this.textContent = this.textContent.trim()+"_";
-        })
-        t.find(".dc0").each(function(){
-          this.textContent = this.textContent.trim()+"___";
-        })
-      }
+      var dosDecimales = t.find(".dosDecimales");
+      if (t.is(".dosDecimales")) dosDecimales = dosDecimales.add(t);
+      dosDecimales.find(".dc1").each(function(){
+        this.textContent = this.textContent.trim()+"_";
+      })
+      dosDecimales.find(".dc0").each(function(){
+        this.textContent = this.textContent.trim()+"___";
+      })
       var alg = t.find(".txt").length>0 || t.is(".numbers");
       var trs = t.find("tr");
       var _tr = trs.filter(function(){return $(this).find("*[colspan]").length==0});
@@ -71,7 +71,7 @@ function html_to_md(elms, opt) {
           var td_wdt=wdt[desfase+c];
           var colspan = parseInt(td.attr("colspan"));
           if (!isNaN(colspan) && colspan>1) {
-            for(j=1; j<colspan; j++) td_wdt = td_wdt + wdt[c+j]+3;
+            for(j=1; j<colspan; j++) td_wdt = td_wdt + wdt[desfase+c+j]+3;
             desfase = desfase + colspan -1;
           }
           while (txt.length<td_wdt) {

@@ -1,11 +1,11 @@
 <fieldset>
   <legend>Objetivo predicción</legend>
   <label for="Target" class="hide">Objetivo predicción:</label>
-  <select id="Target" name="target" required data-desmarcar=".meteo_predictores input[type='checkbox']" style="width: 100%;" data-marca-if=".set_meteo_param" class="target_meteo" data-txt="capana_verano_target">
+  <select id="Target" name="target" required data-desmarcar=".meteo_predictores input[type='checkbox']" style="width: 100%;" data-marca-if=".predictores_optimos" class="target_meteo" data-txt="capana_verano_target">
       <option/>
       <option value="0" data-marcar=".predic_super[type='checkbox']">Superficie quemada</option>
       <option value="1" data-marcar=".predic_incen[type='checkbox']">Número de incendios</option>
   </select>
-  <input type="checkbox" name="set_meteo_param" id="set_meteo_param" value="1" class="set_meteo_param" data-fire-change=".target_meteo" data-bloquear=".meteo_predictores input[type='checkbox']">
-  <label for="set_meteo_param" class="set_meteo_param">Usar <u>solo</u> predictores óptimos para el objetivo seleccionado</label>
+  <input type="checkbox" name="predictores_optimos" id="predictores_optimos" value="1" class="predictores_optimos" data-fire-change=".target_meteo" data-bloquear=".meteo_predictores input[type='checkbox']">
+  <label for="predictores_optimos" class="predictores_optimos">Usar <u>solo</u> predictores óptimos para el objetivo seleccionado</label>
 </fieldset>

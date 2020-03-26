@@ -123,6 +123,40 @@ function inputAnualToHtml(obj, _class) {
   return html;
 }
 
+function inputSemanalToHtml(obj, _class) {
+  if (!_class) _class='';
+  var i, t, c, v;
+  var zonas = obj.input.zona.map(function(k) { return TXT.zonas[k] })
+  zonas = zonas.join(", ");
+  var mode = obj.input.rango_temporal.join(", ")
+  var pred = "";
+  for (i=0;i<obj.input.check_meteo_param.length;i++) {
+    c = obj.input.check_meteo_param[i]
+    t = TXT.check_meteo_param[c]
+    if (obj.input.pred_temporalidad.indexOf(c)>-1) {
+      pred = pred + "<li>"+t+" con temporalidad</li>";
+    } else {
+      pred = pred + "<li>"+t+"</li>";
+    }
+  }
+  var html=`
+  <h2>Datos del entrenamiento</h2>
+  <ul class='${_class}'>
+    <li>Región: ${zonas}</li>
+    <li>Target: ${TXT.capana_verano_target[obj.input.target]}</li>
+    <li>Considerar incendios previos: ${obj.input.target?'SI':'NO'}</li>
+    <li class="annos_modelo">Años modelo: ${mode}</li>
+    <li>Predictores:
+      <ul>
+        ${pred}
+      </ul>
+    </li>
+  </ul>
+  `
+  html = html.replace(/^.*\bnull\b.*$/gm, "");
+  return html;
+}
+
 function datoToPoints() {
   var data = arguments[0].data;
 
@@ -663,10 +697,57 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   });
   if (fls) {
     $("#resultado .content").append(fls);
-  } else {
-    values = [...new Set(obj.values)].sort(function(a, b){return a-b});
-
   }
 
   return true;
+}
+
+
+ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
+    var obj = data;//.status?objForm(form):data;
+    if (textStatus!="success") return false;
+    obj.input.check_meteo_param = obj.modelo._predictores
+    obj.input.pred_temporalidad = obj.modelo._temp_pred
+    obj.input.rango_temporal = obj.modelo._anios_entrenmt
+    obj.input.ventana_size = obj.modelo._tam_ventana
+
+    var html =""
+
+
+    cels = [
+      {"class": "isSortable isSortedByMe", "txt":"Año"},
+      {"class": "isSortable"+(obj.input.target==0?" dosDecimales":""), "txt": "Baseline", "title": "Error medio  de los valores reales respecto al valor medio"},
+      {"class": "isSortable"+(obj.input.target==0?" dosDecimales":""), "txt": "MAE", "title":"Error medio de los valores reales respecto a las predicciones"},
+      {"class": "isSortable dosDecimales", "txt":"C. exp", "title": "Carga explicativa. Porcentaje explicado por el modelo"},
+      {"class": "isSortable dosDecimales", "txt":"Spearman", "title":'Valor de correlación entre valor real y predicción para los años evaluados'},
+      {"class": "isSortable dosDecimales", "txt":"p-valor", "title": "Valor de significancia de la correlación de Spearman"}
+    ];
+    for (var [key, v] of Object.entries(obj)) {
+      key = Number(key);
+      if (isNaN(key)) continue;
+      cels.push(key);
+      cels.push(spanNumber(v.baseline, obj.input.target==0?2:0));
+      cels.push(spanNumber(v.mae, obj.input.target==0?2:0));
+      cels.push(spanNumber(v.carga_expl, 2));
+      cels.push(spanNumber(v.spearman, 2));
+      cels.push(spanNumber(v.pvalor, 2));
+    }
+
+    table = buildTable("numbers", 6, cels);
+    table = table.replace("<thead>", `
+      <thead><tr>
+        <th colspan='1'></th>
+        <th colspan='2' style='text-align: center;'>${getTargetUnidad(obj.input.target).toCapitalize()}</th>
+        <th colspan='2' style='text-align: center;'>Porcentaje (%)</th>
+        <th colspan='1'></th>
+      </tr>
+    `);
+
+    html = html + table
+
+    html = html + inputSemanalToHtml(obj, "analisis_semana_provincia");
+
+    showResultado(html, "Resultado análisis semanal", "analisis");
+
+    return true;
 }

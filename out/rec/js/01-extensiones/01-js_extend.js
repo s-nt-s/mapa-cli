@@ -302,7 +302,8 @@ function buildTable(table_class, row_size, cels) {
           th = cels[i % row_size];
           if (typeof th == "object") td = th;
       }
-      td.txt = txt
+      td.txt = txt;
+      td.title = null;
     }
     if (i == row_size) {
       t = t + `
@@ -313,9 +314,9 @@ function buildTable(table_class, row_size, cels) {
     }
     t = t + "\n       ";
     if (i<row_size) {
-      t = t + `<th class='${td.class || ''}'>${td.txt}</th>`;
+      t = t + `<th class='${td.class || ''}' title='${td.title || ''}'>${td.txt}</th>`;
     } else {
-      t = t + `<td class='${td.class || ''}'>${td.txt}</td>`;
+      t = t + `<td class='${td.class || ''}' title='${td.title || ''}'>${td.txt}</td>`;
     }
     if (((i+1) % row_size == 0) && !(i==0 || i == row_size)) {
       t = t + `
