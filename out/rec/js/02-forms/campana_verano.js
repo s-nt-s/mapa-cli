@@ -706,6 +706,8 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
 ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
     if (textStatus!="success") return false;
+    var i, v;
+
     obj.input.check_meteo_param = obj.modelo._predictores
     obj.input.pred_temporalidad = obj.modelo._temp_pred
     obj.input.rango_temporal = obj.modelo._anios_entrenmt
@@ -722,15 +724,20 @@ ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
       {"class": "isSortable dosDecimales", "txt":"Spearman", "title":'Valor de correlación entre valor real y predicción para los años evaluados'},
       {"class": "isSortable dosDecimales", "txt":"p-valor", "title": "Valor de significancia de la correlación de Spearman"}
     ];
-    for (var [key, v] of Object.entries(obj)) {
-      key = Number(key);
+    for (i=0; i<obj.input.rango_temporal_evaluar.length; i++) {
+      key = Number(obj.input.rango_temporal_evaluar[i]);
       if (isNaN(key)) continue;
       cels.push(key);
-      cels.push(spanNumber(v.baseline, obj.input.target==0?2:0));
-      cels.push(spanNumber(v.mae, obj.input.target==0?2:0));
-      cels.push(spanNumber(v.carga_expl, 2));
-      cels.push(spanNumber(v.spearman, 2));
-      cels.push(spanNumber(v.pvalor, 2));
+      v = obj[key];
+      if (v!=null) {
+        cels.push(spanNumber(v.baseline, obj.input.target==0?2:0));
+        cels.push(spanNumber(v.mae, obj.input.target==0?2:0));
+        cels.push(spanNumber(v.carga_expl, 2));
+        cels.push(spanNumber(v.spearman, 2));
+        cels.push(spanNumber(v.pvalor, 2));
+      } else {
+        cels.push({"colspan": 5, "txt": "No se disponen de datos suficientes", "style":'text-align: center;'})
+      }
     }
 
     table = buildTable("numbers", 6, cels);

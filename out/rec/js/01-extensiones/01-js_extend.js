@@ -292,20 +292,22 @@ function buildTable(table_class, row_size, cels) {
     <table class='${table_class}'>
     <thead>
       <tr>`;
-  var i, th, td, txt;
+  var i, th, td, txt, index, tag;
+  var desfase = 0;
   for (i=0; i<cels.length; i++) {
+    index = i + desfase;
     td = cels[i];
     if (typeof td != "object") {
       txt = td;
       td = {}
-      if (i>=row_size) {
-          th = cels[i % row_size];
+      if (index>=row_size) {
+          th = cels[index % row_size];
           if (typeof th == "object") td = th;
       }
       td.txt = txt;
       td.title = null;
     }
-    if (i == row_size) {
+    if (index == row_size) {
       t = t + `
       </tr>
     </thead>
@@ -313,12 +315,9 @@ function buildTable(table_class, row_size, cels) {
       <tr>`;
     }
     t = t + "\n       ";
-    if (i<row_size) {
-      t = t + `<th class='${td.class || ''}' title='${td.title || ''}'>${td.txt}</th>`;
-    } else {
-      t = t + `<td class='${td.class || ''}' title='${td.title || ''}'>${td.txt}</td>`;
-    }
-    if (((i+1) % row_size == 0) && !(i==0 || i == row_size)) {
+    tag = (index<row_size)?"th":"td";
+    t = t + `<${tag} class='${td.class || ''}' style='${td.style || ''}' title='${td.title || ''}' colspan='${td.colspan || 1}'>${td.txt}</${tag}>`;
+    if (((index+1) % row_size == 0) && !(i==0 || i == row_size)) {
       t = t + `
       </tr>`;
     }
@@ -328,6 +327,7 @@ function buildTable(table_class, row_size, cels) {
     <tbody>
   </table>`;
   }
-  t = t.replace(/\s*class=''/g, "");
+  t = t.replace(/\s*(class|title|colspan|style)=''/g, "");
+  t = t.replace(/\s*colspan='1'/g, "");
   return t;
 }
