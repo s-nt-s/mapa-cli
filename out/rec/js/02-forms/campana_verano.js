@@ -715,14 +715,26 @@ ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
 
     var html =""
 
+    html = html + `
+      <h2>Valores medios</h2>
+      <ul class='big dosEnteros dosDecimales'>
+        <li title='Error medio  de los valores reales respecto al valor medio'><b>Baseline</b>: <code>${spanNumber(obj.media.baseline, 2)}</code> ${getTargetUnidad(obj.input.target, obj.baseline).toCapitalize()}</li>
+        <li title='Error medio de los valores reales respecto a las predicciones'><b>Error medio</b>: <code>${spanNumber(obj.media.mae, 2)}</code> ${getTargetUnidad(obj.input.target, obj.mae).toCapitalize()}</li>
+        <li title='Porcentaje explicado por el modelo'><b>Carga explicativa</b>: <code>${spanNumber(obj.media.cargaexplicativa, 2)}%</code> </li>
+        <li title='Valor de correlación entre valor real y predicción para los años evaluados'><b>Spearman</b>: <code>${spanNumber(obj.media.spearman, 0)}%</code></li>
+      </ul>
+    `;
+
+    html = html + `
+      <h2>Detalle por año evaluado</h2>
+    `;
 
     cels = [
       {"class": "isSortable isSortedByMe", "txt":"Año"},
       {"class": "isSortable"+(obj.input.target==0?" dosDecimales":""), "txt": "Baseline", "title": "Error medio  de los valores reales respecto al valor medio"},
       {"class": "isSortable"+(obj.input.target==0?" dosDecimales":""), "txt": "MAE", "title":"Error medio de los valores reales respecto a las predicciones"},
       {"class": "isSortable dosDecimales", "txt":"C. exp", "title": "Carga explicativa. Porcentaje explicado por el modelo"},
-      {"class": "isSortable dosDecimales", "txt":"Spearman", "title":'Valor de correlación entre valor real y predicción para los años evaluados'},
-      {"class": "isSortable dosDecimales", "txt":"p-valor", "title": "Valor de significancia de la correlación de Spearman"}
+      {"class": "isSortable dosDecimales", "txt":"Spearman", "title":'Valor de correlación entre valor real y predicción para los años evaluados'}
     ];
     for (i=0; i<obj.input.rango_temporal_evaluar.length; i++) {
       key = Number(obj.input.rango_temporal_evaluar[i]);
@@ -732,22 +744,31 @@ ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
       if (v!=null) {
         cels.push(spanNumber(v.baseline, obj.input.target==0?2:0));
         cels.push(spanNumber(v.mae, obj.input.target==0?2:0));
-        cels.push(spanNumber(v.carga_expl, 2));
+        cels.push(spanNumber(v.cargaexplicativa, 2));
         cels.push(spanNumber(v.spearman, 2));
-        cels.push(spanNumber(v.pvalor, 2));
       } else {
-        cels.push({"colspan": 5, "txt": "No se disponen de datos suficientes", "style":'text-align: center;'})
+        cels.push({"colspan": 4, "txt": "No se disponen de datos suficientes", "style":'text-align: center;'})
       }
     }
 
-    table = buildTable("numbers", 6, cels);
+    table = buildTable("numbers", 5, cels);
     table = table.replace("<thead>", `
-      <thead><tr>
+      <thead>
+      <tr>
         <th colspan='1'></th>
         <th colspan='2' style='text-align: center;'>${getTargetUnidad(obj.input.target).toCapitalize()}</th>
         <th colspan='2' style='text-align: center;'>Porcentaje (%)</th>
-        <th colspan='1'></th>
       </tr>
+    `);
+    table = table.replace("</tbody>", `
+      </tbody>
+      <tfoot>
+      <tr>
+        <th colspan='1'></th>
+        <th colspan='3' style='text-align: center;' title='Métrica obtenida sobre las diferencias absolutas entre valores reales y predicciones'>M. absoluta</th>
+        <th colspan='1' style='text-align: center;' title='Métrica obtenida sobre incidencia relativa en provincias y semanas'>M. relativa</th>
+      </tr>
+      </tfoot>
     `);
 
     html = html + table

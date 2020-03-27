@@ -324,7 +324,7 @@ function buildTable(table_class, row_size, cels) {
   }
   if (cels.length>row_size) {
     t = t + `
-    <tbody>
+    </tbody>
   </table>`;
   }
   t = t.replace(/\s*(class|title|colspan|style)=''/g, "");

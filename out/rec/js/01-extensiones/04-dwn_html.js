@@ -48,22 +48,28 @@ function html_to_md(elms, opt) {
           for (c=0;c<wdt.length;c++) wdt[c]=Math.max(wdt[c],_wdt[c]);
         }
       }
-      var fTd=false;
       for (i=0; i<trs.length; i++) {
         html = html + "|";
         var tds = trs.eq(i).find("td,th");
-        if (!fTd && i>0 && tds.filter("td").length) {
-          fTd=true;
+        var divisorA = "";
+        var divisorB = "";
+        var cur = trs.eq(i).closest("tbody,thead,tfoot").prop("tagName").toLowerCase();
+        if (i>0 && cur=="tbody") {
+          var pre = trs.eq(i-1).closest("tbody,thead,tfoot").prop("tagName");
+          var nex = trs.eq(i+1).closest("tbody,thead,tfoot").prop("tagName");
+          if (pre) pre=pre.toLowerCase();
+          if (nex) nex=nex.toLowerCase();
+          var divisor="";
           for (c=0;c<tds.length;c++) {
             var txt = "-";
-            while (txt.length<wdt[c]) {
-              if (alg && !tds.eq(c).is(".txt")) txt = "-"+txt;
-              else txt = txt+"-";
-            }
-            html = html + "-" + txt+"-|";
+            while (txt.length<wdt[c]) txt = txt+"-";
+            divisor = divisor + "-" + txt + "-|";
           }
-          html = html + "\n|";
+          if (pre!="tbody") divisorA=divisor+ "\n|";
+          if (nex!="tbody") divisorB="|"+divisor+ "\n";
+
         }
+        if (divisorA.length) html = html + divisorA;
         var desfase = 0;
         for (c=0;c<tds.length;c++) {
           var td = tds.eq(c);
@@ -86,6 +92,7 @@ function html_to_md(elms, opt) {
           html = html + " " + txt.replace(/_/g, " ")+" |";
         }
         html = html + "\n";
+        if (divisorB.length) html = html + divisorB;
       }
       html = html + "\n";
     }
