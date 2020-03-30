@@ -1,16 +1,18 @@
-function setBarChar(id, title, labels, dataset) {
-    var elem = document.getElementById(id)
+function setGraphChart(obj, dataset) {
+    if (obj.id==null) obj.id = "myChart";
+    if (obj.type==null) obj.type = "bar";
+    var elem = document.getElementById(obj.id)
     var ctx = elem.getContext('2d');
     var dat = {
-        type: 'bar',
+        type: obj.type,
         data: {
-            labels: labels,
+            labels: obj.labels,
             datasets: dataset
         },
         options: {
             title: {
-              display: title!=null,
-              text: title,
+              display: obj.title!=null,
+              text: obj.title,
             },
             tooltips: {
               mode: 'index',
@@ -45,7 +47,10 @@ function setBarChar(id, title, labels, dataset) {
       if (dataset[i].label==null) dat.options.legend={display:false};
     }
     var myChart = new Chart(ctx, dat);
-    if (dataset.length>1) myChart.options.scales.yAxes[0].ticks.max = myChart.scales["y-axis-0"].max;
+    if (dataset.length>1) {
+      if (obj.max_y==null) obj.max_y = myChart.scales["y-axis-0"].max;
+      myChart.options.scales.yAxes[0].ticks.max = obj.max_y;
+    }
     $(elem).data("chart", myChart);
     return myChart;
 }
@@ -399,7 +404,11 @@ ON_ENDPOINT["analisis_anual"]=function(data, textStatus, jqXHR) {
 
     showResultado(html, "Resultado análisis <abbr title='campaña'>c.</abbr> verano", "analisis");
 
-    var myChart = setBarChar('myChart', getTargetUnidad(obj.input.target).toCapitalize(), obj.annos, [{
+    var myChart = setGraphChart({
+          id: 'myChart',
+          title: getTargetUnidad(obj.input.target).toCapitalize(),
+          labels: obj.annos
+      }, [{
           label: "Predicción",
           data: prediccion,
           backgroundColor: 'rgba(255, 99, 132, 0.2)',
@@ -476,7 +485,11 @@ ON_ENDPOINT["prediccion_anual"]=function(data, textStatus, jqXHR) {
 
     showResultado(html, "Resultado predicción <abbr title='campaña'>c.</abbr> verano", "prediccion");
 
-    var myChart = setBarChar('myChart', getTargetUnidad(obj.input.target).toCapitalize(), annos, [{
+    var myChart = setGraphChart({
+        id: 'myChart',
+        title: getTargetUnidad(obj.input.target).toCapitalize(),
+        labels: annos
+    }, [{
         label: null,
         data: valre,
         backgroundColor: backgroundColor,
@@ -728,8 +741,10 @@ ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
     html = html + `
       <h2>Detalle por año evaluado</h2>
     `;
-
-    cels = [
+    var annos = [];
+    var cargaexplicativa = [];
+    var spearman = [];
+    var cels = [
       {"class": "isSortable isSortedByMe", "txt":"Año"},
       {"class": "isSortable"+(obj.input.target==0?" dosDecimales":""), "txt": "Baseline", "title": "Error medio  de los valores reales respecto al valor medio"},
       {"class": "isSortable"+(obj.input.target==0?" dosDecimales":""), "txt": "MAE", "title":"Error medio de los valores reales respecto a las predicciones"},
@@ -742,6 +757,9 @@ ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
       cels.push(key);
       v = obj[key];
       if (v!=null) {
+        annos.push(key)
+        cargaexplicativa.push(Math.round(v.cargaexplicativa*100)/100);
+        spearman.push(Math.round(v.spearman*100)/100);
         cels.push(spanNumber(v.baseline, obj.input.target==0?2:0));
         cels.push(spanNumber(v.mae, obj.input.target==0?2:0));
         cels.push(spanNumber(v.cargaexplicativa, 2));
@@ -771,11 +789,45 @@ ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
       </tfoot>
     `);
 
-    html = html + table
+    html = html + table + `
+      <div class="canvas_wrapper">
+        <canvas id="myChart"></canvas>
+      </div>
+    `
 
     html = html + inputSemanalToHtml(obj, "analisis_semana_provincia");
 
     showResultado(html, "Resultado análisis semanal", "analisis");
+
+    var myChart = setGraphChart({
+          id: 'myChart',
+          title: "Porcentaje (%)",
+          labels: annos,
+          type: "line",
+          max_y: 100
+      }, [{
+          label: "Carga explicativa",
+          data: cargaexplicativa,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+      },{
+          label: "Spearman",
+          data: spearman,
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+    }], 100);
+    /*
+    var points = datoToPoints(myChart, "cargaexplicativa", "spearman");
+    myChart.options.data_order = [
+      pointToData(points.sort(function(a, b) {return a.label - b.label;})),
+      pointToData(points.sort(function(a, b) {
+        var x = a.varel - b.varel;
+        if (x!=0) return -x;
+        return a.label - b.label;
+      }))
+    ]*/
 
     return true;
 }
