@@ -43,7 +43,9 @@ $(document).ready(function(){
         fn = fn.hashCode().toString();
         fn = form.attr("id") + "_" + fn + ".json";
         //store_in.val(fn);
-        _url = window.location.pathname+"rec/api/"+fn;
+        pathname = window.location.pathname
+        if (pathname.endsWith("/index.html")) pathname = pathname.substr(0, pathname.length-10);
+        _url = pathname+"rec/api/"+fn;
         store_in.val(_url);
       }
       var settings = {
