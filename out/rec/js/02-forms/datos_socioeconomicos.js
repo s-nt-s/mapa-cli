@@ -269,9 +269,14 @@ ON_ENDPOINT["predecir"]=function(data, textStatus, jqXHR) {
     return ON_ENDPOINT["__predecir"].apply(this, arguments);
   }
   //$("#resultado .ld_footer").removeClass("hide").text("Renderizando");
+  /*
+  $.getJSON("https://dataia.mapa.gob.es/data-municipios/geo/municipios.js", function( data ) {
+    prediccion_semanal = data;
+  });
+  */
   $.ajax({
-    url: "https://dataia.mapa.gob.es/data-municipios/aemet/prediccion_semanal.json";//myroot+"geo/municipios.js",
-    dataType: "script",
+    url: "https://dataia.mapa.gob.es/data-municipios/geo/municipios.js",//myroot+"geo/municipios.js",
+    dataType: "json",
     cache: true,
     origin: [this, arguments],
     success: function(data) {
