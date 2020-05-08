@@ -242,7 +242,7 @@ $(document).ready(function() {
     var isSpain=(z.length==1)?(z[0]=="ESP"):false;
     var obj={}
     var v, k;
-    for (const [key, value] of Object.entries(meta_info["ultimo_meteo"])) {
+    for (const [key, value] of Object.entries(meta_info.p1.ultimo_verano)) {
       if (isSpain || z.includes(key)) {
         for (const [prm, val] of Object.entries(value)) {
           v = obj[prm] || [];
@@ -269,7 +269,7 @@ $(document).ready(function() {
     var t=$(this).closest("form");
     var z=t.find("select[name='predictor_zona']").val();
     var p_semanal = prediccion_semanal[z];
-    var p_ultimo = meta_info["ultimo_meteo"][z];
+    var p_ultimo = meta_info.p1.ultimo_verano[z];
     t = $(this).closest(".meteo_predictores");
     t.find("input[type=number]").each(function(){
       var v = null;
