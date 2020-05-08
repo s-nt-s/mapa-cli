@@ -14,7 +14,7 @@ from core.common import create_script, read_js
 from core.j2 import Jnj2, toTag
 
 parser = argparse.ArgumentParser(description='Crea la página web')
-parser.add_argument('--local', action='store_true', help='No descarga los json si ya estan en local')
+parser.add_argument('--localhost', action='store_true', help='Generar página para probarla en localhost')
 args = parser.parse_args()
 
 def get_label(soup, id, tag=False):
@@ -180,7 +180,7 @@ provincias = [p for p in provincias if int(p["ID"])<53]
 
 for t in ("provincias", "municipios"):
     fl = "out/geo/"+t+".js"
-    if args.local and os.path.isfile(fl):
+    if args.localhost and os.path.isfile(fl):
         continue
     geojson = read_js("data/get/"+t+".json")
     if geojson is None:
@@ -196,4 +196,7 @@ provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)
 jHtml = Jnj2("templates/", "out/", post=parse)
 jHtml.save("index.html", provincias=provincias,
-           API_ENDPOINT=os.environ.get("API_ENDPOINT", ""), now=datetime.now())
+        enpoints={
+            "p1": os.environ.get("API_ENDPOINT_P1", ""),
+            "p4": os.environ.get("API_ENDPOINT_P4", "")
+        }, now=datetime.now())

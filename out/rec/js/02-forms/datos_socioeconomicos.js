@@ -1,3 +1,4 @@
+var geomunicipios = null;
 function riesgoTxt(v) {
   if (v==0) return "bajo";
   if (v==1) return "medio";
@@ -264,16 +265,17 @@ Incendios;${obj.inc_usados}
     return true;
 }
 ON_ENDPOINT["predecir"]=function(data, textStatus, jqXHR) {
-  if (typeof geomunicipios != "undefined") {
+  if (typeof geomunicipios != "undefined" && geomunicipios!=null) {
     return ON_ENDPOINT["__predecir"].apply(this, arguments);
   }
   //$("#resultado .ld_footer").removeClass("hide").text("Renderizando");
   $.ajax({
-    url: myroot+"geo/municipios.js",
+    url: "https://dataia.mapa.gob.es/data-municipios/aemet/prediccion_semanal.json";//myroot+"geo/municipios.js",
     dataType: "script",
     cache: true,
     origin: [this, arguments],
-    success: function() {
+    success: function(data) {
+      geomunicipios=data;
       return ON_ENDPOINT["__predecir"].apply(this.origin[0], this.origin[1]);
     }
   });
