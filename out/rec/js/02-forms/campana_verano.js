@@ -718,6 +718,14 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
 
 ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
+    if (obg.msg && obj.code) {
+      $("#resultado .content").html(`<p>${obj.msg}</p>`);
+      var tResultado = $("#tResultado");
+      tResultado.text($("#fSocialAnalisis").data("resultado") || tResultado.data("default"))
+      var i = $("#iResultado").show().find("i");
+      if (!$("#resultado .content").is(":visible")) i.click();
+      return true;
+    }
     if (textStatus!="success") return false;
     var i, v;
 

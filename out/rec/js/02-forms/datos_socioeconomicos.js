@@ -289,14 +289,6 @@ ON_ENDPOINT["predecir"]=function(data, textStatus, jqXHR) {
 
 ON_ENDPOINT["analisis"]=function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
-    if (obg.msg && obj.code) {
-      $("#resultado .content").html(`<p>${obj.msg}</p>`);
-      var tResultado = $("#tResultado");
-      tResultado.text($("#fSocialAnalisis").data("resultado") || tResultado.data("default"))
-      var i = $("#iResultado").show().find("i");
-      if (!$("#resultado .content").is(":visible")) i.click();
-      return true;
-    }
     if (typeof obj == "object") {
       var html = `<ul class='big dosEnteros dosDecimales'>
         <li title='Precisión de la predicción probabilística (sin tener en cuenta ningún parámetro)'><code>${spanNumber(obj.baseline)}%</code> <b>baseline</b></li>
