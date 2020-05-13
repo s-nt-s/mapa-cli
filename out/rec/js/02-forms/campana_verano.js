@@ -718,7 +718,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
 
 ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
     var obj = data;//.status?objForm(form):data;
-    if (obg.msg && obj.code) {
+    if (obj.msg && obj.code) {
       $("#resultado .content").html(`<p>${obj.msg}</p>`);
       var tResultado = $("#tResultado");
       tResultado.text($("#fSocialAnalisis").data("resultado") || tResultado.data("default"))
