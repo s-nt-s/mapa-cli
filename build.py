@@ -153,7 +153,7 @@ def parse(html, *args, **kargv):
             del TXT[k]
 
     #create_script("out/rec/txt.js", indent=2, TXT=TXT)
-    create_script("out/rec/js/00-constantes/txt.js", indent=2, TXT=TXT)
+    create_script("out/rec/js/01-constantes/txt.js", indent=2, TXT=TXT)
 
     for n in soup.select("*[data-extract]"):
         n.extract()
