@@ -83,3 +83,16 @@ function intervalo(start, to_string) {
   if (!to_string) return seconds;
   return seconds_to_string(seconds);
 }
+
+function logHttp(url, http) {
+  var dtC = http.getResponseHeader("date");
+  var dtM = http.getResponseHeader("last-modified");
+  dtC = dtC?new Date(dtC):null;
+  dtM = dtM?new Date(dtM):null;
+  //if (dtC>=fecha || dtM>=fecha) return true;
+  if (dtM>=fecha) return http.status;
+  if (dtC) dtC = getStrFecha(dtC);
+  if (dtM) dtM = getStrFecha(dtM);
+  console.log(url);
+  console.log("date:          "+dtC+"\nlast-modified: "+dtM+"\n"+method+" "+url);
+}
