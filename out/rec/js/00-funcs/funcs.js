@@ -94,7 +94,7 @@ function logHttp(url, http, timestamp) {
   var log = url+"\ndate:          "+dtC+"\nlast-modified: "+dtM
   if (timestamp) {
       var d=new Date(0)
-      d.setUTCSeconds(data["__timestamp__"]);
+      d.setUTCSeconds(timestamp);
       log = log+"\ntimestamp:     "+getStrFecha(d)+" [hace "+intervalo(d, true)+"]";
   }
   console.log(log);
