@@ -89,8 +89,6 @@ function logHttp(url, http) {
   var dtM = http.getResponseHeader("last-modified");
   dtC = dtC?new Date(dtC):null;
   dtM = dtM?new Date(dtM):null;
-  //if (dtC>=fecha || dtM>=fecha) return true;
-  if (dtM>=fecha) return http.status;
   if (dtC) dtC = getStrFecha(dtC);
   if (dtM) dtM = getStrFecha(dtM);
   console.log(url);
