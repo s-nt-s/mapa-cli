@@ -279,9 +279,13 @@ ON_ENDPOINT["predecir"]=function(data, textStatus, jqXHR) {
     dataType: "json",
     cache: true,
     origin: [this, arguments],
-    success: function(data) {
+    success: function(
+      data,
+      status,
+      http
+    ) {
       geomunicipios=data;
-      //logHttp(this.url, http);
+      logHttp(this.url, http);
       return ON_ENDPOINT["__predecir"].apply(this.origin[0], this.origin[1]);
     }
   });
