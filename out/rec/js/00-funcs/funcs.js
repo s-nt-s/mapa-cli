@@ -91,6 +91,5 @@ function logHttp(url, http) {
   dtM = dtM?new Date(dtM):null;
   if (dtC) dtC = getStrFecha(dtC);
   if (dtM) dtM = getStrFecha(dtM);
-  console.log(url);
-  console.log("date:          "+dtC+"\nlast-modified: "+dtM+"\n"+method+" "+url);
+  console.log(url+"\ndate:          "+dtC+"\nlast-modified: "+dtM);
 }
