@@ -5,5 +5,5 @@ $.getJSON("https://dataia.mapa.gob.es/data-municipios/aemet/prediccion_semanal.j
   http
 ) {
   prediccion_semanal = data;
-  logHttp(this.url, http);
+  logHttp(this.url, http, prediccion_semanal["__timestamp__"]);
 });

@@ -84,12 +84,18 @@ function intervalo(start, to_string) {
   return seconds_to_string(seconds);
 }
 
-function logHttp(url, http) {
+function logHttp(url, http, timestamp) {
   var dtC = http.getResponseHeader("date");
   var dtM = http.getResponseHeader("last-modified");
   dtC = dtC?new Date(dtC):null;
   dtM = dtM?new Date(dtM):null;
   if (dtC) dtC = getStrFecha(dtC);
   if (dtM) dtM = getStrFecha(dtM);
-  console.log(url+"\ndate:          "+dtC+"\nlast-modified: "+dtM);
+  var log = url+"\ndate:          "+dtC+"\nlast-modified: "+dtM
+  if (timestamp) {
+      var d=new Date(0)
+      d.setUTCSeconds(data["__timestamp__"]);
+      log = log+"\ntimestamp:     "+getStrFecha(d)+" [hace "+intervalo(d, true)+"]";
+  }
+  console.log(log);
 }
