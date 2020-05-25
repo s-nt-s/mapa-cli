@@ -11,8 +11,9 @@ $.getJSON("https://dataia.mapa.gob.es/data-municipios/aemet/prediccion_semanal.j
         var d=new Date(0)
         d.setUTCSeconds(prediccion_semanal["__timestamp__"]);
         var eq = $("span.datos_aemet_prediccion_semanal");
-        eq.html("aemet (obtenidos hace "+intervalo(d, true)+")");
-        eq.attr("title", getStrFecha(d))
+        var hace = seconds_to_hours(intervalo(d, false));
+        eq.html("aemet (obtenidos hace <span>"+hace+"</span>)");
+        eq.find("span").attr("title", getStrFecha(d))
     });
   }
 });

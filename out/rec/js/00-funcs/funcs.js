@@ -76,6 +76,18 @@ function seconds_to_string(seconds) {
   return h+m+" y "+s+" segundos";
 }
 
+function seconds_to_hours(seconds) {
+  seconds = Math.round(seconds);
+  if (seconds==1) return "un segundo";
+  if (seconds<60) return seconds+" segundos"
+  var m = Math.floor(seconds/60);
+  if (m==1) return "un minuto";
+  if (m<60) return m+" minutos";
+  var h = Math.floor(m/60);
+  if (h==1) return "una hora";
+  return h+" horas";
+}
+
 function intervalo(start, to_string) {
   var timeDiff = new Date() - start;
   timeDiff /= 1000;
