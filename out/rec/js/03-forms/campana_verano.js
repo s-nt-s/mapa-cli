@@ -253,7 +253,8 @@ $(document).ready(function() {
     }
     var _getSum = function getSum(total, num) {return total + num;}
     for (const [key, value] of Object.entries(obj)) {
-      k = PARAMS_SERVER_CLIENT[key] || key;
+      if (key=="tdesviacion") k = "temp_vari";
+      else k = PARAMS_SERVER_CLIENT[key] || key;
       v = value.reduce(_getSum, 0) / value.length;
       v = Math.round(v*100)/100;
       obj[k] = v;
