@@ -175,6 +175,7 @@ os.makedirs("out/rec", exist_ok=True)
 provincias = read_js("data/provincias.json") or []
 if os.environ.get("JS_PROVINCIAS") and not(provincias and args.local):
     r = requests.get(os.environ["JS_PROVINCIAS"])
+    print(r.text)
     provincias = r.json()
 
 provincias = [p for p in provincias if int(p["ID"])<53]
