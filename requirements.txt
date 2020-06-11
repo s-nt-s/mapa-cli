@@ -8,3 +8,4 @@ PyYAML==5.1.2
 requests==2.18.4
 Shapely==1.6.4.post2
 Unidecode==1.1.1
+boto3
