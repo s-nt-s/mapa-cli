@@ -10,6 +10,9 @@ from unidecode import unidecode
 import argparse
 from datetime import datetime
 import json
+import boto3
+
+s3 = boto3.client('s3')
 
 from core.common import create_script, read_js
 from core.j2 import Jnj2, toTag
@@ -168,15 +171,21 @@ def sort_prov(p):
     n.replace("--------", "ñ")
     return (n, p.ID)
 
+def dwn_s3(s3_key, target, overwrite=True):
+    if not s3_key:
+        return
+    if not overwrite and os.path.isfile(target):
+        return
+    print(s3_key,"->", target)
+    bucket, key = s3_key.split('/',2)[-1].split('/',1)
+    s3.download_file(bucket, key, target)
+
 
 os.makedirs("out/geo", exist_ok=True)
 os.makedirs("out/rec", exist_ok=True)
 
+dwn_s3(os.environ.get("JS_PROVINCIAS"), "data/provincias.json", overwrite=not args.local)
 provincias = read_js("data/provincias.json") or []
-if os.environ.get("JS_PROVINCIAS") and not(provincias and args.local):
-    r = requests.get(os.environ["JS_PROVINCIAS"])
-    print(r.text)
-    provincias = r.json()
 
 provincias = [p for p in provincias if int(p["ID"])<53]
 
@@ -184,11 +193,9 @@ for t in ("provincias", "municipios"):
     fl = "out/geo/"+t+".js"
     if args.local and os.path.isfile(fl):
         continue
-    geojson = read_js("data/get/"+t+".json")
-    if geojson is None:
-        url = os.environ.get("GEO_"+t.upper())
-        r = requests.get(url)
-        geojson = r.json()
+    geo = "data/geo/"+t+".json"
+    dwn_s3(os.environ.get("GEO_"+t.upper()), geo)
+    geojson = read_js(geo)
     if t == "provincias":
         geojson['features']=[f for f in geojson['features'] if int(f["properties"]["i"])<53]
     param = {"geo"+t: geojson}
@@ -199,7 +206,6 @@ for k, v in os.environ.items():
     if k.startswith("API_ENDPOINT_"):
         k = k[13:].lower()
         enpoints[k]=v
-print("enpoints = ", json.dumps(enpoints, indent=1))
 
 provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)
