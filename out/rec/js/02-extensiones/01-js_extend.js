@@ -3,6 +3,7 @@ $(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
   if (ajaxOptions.url == ping_url) {
     alert("Su sesión ha caducado.");
     location.reload();
+    return;
   }
   $.ajax({"url":myroot+"ping.txt"});
 });
