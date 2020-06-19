@@ -1,21 +1,7 @@
 $(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
-  console.log(event);
+  console.log(arguments);
 });
 
-function isSessionAlive() {
-  if (document.location.hostname!="dataia.mapa.gob.es") return true;
-
-  //alert("Su sesión se ha cerrado por inactividad.")
-  //window.location.reload(true);
-}
-/*
-jQuery(document).ajaxStart(function(){
-
-});
-jQuery(document).ajaxError(function(){
-alert(1)
-});
-*/
 function set_max(selector, maximum, value, placeholder) {
   var es = $(selector);
   var i,e;
