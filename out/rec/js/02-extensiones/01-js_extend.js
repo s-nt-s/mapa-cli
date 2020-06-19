@@ -1,3 +1,7 @@
+$(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
+  console.log(event);
+});
+
 function isSessionAlive() {
   if (document.location.hostname!="dataia.mapa.gob.es") return true;
 
