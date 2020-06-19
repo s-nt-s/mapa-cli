@@ -1,5 +1,10 @@
 $(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
-  console.log(arguments);
+  var ping_url = myroot+"ping.txt";
+  if (ajaxOptions.url == ping_url) {
+    alert("Su sesión ha caducado.");
+    location.reload();
+  }
+  $.ajax({"url":myroot+"ping.txt"});
 });
 
 function set_max(selector, maximum, value, placeholder) {
