@@ -1,3 +1,17 @@
+function isSessionAlive() {
+  if (document.location.hostname!="dataia.mapa.gob.es") return true;
+
+  //alert("Su sesión se ha cerrado por inactividad.")
+  //window.location.reload(true);
+}
+/*
+jQuery(document).ajaxStart(function(){
+
+});
+jQuery(document).ajaxError(function(){
+alert(1)
+});
+*/
 function set_max(selector, maximum, value, placeholder) {
   var es = $(selector);
   var i,e;
@@ -84,7 +98,12 @@ function isUrlOnline(url, status, fecha, method) {
   http.open(method, url, false);
   http.setRequestHeader('cache-control', 'no-cache, no-store, must-revalidate, post-check=0, pre-check=0');
   http.setRequestHeader('cache-control', 'max-age=0');
-  http.send();
+  try{
+    http.send();
+  } catch (error) {
+    console.error(error);
+    return 999;
+  }
   if (!status.includes(http.status)) {
     console.log(http.status+" "+method+" "+url);
     return http.status;
