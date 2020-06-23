@@ -624,7 +624,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
     }
   }
   if (trs.find("td:last code").filter(function() {
-    return this.textContent.trim().length==1;
+    return this.textContent.trim().length==0;
   }).length==0) {
     $("p.show_hide_null").remove();
   }
