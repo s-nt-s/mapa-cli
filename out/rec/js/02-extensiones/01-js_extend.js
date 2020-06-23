@@ -5,7 +5,10 @@ $(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
     location.reload();
     return;
   }
-  $.ajax({"url":myroot+"ping.txt"});
+  $.ajax({
+      "url":myroot+"ping.txt",
+      "cache": false
+  });
 });
 
 function set_max(selector, maximum, value, placeholder) {
