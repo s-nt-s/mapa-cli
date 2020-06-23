@@ -624,7 +624,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
     }
   }
   if (trs.find("td:last code").filter(function() {
-    return this.textContent.trim().length==1;
+    return this.textContent.trim().length==0;
   }).length==0) {
     $("p.show_hide_null").remove();
   }
@@ -701,6 +701,10 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
           },
           onEachFeature: function(f, l) {
             var val = obj.prediccion[f.properties.i];
+            if (val==null) {
+              l.bindTooltip(f.properties.n+"<br/>Faltan predictores");
+              return;
+            }
             var d = Math.pow(10, obj.decimales)
             val = Math.round(val*d)/d;
             val = val+" "+obj.unidades;
@@ -708,7 +712,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
           },
           filter: function(f, layer) {
             var fp = f.properties;
-            return fp.i in prov_color;
+            return fp.i in obj.prediccion;
           }
         }
       );
