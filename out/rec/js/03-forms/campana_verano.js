@@ -601,6 +601,10 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
           Mostrar provincias con predicción igual a <code>0</code>
         </label>
       </p>
+      <p class="avoidMd show_hide_null">
+        (*) Algunas provincias aparecen sin datos en la tabla, y en gris en el mapa, por falta de predictores.
+        Si lo desea, puede repetir la operación rellenando los predictores faltantes con el panel 'Modificar predictores'.
+      </p>
     `
   }
 
@@ -618,6 +622,11 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
         $("p.show_hide_cero").remove();
       }
     }
+  }
+  if (trs.find("td:last code").filter(function() {
+    return this.textContent.trim().length==1;
+  }).length==0) {
+    $("p.show_hide_null").remove();
   }
 
   var values = Object.entries(obj.prediccion).map(function(k){return k[1]});
@@ -640,10 +649,12 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
       var prov_color={};
       if (t.is(".plan_b")) {
         for (var [key, value] of Object.entries(obj.prediccion)) {
+          if (value==null) continue;
           prov_color[key]=rng[value];
         }
       } else {
         for (var [key, value] of Object.entries(obj.prediccion)) {
+          if (value==null) continue;
           var flag = true;
           for (i=0;!(key in prov_color) && i<rng.length;i++) {
             r = rng[i];
@@ -670,18 +681,23 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
             var fp = f.properties;
             var gp = f.geometry.properties;
             var v=prov_color[gp.i];
-            var color="red";
-            if (v==0) {
-                color="green"
-            } else if (v==1) {
-                color="yellow"
-            }
-            return {
-              "color": color,
+            var cnf = {
+              "color": "red",
               "weight": 5,
               "opacity": 0.10,
               "fillOpacity": 0.4
+            };
+            if (v==null) {
+              cnf.color = "grey";
+              cnf.opacity = 0.05;
+            } else {
+              if (v==0) {
+                  cnf.color="green"
+              } else if (v==1) {
+                  cnf.color="yellow"
+              }
             }
+            return cnf;
           },
           onEachFeature: function(f, l) {
             var val = obj.prediccion[f.properties.i];
