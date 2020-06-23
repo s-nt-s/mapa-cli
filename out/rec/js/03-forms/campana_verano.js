@@ -689,8 +689,8 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
             };
             if (v==null) {
               cnf.color = "grey";
-              cnf.opacity = 0.05;
-              cnf.fillOpacity = 0.02;
+              cnf.opacity = 0.08;
+              cnf.fillOpacity = 0.03;
             } else {
               if (v==0) {
                   cnf.color="green"
