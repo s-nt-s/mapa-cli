@@ -611,6 +611,11 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   showResultado(html, "Resultado predicción semanal", "prediccion");
 
   var trs = $("#resultado .content table tbody tr");
+  if (trs.find("td:last code").filter(function() {
+    return this.textContent.trim().length==0;
+  }).length==0) {
+    $("p.show_hide_null").remove();
+  }
   if (trs.length<2) {
     $("p.show_hide_cero").remove();
   } else {
@@ -622,11 +627,6 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
         $("p.show_hide_cero").remove();
       }
     }
-  }
-  if (trs.find("td:last code").filter(function() {
-    return this.textContent.trim().length==0;
-  }).length==0) {
-    $("p.show_hide_null").remove();
   }
 
   var values = Object.entries(obj.prediccion).map(function(k){return k[1]});
