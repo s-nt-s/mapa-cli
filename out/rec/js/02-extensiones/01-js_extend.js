@@ -1,17 +1,3 @@
-function inSession(event, xhr, ajaxOptions, thrownError) {
-  var ping_url = myroot+"ping.txt";
-  if (ajaxOptions.url == ping_url) {
-    alert("Su sesión ha caducado.");
-    location.reload();
-    return;
-  }
-  $.ajax({
-      "url":ping_url,
-      "cache": false,
-      "originAjax": ajaxOptions
-  });
-}
-
 $(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
   var ping_url = myroot+"ping.txt";
   if (ajaxOptions.url == ping_url) {
