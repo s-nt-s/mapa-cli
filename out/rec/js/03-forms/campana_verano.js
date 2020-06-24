@@ -548,7 +548,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
     html = html + `<li><b>Considerar incendios previos</b>: NO</li>`;
   } else {
     html = html + `<li><b>Considerar incendios previos</b>: `;
-    if (obj.temporalidad_off == se) {
+    if (obj.temporalidad_off == false) {
       html = html + `SI</li>`;
     } else if (obj.temporalidad_off == true) {
       html = html + `Se solicitó, pero ha tenido que ser desactivado por no disponer de datos suficientes</li>`;
