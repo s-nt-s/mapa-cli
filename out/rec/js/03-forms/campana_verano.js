@@ -541,14 +541,14 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   if (obj.input.ventana_size==obj.ventana_size) {
     html = html + `<li><b>Tamaño de ventana</b>: ${obj.input.ventana_size}</li>`;
   } else {
-    html = html + `<li><b>Tamaño de ventana</b>: Se solicitó ${obj.input.ventana_size}, pero se ha usado ${obj.ventana_size} por falta de datos</li>`;
+    html = html + `<li><b>Tamaño de ventana</b>: Se solicitó ${obj.input.ventana_size}, pero se ha usado ${obj.ventana_size} por ta de datos</li>`;
   }
 
   if (obj.input.incendios_previos==null || obj.input.incendios_previos==0) {
     html = html + `<li><b>Considerar incendios previos</b>: NO</li>`;
   } else {
     html = html + `<li><b>Considerar incendios previos</b>: `;
-    if (obj.temporalidad_off == false) {
+    if (obj.temporalidad_off == se) {
       html = html + `SI</li>`;
     } else if (obj.temporalidad_off == true) {
       html = html + `Se solicitó, pero ha tenido que ser desactivado por no disponer de datos suficientes</li>`;
@@ -602,8 +602,8 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
         </label>
       </p>
       <p class="avoidMd show_hide_null">
-        (*) Algunas provincias aparecen sin datos en la tabla, y en gris en el mapa, por falta de predictores.
-        Si lo desea, puede repetir la operación rellenando los predictores faltantes con el panel 'Modificar predictores'.
+        (*) Algunas provincias aparecen sin datos en la tabla, y en gris en el mapa, por falta de predictores o datos en el histórico de ventana.
+        Si lo desea, puede repetir la operación rellenando los predictores faltantes con el panel 'Modificar predictores' y/o disminuyendo el tamaño de ventana.
       </p>
     `
   }
@@ -701,7 +701,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
           onEachFeature: function(f, l) {
             var val = obj.prediccion[f.properties.i];
             if (val==null) {
-              l.bindTooltip(f.properties.n+"<br/>Faltan predictores");
+              l.bindTooltip(f.properties.n+"<br/>Faltan predictores o datos en la ventana");
               return;
             }
             var d = Math.pow(10, obj.decimales)
