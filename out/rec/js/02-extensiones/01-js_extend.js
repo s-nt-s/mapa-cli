@@ -1,7 +1,9 @@
 $(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
   var ping_url = myroot+"ping.txt";
   var origin = ajaxOptions.url.replace(/\?[^\?]*$/, "");
-  if (origin == ping_url) {
+  if (ajaxOptions==null) ajaxOptions={};
+  ajaxOptions.__intento__ = (ajaxOptions.__intento__||0)+1;
+  if (origin == ping_url || ajaxOptions.__intento__>3) {
     alert("Su sesión ha caducado.");
     location.reload();
     return;
