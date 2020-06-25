@@ -541,17 +541,17 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
   if (obj.input.ventana_size==obj.ventana_size) {
     html = html + `<li><b>Tamaño de ventana</b>: ${obj.input.ventana_size}</li>`;
   } else {
-    html = html + `<li><b>Tamaño de ventana</b>: Se solicitó ${obj.input.ventana_size}, pero se ha usado ${obj.ventana_size} por ta de datos</li>`;
+    html = html + `<li><b>Tamaño de ventana</b>: Se solicitó ${obj.input.ventana_size}, pero se ha usado ${obj.ventana_size} por falta de datos</li>`;
   }
 
   if (obj.input.incendios_previos==null || obj.input.incendios_previos==0) {
     html = html + `<li><b>Considerar incendios previos</b>: NO</li>`;
   } else {
     html = html + `<li><b>Considerar incendios previos</b>: `;
-    if (obj.temporalidad_off == false) {
-      html = html + `SI</li>`;
-    } else if (obj.temporalidad_off == true) {
+    if (obj.ventana_size == 0 || obj.temporalidad_off == true) {
       html = html + `Se solicitó, pero ha tenido que ser desactivado por no disponer de datos suficientes</li>`;
+    } else if (obj.temporalidad_off == false) {
+      html = html + `SI</li>`;
     } else {
       if (obj.temporalidad_off.length==1) {
         var z=obj.temporalidad_off[0];
