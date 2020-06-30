@@ -562,6 +562,8 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
         var i,k;
         for (i=0; i<obj.temporalidad_off.length;i++) {
           k = obj.temporalidad_off[i];
+          k = k.toString();
+          if (k.length==1) k = "0"+k;
           html = html + `<li>${TXT.zonas[k]}</li>`;
         }
         html = html + `</ul> por falta de datos</li>`;
