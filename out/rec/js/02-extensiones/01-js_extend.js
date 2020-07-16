@@ -13,6 +13,10 @@ $(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
       "cache": false,
       "originAjax": ajaxOptions
   }).done(function(){
+    if (this.originAjax.when_url_exist!=null) {
+      console.log("Ping superado, esperar when_url_exist");
+      return;
+    }
     console.log("Ping superado, reintentar llamada ajax");
     $.ajax(this.originAjax);
   });
