@@ -1,0 +1,97 @@
+<h1 class="sidebar-header">
+  Información
+  <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+  <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+    <p class="logo">
+      <img src="img/logo.png" alt="Logo MAPA" title="Logo MAPA"/><br>
+      <img src="img/logo_miterd.png" alt="Logo MITERD" title="Logo MITERD"/><br>
+    </p>
+	
+  <h2>1. Estructura de Arbaria</h2> 
+  <p>
+  Arbaria consta de dos proyectos de apoyo a la prevención y extinción de incendios forestales:
+  </p>
+  <ol>
+    <li>Riesgo municipal según datos socioeconómicos (bloque rosa).</li>
+    <li>Predicción para la campaña de verano (bloque amarillo).</li>
+  </ol>
+  <h2>2. Riesgo municipal según datos socioeconómicos</h2>
+  <h3>2.1. Predicción de incendios</h3>
+  <p>Funcionalidad que permite estimar la probabilidad de riesgo de incendio a escala municipal para el conjunto de las provincias seleccionadas (por defecto, toda España) asociada a factores socioeconómicos. Se pueden configurar diferentes parámetros, causas, radios de influencia, rangos de riesgos o rangos temporales de los que obtener los patrones. Además, presenta información adicional valiosa para determinar las causas de la asignación de niveles de riesgo. Modelos creados a partir de algoritmos de ensemble (Random-Forest)</p>
+  <dl class="con_bas">
+    <dt>Selección de zonas</dt><dd>Se permite seleccionar múltiples provincias de varias formas: en el panel lateral izquierdo de la aplicación o, sobre el mapa, pulsando el botón derecho del ratón sobre las diferentes provincias o manteniendo pulsada la tecla "Control".</dd>
+    <dt>Comparativa entre municipios</dt><dd>En la pestaña de resultados, se permite crear tablas comparativas de los valores resultantes de la predicción pulsando con el botón derecho del ratón sobre aquellos municipios que se deseen comparar.</dd>
+  </dl>
+  <h3>2.2. Análisis de incendios</h3>
+  <p>Funcionalidad que permite medir la bondad de las predicciones para años pasados y analizar la influencia de los distintos parámetros en diversas zonas y regiones. Se obtienen las métricas explicadas en la sección de "Conceptos básicos".</p>
+  <h3>2.3. Leyenda</h3>
+  <p>Niveles de riesgo en el mapa. La cuantificación de dichos niveles es uno de los parámetros que se introducen como entrada de una predicción o un análisis.</p>
+  <ul>
+  <li>Verde: riesgo bajo.</li>
+  <li>Amarillo: riesgo medio.</li>
+  <li>Naranja: riesgo alto.</li>
+  <li>Rojo: riesgo muy alto.</li>
+  </ul>
+  <h3>2.4. Conceptos básicos</h3>
+  <p>
+    Para el correcto aprovechamiento de esta herramienta conviene conocer los siguientes conceptos básicos:
+  </p>
+  <dl class="con_bas">
+    <dt>Baseline (panel-análisis)</dt><dd>Valor de base de la predicción. Se obtiene a partir del cálculo de la distribución de las probabilidades entre los cuatro niveles de riesgo. Es lo que obtendríamos sin emplear ningún parámetro.</dd>
+    <dt>Accuracy (panel-análisis)</dt><dd>Acierto general de la predicción, medido como el número de casos acertados dividido por el número de casos totales.</dd>
+    <dt>Mejora (panel-análisis)</dt><dd>Diferencia entre accuracy y baseline. Da una idea de cuánto hemos mejorado al introducir los parámetros.</dd>
+    <dt>Carga explicativa (panel-análisis)</dt><dd>Porcentaje de influencia en la ocurrencia de incendios que tienen los parámetros seleccionados. Se obtiene como el cociente entre la mejora y el total de la máxima carga explicativa posible. Esta se obtiene como la diferencia entre el 100% de acierto y el valor del porcentaje del baseline.</dd>
+    <dt>Importancia global de un parámetro (panel-predicción y análisis)</dt><dd>Grado de influencia que tiene el parámetro sobre la ocurrencia de incendios sobre el territorio seleccionado y para las características establecidas en el panel. Esta información se obtiene durante el entrenamiento del algoritmo y corresponde a los patrones generales.</dd>
+    <dt>Importancia local de un parámetro (panel-predicción)</dt><dd>Explicación de las causas que hacen que un municipio determinado tenga asignado un determinado riesgo. Los valores mayores corresponden a los parámetros que han tenido una mayor carga en la asignación del nivel de riesgo. Se obtiene en fase de predicción, ya que es específico de cada municipio para los últimos datos recabados.</dd>
+    <dt>Valor real (pop up - predicción)</dt><dd>Valor absoluto de ese parámetro para el municipio seleccionado. Las celdas vacías corresponden a valores que se han inferido internamente.</dd>
+    <dt>Percentil (pop up - predicción)</dt><dd>Percentil que corresponde al municipio seleccionado en cada parámetro, dentro del conjunto de municipios de las provincias seleccionadas para la predicción.</dd>
+  </dl>
+  <h2>3. Predicción para la campaña de verano</h2>
+  <h3>3.1. Simulación o análisis de la campaña de verano</h3>
+  <p>Funcionalidad que permite simular el número de incendios o la superficie quemada durante la campaña de verano completa, para todo el territorio nacional o para una zona seleccionada agregando provincias. También permite simular predicciones análogas para años pasados y comparar el resultado con su valor real. El modelo se genera a partir de una regresión lineal múltiple con regularización Ridge.</p>
+  <p>Se permite seleccionar los años pasados de los que se extraerán patrones para crear el modelo que se utilizará al realizar la predicción.</p>
+  <p>Para realizar la predicción, se emplean los valores de predictores del formulario. Para facilitar la tarea de rellenarlos, se habilita un botón que precarga los valores medios para la zona seleccionada en el año anterior.</p>
+  <dl class="con_bas">
+    <dt>Selección de zonas</dt><dd>Se permite seleccionar múltiples provincias de varias formas: en el panel lateral izquierdo de la aplicación o, sobre el mapa, pulsando el botón derecho del ratón sobre las diferentes provincias o manteniendo pulsada la tecla "Control".</dd>
+    <dt>Regularización de Ridge</dt><dd>Permite ajustar el nivel de regularización del modelo. Si se deja vacío, se empleará aquel que optimice los resultados para los años pasados.</dd>
+  </dl>
+  <h3>3.2. Predicción semanal-provincial</h3>
+  <p>Funcionalidad que predice el número de incendios o la superficie quemada de los próximos 7 días para cada una de las provincias seleccionadas. Los predictores meteorológicos empleados son los que suministra Aemet. No obstante, es posible modificar estos valores seleccionando la provincia deseada para poder realizar simulaciones alternativas. La predicción se realiza a partir de modelos de Deep Learning (MLP con embeddings y ventana deslizante).</p>
+  <p>En el caso de que alguna provincia no aparezca en la tabla final de resultados, esto puede deberse a que no exista valor de Aemet para alguno de los predictores. En ese caso, es posible repetir la predicción volviendo a la interfaz de entrada y, tras cargar los valores de Aemet, fijando manualmente un valor para el predictor ausente de dicha provincia. De ese modo sí se obtendrá un resultado de predicción para la provincia que se visualizará en la tabla y en el mapa.</p>
+  <dl class="con_bas">
+    <dt>Ventana</dt><dd>Permite seleccionar el número de semanas previas de las que se incluyen valores de predictores en el modelo. Además, se permite incluir como predictor el número de incendios de dichas semanas.</dd>
+    <dt>Simular</dt><dd>Permite simular predicciones análogas para semanas de años pasados y comparar el resultado con su valor real. Si se deja en blanco, se realiza la predicción para los próximos 7 días.</dd>
+  </dl>
+  <h3>3.3. Análisis semanal-provincial</h3>
+  <p>Funcionalidad que permite medir la bondad de las predicciones en años pasados mediante validazión cruzada en diversas zonas y regiones. La validación utiliza modelos pre-entrenados, por lo que en caso de modificar los predictores involucrados o elegir para el modelo un conjunto de años todavía no probado, será necesario esperar unos minutos hasta que se complete el entrenamiento. Se puede volver a solicitar el análisis a los 5 minutos. Si los modelos ya han podido ser entrenados, se cargarán los resultados de forma inmediata. Se obtienen las métricas explicadas en la sección de "Conceptos básicos".</p>
+    <h3>3.4. Leyenda</h3>
+  <p>Niveles de riesgo en el mapa. Se pueden modificar de manera dinámica directamente sobre el panel de resultados. Es importante tener en cuenta que los umbrales de cada nivel se ajustan de manera relativa a los valores de cada semana, por lo que no tienen un significado absoluto, sino que indican qué provincias, en esa semana, tienen un mayor o menor riesgo relativo.</p>
+  <ul>
+  <li>Verde: provincias con menor riesgo en la semana elegida.</li>
+  <li>Amarillo: provincias con riesgo intermedio en la semana elegida.</li>
+  <li>Rojo: provincias con mayor riesgo en la semana elegida.</li>
+  </ul>
+  <h3>3.5. Conceptos básicos</h3>
+  <p>
+    Para interpretar correctamente los resultados, conviene conocer los siguientes conceptos básicos:
+  </p>
+  <dl class="con_bas">
+    <dt>Baseline</dt><dd>Error base de la predicción. Se obtiene a partir de la diferencia entre el valor real de cada provincia y su esperanza matemática. Es lo que obtendríamos sin emplear ningún predictor.</dd>
+    <dt>Error medio</dt><dd>Error medio de la predicción. Se obtiene como el valor medio de los valores absolutos de la diferencia entre el valor real de cada provincia-semana y su valor predecido por el modelo.</dd>
+    <dt>Carga explicativa</dt><dd>Porcentaje de acierto relativo del modelo respecto al baseline. En caso de que el error medio fuera igual al baseline, la carga explicativa del modelo sería 0, ya que no aportaría conocimiento sobre la base estadística. Para alcanzar el 100%, el error medio debería ser 0, es decir, que todas las predicciones fueran exactamente iguales a sus correspondientes valores reales.</dd>
+    <dt>Acierto relativo</dt><dd>Medido mediante la correlación de Spearman, indica la bondad cualitativa del modelo a la hora de hacer las predicciones. Se basa en comprobar la similitud de las listas ordenadas (de mayor a menor) de resultados reales y predicciones. Alcanzaría el 100% cuando el orden de provincias-semanas según número de incendios y superficie quemada sea exactamente igual en la lista real y en la lista de predicciones. Sería de un 0% cuando no hubiera ninguna correlación entre ambas listas. La significación de este resultado de correlación se mide mediante el p-valor indicado, presentándose su interpretación (significancia muy alta: menor de 0,01; significancia alta: menor de 0,05 y mayor de 0,01; significancia baja: mayor de 0,05). </dd>
+    <dt>Coeficientes</dt><dd>En el caso de los modelos de regresión, se presentan como resultado los coeficientes de los predictores para cada uno de los modelos utilizados. Hay que tener en cuenta que, cuando se evalúan varios años, el modelo es distinto para cada uno de ellos, ya que el año de evaluación se excluye del entrenamiento para no falsear los resultados. Esto provoca distintos modelos y, por lo tanto, valores de coeficientes ligeramente diferentes entre ellos.</dd>
+	</dl>
+  
+  
+  <h2>4. Fuentes</h2>
+  <ul>
+  <li>Estadística General de Incendios Forestales (EGIF) del MAPA-MITERD</li>
+  <li>Agencia Estatal de Meteorología (AEMET)</li>
+  <li>Instituto Nacional de Estadística (INE)</li>
+  <li>Servicio Estatal de Empleo (SEPE)</li>
+  <li>Agencia Estatal de Administración Tributaria (AEAT)</li>
+  <li>Portal datos abierto del País Vasco</li>
+  <li>Información de límites geográficos del Ministerio de Fomento</li>
+</ul>

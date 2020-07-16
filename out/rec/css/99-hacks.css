@@ -1,0 +1,46 @@
+#crear-modelo-semana-provincia .meteo_predictores input[type=checkbox]:checked + label {
+  opacity: 1 !important;
+}
+
+.items_1 > .egifWarning {
+  display: none;
+}
+.items_2 > fieldset > .egifWarning {
+  display: none;
+}
+
+th.transparente {
+  border: none;
+  background-color: white;
+}
+
+.prediccion li.annos_modelo {
+  display: none;
+}
+
+td .unidades {
+  display: inline-block;
+  min-width: 2em;
+  text-align: left;
+}
+
+div.canvas_wrapper {
+  /*max-height: 500px;*/
+}
+
+.meteo_predictores_a .lbNumber, .meteo_predictores_a input[type=number], .meteo_predictores_a .unidad {
+  display: none;
+}
+.meteo_predictores_p .lbCheck {
+  display: none;
+}
+.meteo_predictores_p .lbNumber {
+  display: inline-block;
+  min-width: 16em;
+}
+.meteo_predictores_p input[type=number] {
+  width: 7em;
+}
+.greycero .sig_cero {
+  opacity: 0.5;
+}

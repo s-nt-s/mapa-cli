@@ -1,0 +1,13 @@
+<fieldset>
+  <legend>Zona</legend>
+  <label for="zona" class="hide">Zona:</label><select id="zona" name="zona[]" multiple="multiple" class="oneGroup" data-txt="zonas">
+    <optgroup label="País">
+      <option value="ESP">España</option>
+    </optgroup>
+    <optgroup label="Provincias" id="provES">
+    {% for p in provincias %}
+       <option value="{{p.ID}}">{{p.nombre}}</option>
+    {% endfor %}
+    </optgroup>
+  </select>
+</fieldset>

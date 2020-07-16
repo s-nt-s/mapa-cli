@@ -1,0 +1,47 @@
+{% include 'snippet/zona.html' %}
+
+<fieldset>
+  <legend>Parámetros</legend>
+    <input type="checkbox" name="params[]" id="PRenta" value="renta"> <label for="PRenta">Renta</label><br/>
+    <input type="checkbox" name="params[]" id="PHombres" value="hombres"> <label for="PHombres">Hombres</label><br/>
+    <input type="checkbox" name="params[]" id="PMujeres" value="mujeres"> <label for="PMujeres">Mujeres</label><br/>
+    <input type="checkbox" name="params[]" id="P60s" value="mayores_de_60"> <label for="P60s">Mayores de 60</label><br/>
+    <input type="checkbox" name="params[]" id="P3059" value="de_30_a_59"> <label for="P3059">De 30 a 59</label><br/>
+    <input type="checkbox" name="params[]" id="P29" value="hasta_29"> <label for="P29">Hasta 29</label><br/>
+    <input type="checkbox" name="params[]" id="PUTA" value="UTA" title="Unidades de trabajo anuales"> <label for="PUTA">UTA</label><br/>
+    <input type="checkbox" name="params[]" id="PExpl" value="explotaciones_agricolas"> <label for="PExpl">Explotaciones agrícolas</label><br/>
+    <input type="checkbox" name="params[]" id="PUniGan" value="unidades_ganaderas"> <label for="PUniGan">Unidades Ganaderas</label><br/>
+    <input type="checkbox" name="params[]" id="PParo" value="paro"> <label for="PParo">Paro</label><br/>
+    <input type="checkbox" name="params[]" id="PSAU" value="SAU" title="Superficie agrícola utilizada"> <label for="PSAU">SAU</label><br/>
+    <input type="checkbox" name="params[]" id="PEmp" value="empresas"> <label for="PEmp">Empresas</label>
+</fieldset>
+<fieldset>
+  <legend>Causas de Incendios</legend>
+    <input type="checkbox" name="causas[]" id="PC1" value="C1"> <label for="PC1">C1 - Causas naturales</label><br/>
+    <input type="checkbox" name="causas[]" id="PC2" value="C2"> <label for="PC2">C2 - Negligencias humanas</label><br/>
+    <input type="checkbox" name="causas[]" id="PC3" value="C3"> <label for="PC3">C3 - Negligencias industriales</label><br/>
+    <input type="checkbox" name="causas[]" id="PC4" value="C4"> <label for="PC4">C4 - Incendios intencionados </label><br/>
+    <input type="checkbox" name="causas[]" id="PC5" value="C5"> <label for="PC5">C5 - Causas desconocidas</label><br/>
+    <input type="checkbox" name="causas[]" id="PC6" value="C6"> <label for="PC6">C6 - Incendios reproducidos</label>
+</fieldset>
+<fieldset>
+  <legend>Radio de influencia</legend>
+  <label for="radio">Radio de influencia</label>
+  <select class="radio" id="radio" name="radio">
+    <option value="0">&#160;0</option>
+    <option value="5">5</option>
+    <option value="10">10</option>
+    <option value="15">15</option>
+    <option value="20">20</option>
+  </select> <label for="radio">km</label>
+</fieldset>
+<fieldset class="fRangos multirango">
+<legend>Rango de riesgo</legend>
+  <label for="rbajo">Riesgo bajo:</label> de 0 a <span class="count rbajo">0</span> incendios
+  <input type="range" min="0" max="20" step="1" value="0" id="rbajo" name="rbajo" data-showvalue=".count.rbajo"><br/>
+  <label for="rmedio">Riesgo medio:</label> de <span class="count rbajo" data-add="1">1</span> a <span class="count rmedio">5</span> incendios
+  <input type="range" min="0" max="20" step="1" value="5" id="rmedio" name="rmedio" data-showvalue=".count.rmedio"><br/>
+  <label for="ralto">Riesgo alto:</label> de <span class="count rmedio" data-add="1">6</span> a <span class=".count ralto">9</span> incendios
+  <input type="range" min="0" max="20" step="1" value="9" id="ralto" name="ralto" data-showvalue=".count.ralto"><br/>
+  <span class="label">Riesgo muy alto:</span> <span class="count ralto" data-add="1">10</span> incendios o más
+</fieldset>

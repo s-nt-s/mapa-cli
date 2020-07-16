@@ -1,0 +1,71 @@
+<form
+  id="fMeteoAnalisis"
+  name="anual_pais"
+  action="{{enpoints.p1}}analisis_o_predecir_anual"
+  method="POST"
+  data-resultado="Resultado Análisis"
+  data-idprefix="meteo_anual_"
+>
+
+<h1 class="sidebar-header">
+  <span>Predicción o análisis verano</span>
+  <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+  <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+
+{% include 'snippet/zona.html' %}
+
+{% include 'common/meteo_target.html' %}
+
+<fieldset class="fOneField">
+  <legend>Reg. Ridge (α)</legend>
+  <label for="Ridge" class="hide">Reg. Ridge (α):</label>
+  <input type="number" id="Ridge" name="ridge" class="opcional" min="0" max="500" step="0.1"><br/>
+  <span>(*) dejar vacío para que el servidor calcule y use el valor óptimo.</span>
+</fieldset>
+
+<select name="predecir_o_analizar" id="predecir_o_analizar" data-hide="fieldset.grupo_predecir_o_analizar, div.grupo_predecir_o_analizar fieldset, div.grupo_predecir_o_analizar > input, .egifWarning" class="fullwidth">
+  <option/>
+  <option data-show=".grupo_predecir, fieldset.grupo_predecir_o_analizar" value="p">Predecir</option>
+  <option data-show=".grupo_analizar, fieldset.grupo_predecir_o_analizar" value="a">Analizar</option>
+</select>
+
+<fieldset class="meteo_predictores grupo_predecir_o_analizar onlyMe">
+  <legend>Predictores</legend>
+  {% include 'common/meteo_param_anual.html' %}
+  <button type="button" name="set_meteo_param_val" class="grupo_predecir">Rellenar con datos del año pasado</button>
+</fieldset>
+
+<div class="grupo_predecir_o_analizar" style="margin-top: 16px;">
+<div class="meteo_modelo_years" data-count="fieldset:not(.hidebyinput)">
+  <div class="grupo_predecir_o_analizar_fieldsets" data-count="fieldset:not(.hidebyinput)">
+    <fieldset class="fOneField grupo_predecir grupo_analizar meteo_modelo_years">
+      <legend>Años para crear el modelo</legend>
+      <label for="rango_temporal" class="hide">Años para crear el modelo:</label>
+      <select id="rango_temporal" name="rango_temporal[]" required multiple="multiple" class="fullsize" data-min="3">
+          {% for y in range(1999, now.year) %}
+            <option value="{{y}}">{{y}}</option>
+          {% endfor %}
+      </select>
+      <p class='grupo_predecir egifWarning hide'></p>
+    </fieldset>
+
+    <fieldset class="fOneField grupo_analizar">
+      <legend>Años para evaluar el modelo</legend>
+      <label for="rango_temporal_evaluar" class="hide">Años para evaluar el modelo:</label>
+      <select id="rango_temporal_evaluar" name="rango_temporal_evaluar[]" required multiple="multiple" class="rango_temporal_evaluar fullsize" data-min="5">
+          {% for y in range(1999, now.year) %}
+            <option value="{{y}}">{{y}}</option>
+          {% endfor %}
+      </select>
+    </fieldset>
+  </div>
+  <p class='grupo_analizar egifWarning hide'></p>
+  </div>
+
+  <input class="grupo_predecir" type="submit" value="Predecir" formaction="{{enpoints.p1}}prediccion_anual" data-opcional=".rango_temporal_evaluar">
+
+  <input class="grupo_analizar" type="submit" value="Analizar" formaction="{{enpoints.p1}}analisis_anual" data-obligatorio=".rango_temporal_evaluar">
+</div>
+
+</form>

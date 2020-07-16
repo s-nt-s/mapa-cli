@@ -1,0 +1,16 @@
+<input id="chk_{{id}}" type="checkbox" value="{{id}}" title="Habilita {{label | striptags}}" name="{{check_name}}[]" data-show="input[name='{{id}}'], label.lbCheck_{{id}}" class="{{class}} chk">
+<label for="chk_{{id}}" class="{{class}} lbCheck lbCheck_{{id}}">{{label | safe }}</label>
+<label for="{{id}}" class="{{class}} lbNumber">{{label | safe }}:</label>
+{% if val_min is defined and val_max is defined %}
+  <input type="number" name="{{id}}" id="{{id}}" value="" min="{{val_min}}" max="{{val_max}}" class="{{class}}" step="{{step or 1}}">
+{% elif val_min is defined %}
+  <input type="number" name="{{id}}" id="{{id}}" value="" min="{{val_min}}" class="{{class}}" step="{{step or 1}}">
+{% elif val_max is defined %}
+  <input type="number" name="{{id}}" id="{{id}}" value="" max="{{val_max}}" class="{{class}}" step="{{step or 1}}">
+{% else %}
+  <input type="number" name="{{id}}" id="{{id}}" value="" class="{{class}}" step="{{step or 1}}">
+{% endif %}
+{% if unidad is defined %}
+  <span class="unidad" data-txt="unidad {{id}}">{{unidad}}</span>
+{% endif %}
+<br/>

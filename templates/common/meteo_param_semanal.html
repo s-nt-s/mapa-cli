@@ -1,0 +1,27 @@
+<div class="greyinhide">
+{% with check_name='check_meteo_param' %}
+{% with label='Temperatura de la primavera',   unidad='°C', val_min='-90', val_max='75',
+step='0.01', id='prim_tmed', class='predic_incen'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+
+{% with label='Precipitación de la primavera', unidad='mm', val_min='0',  val_max='400',
+step='0.01', id='prin_prec', class='predic_super'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+
+{% with label='Temperatura máxima',            unidad='°C', val_min='-15', val_max='75',
+step='0.01', id='temp_maxi', class='predic_super predic_incen'    %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+
+{% with label='Temperatura mínima',             unidad='°C', val_min='-15', val_max='75',
+step='0.01', id='temp_mini', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+
+{% with label='Variación de <abbr title="temperatura minima">temp. min.</abbr>',      unidad='°C', val_min='-15', val_max='75',
+step='0.01', id='tmin_vari', class=''                             %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+
+{% with label='Viento',                        unidad='m/s', val_min='0',
+step='0.01', id='vien_velm', class='predic_super'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+
+{% with label='Racha de viento',               unidad='m/s', val_min='0',
+step='0.01', id='vien_rach', class='predic_super'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+
+{% with label='Precipitaciones',               unidad='mm', val_min='0',  val_max='400',
+step='0.01', id='prec_medi', class='predic_incen'                 %}{% include 'snippet/check_label_number.html' %}{% endwith %}
+{% endwith %}
+</div>
