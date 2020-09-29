@@ -100,6 +100,7 @@ function resetMap() {
             accessToken:  'pk.eyJ1IjoiZGF0YWlhIiwiYSI6ImNrNWdmazA4bjA2cGczanBib2F4MDNxd3EifQ.ScOIk2EYiQ9qYWBWJmjB2w'
         }).addTo(mymap);
         */
+        /* https://www.ign.es/wmts/ign-base?request=GetCapabilities&service=WMTS */
         var ign = new L.TileLayer.WMTS("https://www.ign.es/wmts/ign-base", {
           id: 'capa.base',
         	layer: "IGNBaseTodo",
