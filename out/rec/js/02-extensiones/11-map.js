@@ -103,7 +103,7 @@ function resetMap() {
         	layer: "IGNBaseTodo",
         	tilematrixSet: "GoogleMapsCompatible",
         	format: "image/png",
-        	attribution: "CC BY 4.0 <a href='http://www.scne.es/'>SCNE</a>, <a href='http://www.ign.es'>IGN</a>, <a href='http://www.scne.es/'>Sistema Cartográfico Nacional</a>",
+        	attribution: "CC BY 4.0 <a href='http://www.scne.es/'>SCNE</a>, <a href='http://www.ign.es'>IGN</a>",
         	maxZoom: 20,
         	crossOrigin: true
         }).addTo(mymap);
