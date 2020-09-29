@@ -83,8 +83,9 @@ function centerMap(ly) {
 }
 
 function clearMap() {
+    var ok=["mapbox.streets", "capa.base"];
     mymap.eachLayer(function (layer) {
-        if (layer.options.id != "mapbox.streets") mymap.removeLayer(layer);
+        if (ok.indexOf(layer.options.id)==-1) mymap.removeLayer(layer);
     });
 }
 
@@ -100,6 +101,7 @@ function resetMap() {
         }).addTo(mymap);
         */
         var ign = new L.TileLayer.WMTS("https://www.ign.es/wmts/ign-base", {
+          id: 'capa.base',
         	layer: "IGNBaseTodo",
         	tilematrixSet: "GoogleMapsCompatible",
         	format: "image/png",
