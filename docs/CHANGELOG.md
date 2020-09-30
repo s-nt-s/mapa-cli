@@ -3,7 +3,7 @@
 Log de cambios basado en [keepachangelog.com](https://keepachangelog.com/es-ES).
 Este proyecto usa [versionamiento Semántico](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - YYYY-MM-DD
+## [2.0.0] - 2020-09-30
 
 ### Changed
 
