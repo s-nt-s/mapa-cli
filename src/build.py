@@ -17,6 +17,10 @@ s3 = boto3.client('s3')
 from core.common import create_script, read_js
 from core.j2 import Jnj2, toTag
 
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
 parser = argparse.ArgumentParser(description='Crea la página web')
 parser.add_argument('--local', action='store_true', help='Generar página para probarla en localhost')
 args = parser.parse_args()
