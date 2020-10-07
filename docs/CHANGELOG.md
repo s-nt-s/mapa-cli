@@ -3,6 +3,13 @@
 Log de cambios basado en [keepachangelog.com](https://keepachangelog.com/es-ES).
 Este proyecto usa [versionamiento Semántico](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2020-10-07
+
+### Added
+
+- `egifWarning` (aviso de hasta que año llegan los datos consolidados de egif)
+en fieldset de simulación de `Predicción semanal-provincial`
+
 ## [2.0.0] - 2020-09-30
 
 ### Changed

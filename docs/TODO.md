@@ -1,0 +1,1 @@
+- Desacoplar dependencia de `egifWarning` con `meta_info.p4.max_year` en `02-jUI.js`
