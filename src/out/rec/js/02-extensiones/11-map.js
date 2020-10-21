@@ -101,7 +101,8 @@ function resetMap() {
         }).addTo(mymap);
         */
         /* https://www.ign.es/wmts/ign-base?request=GetCapabilities&service=WMTS */
-        var ign = new L.TileLayer.WMTS("https://www.ign.es/wmts/ign-base", {
+        /*var ign = */
+        new L.TileLayer.WMTS("https://www.ign.es/wmts/ign-base", {
           id: 'capa.base',
         	layer: "IGNBaseTodo",
         	tilematrixSet: "GoogleMapsCompatible",

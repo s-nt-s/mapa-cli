@@ -54,7 +54,6 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
             `,
           ];
           var vp = meta_info.p4.ultimo_parametros[f.properties.i];
-          var k;
           var orden = rsg.orden.length?rsg.orden:layers.municipios.riesgos.orden;
           orden.forEach(function(k, index) {
               var pr=TXT.params[k];
@@ -112,7 +111,6 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
         preTable.find("thead tr:eq(0)").append("<th colspan='"+colspan+"' class='mun mun"+p.i+"' style='text-align: center;'>"+p.n+"<br/><small>(riesgo "+v+")</small></th>");
         preTable.find("thead tr:eq(1)").append("<th class='mun"+p.i+"' title='Vacío cuando se ha usado un valor inferido'>Valor real</th><th class='mun"+p.i+"'>Percentil (%)</th><th class='mun"+p.i+" "+hide+"'>Influencia (%)</th>");
         var vp = meta_info.p4.ultimo_parametros[p.i];
-        var k;
         var trs = preTable.find("tbody tr");
         layers.municipios.riesgos.orden.forEach(function(k, index) {
             var tr = trs.eq(index);

@@ -18,12 +18,12 @@ def toTag(html, *args):
 
 class Jnj2():
 
-    def __init__(self, origen, destino, pre=None, post=None):
+    def __init__(self, origen, destino, do_before=None, do_after=None):
         self.j2_env = Environment(
             loader=FileSystemLoader(origen), trim_blocks=True)
         self.destino = destino
-        self.pre = pre
-        self.post = post
+        self.do_before = do_before
+        self.do_after = do_after
         self.lastArgs = None
         self.javascript = sorted(relpath(i,self.destino) for i in iglob(self.destino+"/**/*.js", recursive=True))
         self.css = sorted(relpath(i,self.destino) for i in iglob(self.destino+"/**/*.css", recursive=True))
@@ -35,8 +35,8 @@ class Jnj2():
             destino = template
         out = self.j2_env.get_template(template)
         html = out.render(javascript=self.javascript, css=self.css, **kwargs)
-        if self.pre:
-            html = self.pre(html, **kwargs)
+        if self.do_before:
+            html = self.do_before(html, **kwargs)
             html = str(html)
         if parse:
             html = parse(html, **kwargs)
@@ -58,8 +58,8 @@ class Jnj2():
                     r.extract()
             html = str(soup)
 
-        if self.post:
-            html = self.post(html, **kwargs)
+        if self.do_after:
+            html = self.do_after(html, **kwargs)
             html = str(html)
 
         destino = self.destino + destino

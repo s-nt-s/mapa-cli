@@ -396,7 +396,7 @@ function mkChangeUi(scope) {
   fCg[fCg.length] = scope.find(".multirango.globalchange.plan_b select").bind("change",function(){
     var p = $(this).closest(".multirango");
     var values = p.serializeArray();
-    var i, v, r, vls;
+    var i, v, r;
     var new_val={}
     for (i=0; i<values.length; i++) {
       v = values[i];

@@ -4,7 +4,7 @@ function html_to_md(elms, opt) {
   if (typeof elms == "string") elms = $("<div>"+elms+"</div>").find(">*");
   elms = elms.clone().not(".avoidMd");
   elms.find(".avoidMd, strike").remove();
-  var i,c,d,j;
+  var i,c,j;
   var html='';
   elms.each(function(){
     html = html + "\n";

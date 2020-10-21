@@ -213,7 +213,7 @@ for k, v in os.environ.items():
 
 provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)
-jHtml = Jnj2("templates/", "out/", post=parse)
+jHtml = Jnj2("templates/", "out/", do_after=parse)
 jHtml.save("index.html", provincias=provincias,
         enpoints=enpoints,
         now=datetime.now())

@@ -130,7 +130,7 @@ function inputAnualToHtml(obj, _class) {
 
 function inputSemanalToHtml(obj, _class) {
   if (!_class) _class='';
-  var i, t, c, v;
+  var i, t, c;
   var zonas = obj.input.zona.map(function(k) { return TXT.zonas[k] })
   zonas = zonas.join(", ");
   var mode = obj.input.rango_temporal.join(", ")
@@ -657,7 +657,6 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
       } else {
         for (var [key, value] of Object.entries(obj.prediccion)) {
           if (value==null) continue;
-          var flag = true;
           for (i=0;!(key in prov_color) && i<rng.length;i++) {
             r = rng[i];
             if (r!=null && value>r) continue;
@@ -831,7 +830,8 @@ ON_ENDPOINT["analisis_semana_provincia"]=function(data, textStatus, jqXHR) {
 
     showResultado(html, "Resultado análisis semanal", "analisis");
 
-    var myChart = setGraphChart({
+    /*var myChart = */
+    setGraphChart({
           id: 'myChart',
           title: "Porcentaje (%)",
           labels: annos,
