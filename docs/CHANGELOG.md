@@ -3,6 +3,12 @@
 Log de cambios basado en [keepachangelog.com](https://keepachangelog.com/es-ES).
 Este proyecto usa [versionamiento Semántico](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2020-10-27
+
+### Changed
+
+- Solución a errores kiuwan
+
 ## [2.0.1] - 2020-10-07
 
 ### Added
