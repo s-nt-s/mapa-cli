@@ -107,11 +107,13 @@ function resetMap() {
         	layer: "IGNBaseTodo",
         	tilematrixSet: "GoogleMapsCompatible",
         	format: "image/png",
-        	attribution: "CC BY 4.0 <a href='http://www.scne.es/'>SCNE</a>, <a href='http://www.ign.es'>IGN</a>",
+        	attribution: "CC BY 4.0 <a target='_blank' href='http://www.scne.es/'>SCNE</a>, <a target='_blank' href='http://www.ign.es'>IGN</a>",
         	maxZoom: 20,
         	crossOrigin: true
         }).addTo(mymap);
-        $(mymap.attributionControl._container).find("a").attr("target", "_blank")
+        if (mymap.attributionControl && mymap.attributionControl.options && mymap.attributionControl.options.prefix) {
+          mymap.attributionControl.options.prefix = mymap.attributionControl.options.prefix.replace(/ href=/g, ' target="_blank" href=');
+        }
         L.control.sidebar('sidebar').addTo(mymap);
     } else clearMap();
     mymap.addLayer(layerProvincias());
