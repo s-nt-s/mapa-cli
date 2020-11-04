@@ -111,6 +111,7 @@ function resetMap() {
         	maxZoom: 20,
         	crossOrigin: true
         }).addTo(mymap);
+        $(mymap.attributionControl._container).find("a").attr("target", "_blank")
         L.control.sidebar('sidebar').addTo(mymap);
     } else clearMap();
     mymap.addLayer(layerProvincias());
