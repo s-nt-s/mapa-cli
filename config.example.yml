@@ -1,0 +1,23 @@
+vpn: yes
+  # 'yes' si se necesita entrar con vpn,
+  # 'no' si no hace falta.
+  # Quitar parámetro si se prefiere que lo decida el script en tiempo de ejecucción
+mapa:
+    user: "******@mapama.es" # Usuario de la intranet
+    pssw: "********" # Contraseña de la intranet
+gesper:
+    user: "*******" # Usuario de gesper
+    pssw: "*******" # Contraseña de gesper
+autentica:
+  user: "*******" # Usuario de autentica
+  pssw: "*******" # Usuario de autentica
+nominas: "~/Documentos/Trabajo/nominas" # Directorio donde guardar las nominas
+expediente: "~/Documentos/Trabajo/expediente" # Directorio donde guardar los expedientes
+retribuciones: "~/Documentos/Trabajo/retribuciones" # Directorio donde guardar las tablas de retribuciones de funcionarios
+informe_horas: "~/Documentos/Trabajo/informe_horas" # Directorio donde guardar los informes de horas
+sede: "Infanta Isabel" # Texto que se usara para determinar la sede que nos interesa en aquellas secciones donde haya varias alternativas
+xmpp:
+  me: "*******@*****.***" # Contacto que va a enviar las consultas (tu usuario xmpp) para que solo te responda a ti
+  user: "******@****.***" # Cuenta xmpp que va a usar el bot
+  pssw: "***********" # Contraseña de la cuenta xmpp que va a usar el bot
+  LOG: "INFO" # Nivel de los logs del bot

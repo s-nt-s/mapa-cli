@@ -1,0 +1,9 @@
+beautifulsoup4==4.8.2
+bunch==1.0.1
+lxml==4.3.4
+markdownify==0.4.1
+pdftotext==2.1.4
+PyYAML==5.3
+requests==2.22.0
+slixmpp==1.4.2
+urllib3==1.24.2
