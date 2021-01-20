@@ -297,6 +297,12 @@ ul.tGroup.tMeteo li.tGroup {
 .tMeteo {
   border-left-color: yellow !important;
 }
+ul.tGroup.tAereo li.tGroup {
+  background-color: lightblue !important;
+}
+.tAereo {
+    border-left-color: lightblue !important;
+}
 
 fieldset.fOneField input, fieldset.fOneField select {
   width: 100%;
@@ -320,7 +326,7 @@ fieldset.fOneField input[type=number] {
   content: " "
 }
 
-th.isSortable { 
+th.isSortable {
     cursor: pointer;
 }
 th.isSortable:after {

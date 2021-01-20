@@ -1,4 +1,7 @@
 $(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
+  if (window.location.hostname == "localhost") {
+    return;
+  }
   var ping_url = myroot+"ping.txt";
   var origin = ajaxOptions.url.replace(/\?[^\?]*$/, "");
   if (ajaxOptions==null) ajaxOptions={};

@@ -71,6 +71,13 @@
         <li title="Análisis de impacto de meteorología y territorio en la ocurrencia de incendios y en la superficie quemada a nivel semanal-provincial"><a href="#analisis-semana-provincia" role="tab"><i class="fas fa-calculator"></i></a></li>
         #}
       </ul>
+
+      <ul role="tablist" class="tGroup tAereo">
+        <li title="Medios aéreos" class="disabled tGroup"><a href="#" role="tab"><i class="fas fa-plane"></i></a></li>
+        <li title="Predicción medios aéreos"><a href="#prediccion-medios-aereos" role="tab"><i class="fas fa-plane-departure"></i></a></li>
+        <li title="Análisis medios aéreos"><a href="#analisis-medios-aereos" role="tab"><i class="fas fa-plane-arrival"></i></a></li>
+      </ul>
+
       <ul role="tablist">
         <li id="iResultado" class="hide" title="Resultado"><a href="#resultado" id="clear" role="tab"><i class="fas fa-coffee"></i></a></li>
         <li id="limpiar" class="hide" title="Limpia el mapa"><a href="" id="clear" role="tab"><i class="fas fa-eraser"></i></a></li>
@@ -118,6 +125,14 @@
 
       <div class="sidebar-pane" id="analisis-modelo-semana-provincia">
         {% include 'tabs/23-meteo-semanal-analisis.html' %}
+      </div>
+
+      <div class="sidebar-pane" id="prediccion-medios-aereos">
+        {% include 'tabs/31-aereo-prediccion.html' %}
+      </div>
+
+      <div class="sidebar-pane" id="analisis-medios-aereos">
+        {% include 'tabs/32-aereo-analisis.html' %}
       </div>
 
     </div>
