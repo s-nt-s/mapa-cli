@@ -100,6 +100,32 @@ var TXT={
     "0": "Superficie quemada",
     "1": "N\u00famero de incendios"
   },
+  "comunidades": {
+    "ESP": "Espa\u00f1a",
+    "01": "Andaluc\u00eda",
+    "02": "Arag\u00f3n",
+    "03": "Asturias, Principado de",
+    "04": "Balears, Illes",
+    "05": "Canarias",
+    "06": "Cantabria",
+    "07": "Castilla y Le\u00f3n",
+    "08": "Castilla - La Mancha",
+    "09": "Catalu\u00f1a",
+    "10": "Comunitat Valenciana",
+    "11": "Extremadura",
+    "12": "Galicia",
+    "13": "Madrid, Comunidad de",
+    "14": "Murcia, Regi\u00f3n de",
+    "15": "Navarra, Comunidad Foral de",
+    "16": "Pa\u00eds Vasco",
+    "17": "Rioja, La",
+    "18": "Ceuta",
+    "19": "Melilla"
+  },
+  "aereo_target": {
+    "0": "N\u00ba de intervenciones",
+    "1": "Horas de vuelo"
+  },
   "unidad": {
     "prim_tmed": "\u00b0C",
     "prin_prec": "mm",

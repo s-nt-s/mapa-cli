@@ -1,0 +1,32 @@
+<fieldset>
+  <legend>Zona</legend>
+  <label for="zona" class="hide">Zona:</label><select id="zona" name="zona[]" multiple="multiple" class="oneGroup" data-txt="comunidades">
+    <optgroup label="País">
+      <option value="ESP">España</option>
+    </optgroup>
+    <optgroup label="Comunidades" id="comuES">
+<option value="01">Andalucía</option>
+<option value="02">Aragón</option>
+<option value="03">Asturias, Principado de</option>
+<option value="04">Balears, Illes</option>
+<option value="05">Canarias</option>
+<option value="06">Cantabria</option>
+<option value="07">Castilla y León</option>
+<option value="08">Castilla - La Mancha</option>
+<option value="09">Cataluña</option>
+<option value="10">Comunitat Valenciana</option>
+<option value="11">Extremadura</option>
+<option value="12">Galicia</option>
+<option value="13">Madrid, Comunidad de</option>
+<option value="14">Murcia, Región de</option>
+<option value="15">Navarra, Comunidad Foral de</option>
+<option value="16">País Vasco</option>
+<option value="17">Rioja, La</option>
+<option value="18">Ceuta</option>
+<option value="19">Melilla</option>
+    {#% for p in provincias %}
+       <option value="{{p.ID}}">{{p.nombre}}</option>
+    {% endfor %#}
+    </optgroup>
+  </select>
+</fieldset>

@@ -13,6 +13,18 @@
   <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
 </h1>
 
+{% include 'snippet/comunidades.html' %}
+
+{% include 'common/aereo_target.html' %}
+
+
+<fieldset class="fEntrenamiento">
+  <legend>Entrenamiento</legend>
+    <label for="prBng">de</label>    <input name="ini" type="number" min="2006" step="1" id="prBng" placeholder="2006" value="2006" class="prBng" data-desplaza=".personaliza_hasta"><br/>
+    <label for="prEnd">hasta</label> <input name="fin" type="number" min="2006" step="1" id="prEnd" placeholder="2010" value="2010"                       class=" personaliza_hasta prEnd" data-desplaza=".personaliza_test"><br/>
+    <p>El test se hará con los datos de los años que queden fuera de este intervalo.</p>
+  <p class='egifWarning hide'></p>
+</fieldset>
 
 <input type="submit" value="Predicción">
 
