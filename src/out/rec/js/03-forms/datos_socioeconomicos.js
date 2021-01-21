@@ -18,7 +18,7 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
     TXT["municipios"]={}
     var ly = L.geoJSON(geomunicipios, {
         style: function(f, l) {
-          var p = f.geometry.properties;
+          var p = f.properties;
           var v = layers.municipios.riesgos.mun[p.i].riesgo;
           var color="red";
           if (v==0) {
@@ -92,7 +92,7 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
         e.originalEvent.preventDefault();
         e.originalEvent.stopPropagation();
         e.originalEvent.stopImmediatePropagation();
-        var p = e.layer.feature.geometry.properties;
+        var p = e.layer.feature.properties;
         var tdMun = preTable.find(".mun"+p.i);
         if (tdMun.length) {
           e.layer._contextmenu=false;
@@ -273,7 +273,7 @@ ON_ENDPOINT["predecir"]=function(data, textStatus, jqXHR) {
   });
   */
   $.ajax({
-    url: "https://dataia.mapa.gob.es/data-municipios/geo/municipios.js",//myroot+"geo/municipios.js",
+    url: "https://dataia.mapa.gob.es/data-municipios/geo/municipios.geojson",//myroot+"geo/municipios.js",
     dataType: "json",
     cache: true,
     origin: [this, arguments],

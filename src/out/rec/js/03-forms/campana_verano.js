@@ -680,8 +680,7 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
       layers.prediccion_semana_provincia = L.geoJSON(geoprovincias, {
           style: function(f, l) {
             var fp = f.properties;
-            var gp = f.geometry.properties;
-            var v=prov_color[gp.i];
+            var v=prov_color[fp.i];
             var cnf = {
               "color": "red",
               "weight": 5,

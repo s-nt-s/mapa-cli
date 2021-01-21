@@ -197,7 +197,7 @@ for t in ("provincias", "municipios"):
     fl = "out/geo/"+t+".js"
     if args.local and os.path.isfile(fl):
         continue
-    geo = "data/geo/"+t+".json"
+    geo = "data/geo/"+t+".geojson"
     dwn_s3(os.environ.get("GEO_"+t.upper()), geo)
     geojson = read_js(geo)
     if t == "provincias":
