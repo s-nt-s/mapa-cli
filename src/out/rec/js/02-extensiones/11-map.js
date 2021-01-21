@@ -5,7 +5,7 @@ function selectProvincia(e) {
   e.originalEvent.preventDefault();
   e.originalEvent.stopPropagation();
   e.originalEvent.stopImmediatePropagation();
-  var p = e.layer.feature.geometry.properties;
+  var p = e.layer.feature.properties;
   var zonas = $("select[name='zona[]']").eq(0);
   var selected=p.i && zonas.val().indexOf(p.i)>=0;
   selected = !selected;
@@ -21,8 +21,7 @@ function layerProvincias() {
   var ly = L.geoJSON(geoprovincias, {
       style: function(f, l) {
         var fp = f.properties;
-        var gp = f.geometry.properties;
-        var selected=gp.i && $("select[name='zona[]']:eq(0)").val().indexOf(gp.i)>=0;
+        var selected=fp.i && $("select[name='zona[]']:eq(0)").val().indexOf(fp.i)>=0;
         var color=(selected)?"blue":"green";
         return {
           "color": color,
@@ -51,7 +50,7 @@ function layerProvincias() {
       e.originalEvent.preventDefault();
       e.originalEvent.stopPropagation();
       e.originalEvent.stopImmediatePropagation();
-      var p = e.layer.feature.geometry.properties;
+      var p = e.layer.feature.properties;
       var zonas = $("select[name='zona[]']").eq(0);
       var selected=p.i && zonas.val().indexOf(p.i)>=0;
       selected = !selected;
@@ -131,7 +130,7 @@ $("select[name='zona[]']").change(function(){
   other.val(aVals);
   var df = aVals.diff(bVals);
   layers.provincias.eachLayer(function(l){
-    var p = l.feature.geometry.properties;
+    var p = l.feature.properties;
     if (p.i && df.indexOf(p.i)>=0) {
       layers.provincias.resetStyle(l);
     }
