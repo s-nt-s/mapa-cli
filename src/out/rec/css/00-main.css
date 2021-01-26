@@ -338,3 +338,6 @@ th.isSortable.isSortedByMe:after {
 th.isSortable.isSortedByMe.isReversed:after {
   content: " ⇑"
 }
+td input {
+  width: 3em !important;
+}

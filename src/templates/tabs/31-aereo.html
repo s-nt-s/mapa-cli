@@ -23,10 +23,82 @@
   <option data-show=".grupo_analizar" value="a">Analizar</option>
 </select>
 
-
 <fieldset class="grupo_predecir onlyMe">
-  <legend>Predictores</legend>
-  <button type="button" name="set_meteo_param_val" class="grupo_predecir">Rellenar con datos del año pasado</button>
+  <legend>Modificar predictores</legend>
+  <p>
+    <label for="predictor_zona">Comunidad:</label>
+    <select id="predictor_zona" data-hide=".meteo_predictores" class="opcional predictor_zona">
+      <option/>
+      {% for p in comunidades %}
+         <option value="{{p.ID}}" data-show=".predictores_{{p.ID}}">{{p.nombre}}</option>
+      {% endfor %}
+    </select>
+  </p>
+  {% for p in comunidades %}
+  <div class="fLabelInput meteo_predictores predictores_{{p.ID}} notDisabled opcional"
+       data-idprefix="prov_{{p.ID}}_"
+       data-nameprefix="dict_prediccionsemanal_{{p.ID}}_"
+  >
+  {# prec, racha, tmax, tmin, velmedia #}
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">Predictor</th>
+          <th colspan="3">Día</th>
+          <th rowspan="2"><abbr title="Unidades">U</abbr></th>
+        </tr>
+        <tr>
+          <th>1</th>
+          <th>2</th>
+          <th>3</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Precipitaciones</th>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td>mm</td>
+        </tr>
+        <tr>
+          <th><abbr title="Temperatura">Temp.</abbr> máxima</th>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td>°C</td>
+        </tr>
+        <tr>
+          <th><abbr title="Temperatura">Temp.</abbr> mínima</th>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td>°C</td>
+        </tr>
+        <tr>
+          <th>Viento</th>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td>m/s</td>
+        </tr>
+        <tr>
+          <th>Racha de viento</th>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td><input type="number" value="" required=""></td>
+          <td>m/s</td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="button" class="set_meteo_param_val_prediccion_semanal">Rellenar con datos de la aemet</button>
+  </div>
+  {% endfor %}
+  <p>
+  (*) Para cada comunidad se utilizarán los valores proporcionados por la
+  <span class="datos_aemet_prediccion_diaria">Aemet</span>,
+  a no ser que se sobreescriban mediante este panel.
+  </p>
 </fieldset>
 
 <fieldset class="grupo_analizar onlyMe fEntrenamiento">
