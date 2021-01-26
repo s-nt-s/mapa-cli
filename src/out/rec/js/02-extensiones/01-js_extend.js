@@ -1,39 +1,11 @@
-$(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
-  if (window.location.hostname == "localhost") {
-    return;
-  }
-  var ping_url = myroot+"ping.txt";
-  var origin = ajaxOptions.url.replace(/\?[^\?]*$/, "");
-  if (ajaxOptions==null) ajaxOptions={};
-  ajaxOptions.__intento__ = (ajaxOptions.__intento__||0)+1;
-  if (origin == ping_url || ajaxOptions.__intento__>3) {
-    alert("Su sesión ha caducado.");
-    location.reload();
-    return;
-  }
-  $.ajax({
-      "url":ping_url,
-      "cache": false,
-      "originAjax": ajaxOptions
-  }).done(function(){
-    if (this.originAjax.when_url_exist!=null) {
-      console.log("Ping superado, esperar when_url_exist");
-      return;
-    }
-    console.log("Ping superado, reintentar llamada ajax");
-    $.ajax(this.originAjax);
-  });
-});
-
 function set_max(selector, maximum, value, placeholder) {
-  var es = $(selector);
-  var i,e;
-  for (i=0;i<es.length;i++) {
-    e = es.eq(i);
+  if (typeof selector == "string") selector = $(selector);
+  selector.each(function(){
+    var e = $(this);
     setIfNull(e, "placeholder", placeholder);
     setIfNull(e, "value", value);
     setIfNull(e, "max", maximum);
-  }
+  })
 }
 
 function objForm(f) {

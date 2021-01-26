@@ -29,9 +29,9 @@
   {% endfor %}
   <link crossorigin="" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" rel="stylesheet" />
   <script crossorigin="" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
-  <link href="leaflet-plugin/sidebar/leaflet-sidebar.css" rel="stylesheet" />
-  <script src="leaflet-plugin/sidebar/leaflet-sidebar.js"></script>
-  <script src="leaflet-plugin/leaflet-tilelayer-wmts-src.js"></script>
+  <link href="leaflet-plugins/sidebar/leaflet-sidebar.css" rel="stylesheet" />
+  <script src="leaflet-plugins/sidebar/leaflet-sidebar.js"></script>
+  <script src="leaflet-plugins/leaflet-tilelayer-wmts-src.js"></script>
 
   <script src="geo/provincias.js"></script>
   <script src="geo/municipios.js" data-extract="1"></script>
@@ -60,7 +60,7 @@
       </ul>
       <ul role="tablist" class="tGroup tMeteo">
         <li title="Campaña de verano" class="disabled tGroup"><a href="#" role="tab"><i class="fas fa-sun"></i></a></li>
-        <li title="Simulación o análisis de la campaña de verano"><a href="#anual-pais" role="tab"><i class="fas fa-calendar"></i></a></li>
+        <li title="Predicción o análisis de la campaña de verano"><a href="#anual-pais" role="tab"><i class="fas fa-calendar"></i></a></li>
         <li title="Predicción semanal-provincial"><a href="#prediccion-modelo-semana-provincia" role="tab"><i class="fas fa-calendar-week"></i></a></li>
         <li title="Análisis semanal-provincial"><a href="#analisis-modelo-semana-provincia" role="tab"><i class="fas fa-clock"></i></a></li>
 
@@ -74,8 +74,11 @@
 
       <ul role="tablist" class="tGroup tAereo">
         <li title="Medios aéreos" class="disabled tGroup"><a href="#" role="tab"><i class="fas fa-plane"></i></a></li>
+        <li title="Predicción o análisis de medios aéreos"><a href="#medios-aereos" role="tab"><i class="fas fa-plane-departure"></i></a></li>
+        {#
         <li title="Predicción medios aéreos"><a href="#prediccion-medios-aereos" role="tab"><i class="fas fa-plane-departure"></i></a></li>
         <li title="Análisis medios aéreos"><a href="#analisis-medios-aereos" role="tab"><i class="fas fa-plane-arrival"></i></a></li>
+        #}
       </ul>
 
       <ul role="tablist">
@@ -108,33 +111,37 @@
       <div class="sidebar-pane" id="info">
         {% include 'tabs/01-info.html' %}
       </div>
-      <div class="sidebar-pane" id="prediccion">
+      <div class="sidebar-pane p4" id="prediccion">
         {% include 'tabs/11-social-prediccion.html' %}
       </div>
-      <div class="sidebar-pane" id="analisis">
+      <div class="sidebar-pane p4" id="analisis">
         {% include 'tabs/12-social-analisis.html' %}
       </div>
 
-      <div class="sidebar-pane" id="anual-pais">
+      <div class="sidebar-pane p1" id="anual-pais">
         {% include 'tabs/21-meteo-anual.html' %}
       </div>
 
-      <div class="sidebar-pane" id="prediccion-modelo-semana-provincia">
+      <div class="sidebar-pane p1" id="prediccion-modelo-semana-provincia">
         {% include 'tabs/22-meteo-semanal-prediccion.html' %}
       </div>
 
-      <div class="sidebar-pane" id="analisis-modelo-semana-provincia">
+      <div class="sidebar-pane p1" id="analisis-modelo-semana-provincia">
         {% include 'tabs/23-meteo-semanal-analisis.html' %}
       </div>
 
-      <div class="sidebar-pane" id="prediccion-medios-aereos">
+      <div class="sidebar-pane p2" id="medios-aereos">
+        {% include 'tabs/31-aereo.html' %}
+      </div>
+      {#
+      <div class="sidebar-pane p2" id="prediccion-medios-aereos">
         {% include 'tabs/31-aereo-prediccion.html' %}
       </div>
 
-      <div class="sidebar-pane" id="analisis-medios-aereos">
+      <div class="sidebar-pane p2" id="analisis-medios-aereos">
         {% include 'tabs/32-aereo-analisis.html' %}
       </div>
-
+       #}
     </div>
   </div>
   <div id="popup" class="hide">

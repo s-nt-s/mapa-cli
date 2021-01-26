@@ -1,3 +1,37 @@
+$(document).ajaxError(function (event, xhr, ajaxOptions, thrownError) {
+  if (window.location.hostname == "localhost") {
+    let url = (new URL(ajaxOptions.url));
+    if (url.hostname == "dataia.mapa.gob.es") {
+      url.protocol="http:"
+      url.hostname="localhost";
+      ajaxOptions.url = url.href;
+      $.ajax(ajaxOptions);
+    }
+    return;
+  }
+  var ping_url = myroot+"ping.txt";
+  var origin = ajaxOptions.url.replace(/\?[^\?]*$/, "");
+  if (ajaxOptions==null) ajaxOptions={};
+  ajaxOptions.__intento__ = (ajaxOptions.__intento__||0)+1;
+  if (origin == ping_url || ajaxOptions.__intento__>3) {
+    alert("Su sesión ha caducado.");
+    location.reload();
+    return;
+  }
+  $.ajax({
+      "url":ping_url,
+      "cache": false,
+      "originAjax": ajaxOptions
+  }).done(function(){
+    if (this.originAjax.when_url_exist!=null) {
+      console.log("Ping superado, esperar when_url_exist");
+      return;
+    }
+    console.log("Ping superado, reintentar llamada ajax");
+    $.ajax(this.originAjax);
+  });
+});
+
 Number.prototype.pad = function(size) {
   if (size==null) size=2;
   var s = String(this);

@@ -515,14 +515,21 @@ $(document).ready(function(){
   })
   mkChangeUi();
   /* VALUES */
-  set_max(".ttEnd,.prTest,.yEnd", meta_info.p4.max_year, meta_info.egif.max_year, meta_info.egif.max_year);
-  set_max(".prEnd,.yBgn", meta_info.p4.max_year-1, meta_info.egif.max_year-1, meta_info.egif.max_year-1);
-  set_max(".prBng", meta_info.p4.max_year-2);
+  // selector, maximum, value, placeholder
+  ["p2", "p4"].forEach((p, i) => {
+    var mt = meta_info[p];
+    if (mt!=null) {
+    var p = $("div."+p);
+    set_max(p.find(".ttEnd,.prTest,.yEnd"), mt.max_year, meta_info.egif.max_year, meta_info.egif.max_year);
+    set_max(p.find(".prEnd,.yBgn"), mt.max_year-1, meta_info.egif.max_year-1, meta_info.egif.max_year-1);
+    set_max(p.find(".prBng"), mt.max_year-2);
+    }
+  });
   var wrn=$("p.egifWarning");
-  if (meta_info.p4.max_year>meta_info.egif.max_year) {
+  if (meta_info.egif.max_year) {
     var txt = "(*) Tenga en cuenta que solo hay datos EGIF consolidados hasta "+meta_info.egif.max_year+", por lo tanto, cualquier rango que supere ese año trabajará con datos incompletos."
     wrn.text(txt).removeClass("hide");
   } else {
-    txt.remove();
+    wrn.remove();
   }
 })

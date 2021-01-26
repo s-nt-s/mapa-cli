@@ -1,0 +1,45 @@
+<form
+  id="fAereo"
+  name="aereo"
+  action="{{enpoints.p2}}analisis_o_predecir_aereo"
+  method="POST"
+  data-resultado="Resultado Análisis"
+  data-idprefix="aereo_"
+>
+
+<h1 class="sidebar-header">
+  <span>Predicción o análisis medios aéreos</span>
+  <span class="sidebar-expand" title="Ensanchar el panel"><i class="fa fa-angle-double-right"></i></span>
+  <span class="sidebar-contract" title="Restaurar el ancho del panel"><i class="fa fa-angle-double-left"></i></span>
+</h1>
+
+{% include 'snippet/comunidades.html' %}
+
+{% include 'common/aereo_target.html' %}
+
+<select name="predecir_o_analizar" id="predecir_o_analizar" class="fullwidth">
+  <option/>
+  <option data-show=".grupo_predecir" value="p">Predecir</option>
+  <option data-show=".grupo_analizar" value="a">Analizar</option>
+</select>
+
+
+<fieldset class="grupo_predecir onlyMe">
+  <legend>Predictores</legend>
+  <button type="button" name="set_meteo_param_val" class="grupo_predecir">Rellenar con datos del año pasado</button>
+</fieldset>
+
+<fieldset class="grupo_analizar onlyMe fEntrenamiento">
+  <legend>Entrenamiento</legend>
+    <label for="prBng">de</label>    <input name="ini" type="number" min="2006" step="1" id="prBng" placeholder="2006" value="2006" class="prBng" data-desplaza=".personaliza_hasta"><br/>
+    <label for="prEnd">hasta</label> <input name="fin" type="number" min="2006" step="1" id="prEnd" placeholder="2010" value="2010"                       class=" personaliza_hasta prEnd" data-desplaza=".personaliza_test"><br/>
+    <p>El test se hará con los datos posteriores al intervalo de entrenamiento.</p>
+  <p class='egifWarning hide'></p>
+</fieldset>
+
+<input class="grupo_predecir" type="submit" value="Predecir" formaction="{{enpoints.p2}}prediccion_aereo">
+
+<input class="grupo_analizar" type="submit" value="Analizar" formaction="{{enpoints.p2}}analisis_aereo">
+
+
+</form>

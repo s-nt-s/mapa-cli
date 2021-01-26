@@ -184,14 +184,21 @@ def dwn_s3(s3_key, target, overwrite=True):
     bucket, key = s3_key.split('/',2)[-1].split('/',1)
     s3.download_file(bucket, key, target)
 
+def readjs(env_name, file_name, default=None):
+    dwn_s3(os.environ.get(env_name), file_name, overwrite=not args.local)
+    obj = read_js(file_name)
+    if obj is None:
+        return default
+    return obj
+
 
 os.makedirs("out/geo", exist_ok=True)
 os.makedirs("out/rec", exist_ok=True)
 
-dwn_s3(os.environ.get("JS_PROVINCIAS"), "data/provincias.json", overwrite=not args.local)
-provincias = read_js("data/provincias.json") or []
-
+provincias = readjs("JS_PROVINCIAS", "data/provincias.json", default=[])
 provincias = [p for p in provincias if int(p["ID"])<53]
+comunidades = readjs("JS_COMUNIDADES", "data/comunidades.json", default=[])
+comunidades = [p for p in comunidades if int(p["ID"])<20]
 
 for t in ("provincias", "municipios"):
     fl = "out/geo/"+t+".js"
@@ -214,6 +221,9 @@ for k, v in os.environ.items():
 provincias = [Bunch(**i) for i in provincias]
 provincias = sorted(provincias, key=sort_prov)
 jHtml = Jnj2("templates/", "out/", do_after=parse)
-jHtml.save("index.html", provincias=provincias,
-        enpoints=enpoints,
-        now=datetime.now())
+jHtml.save("index.html",
+    provincias=provincias,
+    comunidades=comunidades,
+    enpoints=enpoints,
+    now=datetime.now()
+)
