@@ -515,15 +515,16 @@ $(document).ready(function(){
   })
   mkChangeUi();
   /* VALUES */
-  // selector, maximum, value, placeholder
   ["p2", "p4"].forEach((p, i) => {
+    var max_year = null;
     var mt = meta_info[p];
-    if (mt!=null) {
+    if (mt==null) max_year = (new Date()).getFullYear()-1;
+    else max_year = mt.max_year;
     var p = $("div."+p);
-    set_max(p.find(".ttEnd,.prTest,.yEnd"), mt.max_year, meta_info.egif.max_year, meta_info.egif.max_year);
-    set_max(p.find(".prEnd,.yBgn"), mt.max_year-1, meta_info.egif.max_year-1, meta_info.egif.max_year-1);
-    set_max(p.find(".prBng"), mt.max_year-2);
-    }
+    // selector, maximum, value, placeholder
+    set_max(p.find(".ttEnd,.prTest,.yEnd"), max_year, meta_info.egif.max_year, meta_info.egif.max_year);
+    set_max(p.find(".prEnd,.yBgn"), max_year-1, meta_info.egif.max_year-1, meta_info.egif.max_year-1);
+    set_max(p.find(".prBng"), max_year-2);
   });
   var wrn=$("p.egifWarning");
   if (meta_info.egif.max_year) {
