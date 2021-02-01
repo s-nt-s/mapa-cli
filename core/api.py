@@ -736,7 +736,7 @@ class Api:
                 if per_hour:
                     self.print("%s: %s€ (%s€/h)" % (l, cant, per_hour))
                 else:
-                    sueldo.print("%s: %s€" % (l, cant))
+                    self.print("%s: %s€" % (l, cant))
         if sueldo:
             self.print("")
             self.print("Sueldo anual: "+to_strint(sueldo.bruto))
