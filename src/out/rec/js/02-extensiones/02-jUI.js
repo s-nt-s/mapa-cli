@@ -10,7 +10,7 @@ var sidebar_observer = new MutationObserver(function(mutations) {
 
 function joinJQ(arr) {
   var i;
-  var c = arr[0];
+  var c = $(arr[0]);
   for (i=1; i<arr.length; i++) c=c.add(arr[i]);
   return c;
 }

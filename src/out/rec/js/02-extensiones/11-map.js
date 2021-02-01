@@ -1,5 +1,93 @@
-var mymap=null;
-var layers={}
+LAYERSvar mymap=null;
+var LAYERS={}
+
+function geoJSON(geo, conf) {
+  if (geo==null || conf==null) throw "geoJSON: faltan parametros";
+  if (conf.id==null)  throw "geoJSON: faltan id";
+  var options={};
+  var events={};
+  ["pointToLayer", "style", "onEachFeature", "filter", "coordsToLatLng", "markersInheritOptions"].forEach((k, i) => {
+    if (k in conf) {
+      var v=conf[k];
+      //delete conf[k];
+      if (typeof v === "function") v = v.bind(conf);
+      options[k]=v;
+    }
+  });
+  ["mouseover", "mouseout", "click", "contextmenu"].forEach((k, i) => {
+    if (k in conf) {
+      var v=conf[k];
+      //delete conf[k];
+      if (typeof v === "function") v = v.bind(conf);
+      events[k]=v;
+    }
+  });
+  var ly = L.geoJSON(geo, options);
+  conf.layer = ly;
+  if (Object.keys(events).length) ly.on(events)
+  LAYERS[conf.id]=ly;
+  return ly;
+}
+
+function buildLayer(geo, conf) {
+  return geoJSON(geo, Object.assign({}, conf, {
+      style: function(f, l) {
+        var fp = f.properties;
+        var selected=fp.i && $(this.selected).eq(0).val().indexOf(fp.i)>=0;
+        var color=(selected)?"blue":"green";
+        return {
+          "color": color,
+          "weight": 5,
+          "opacity": 0.10
+        }
+      },
+      onEachFeature: function(f, l) {
+        l.bindTooltip(f.properties.n);
+      },
+      mouseover: function(e) {
+        e.layer.setStyle({opacity: 1});
+      },
+      mouseout: function(e) {
+        this.layer.resetStyle(e.layer);
+      },
+      click: function(e){
+        var ctrl = (e && e.originalEvent && e.originalEvent.ctrlKey);
+        if (ctrl) {
+          console.log(this.layer._events)
+          this.contextmenu.apply(this, arguments);
+          return;
+        }
+        e.originalEvent.preventDefault();
+        e.originalEvent.stopPropagation();
+        e.originalEvent.stopImmediatePropagation();
+        var p = e.layer.feature.properties;
+        var zonas = $(this.selected).eq(0);
+        var selected=p.i && zonas.val().indexOf(p.i)>=0;
+        selected = !selected;
+        zonas.find("option").prop("selected", false);
+        if (selected) {
+          zonas.find("option[value='"+p.i+"']").prop("selected", true);
+        }
+        zonas.change();
+      },
+      contextmenu: function(e) {
+        e.originalEvent.preventDefault();
+        e.originalEvent.stopPropagation();
+        e.originalEvent.stopImmediatePropagation();
+        var p = e.layer.feature.properties;
+        var zonas = $(this.selected).eq(0);
+        var selected=p.i && zonas.val().indexOf(p.i)>=0;
+        selected = !selected;
+        if (selected) {
+          zonas.find("option[value='"+p.i+"']").prop("selected", true);
+        } else {
+          zonas.find("option[value='"+p.i+"']").prop("selected", false);
+        }
+        zonas.change();
+      }
+    })
+  )
+}
 
 function selectProvincia(e) {
   e.originalEvent.preventDefault();
@@ -17,60 +105,8 @@ function selectProvincia(e) {
   zonas.change();
 }
 
-function layerProvincias() {
-  var ly = L.geoJSON(geoprovincias, {
-      style: function(f, l) {
-        var fp = f.properties;
-        var selected=fp.i && $("select[name='zona[]']:eq(0)").val().indexOf(fp.i)>=0;
-        var color=(selected)?"blue":"green";
-        return {
-          "color": color,
-          "weight": 5,
-          "opacity": 0.10
-        }
-      },
-      onEachFeature: function(f, l) {
-        l.bindTooltip(f.properties.n);
-      }
-    }
-  );
-  ly.on({
-    mouseover: function(e) {
-      e.layer.setStyle({opacity: 1});
-    },
-    mouseout: function(e) {
-      layers.provincias.resetStyle(e.layer);
-    },
-    click: function(e){
-      var ctrl = (e && e.originalEvent && e.originalEvent.ctrlKey);
-      if (ctrl) {
-        selectProvincia.apply(this, arguments);
-        return;
-      }
-      e.originalEvent.preventDefault();
-      e.originalEvent.stopPropagation();
-      e.originalEvent.stopImmediatePropagation();
-      var p = e.layer.feature.properties;
-      var zonas = $("select[name='zona[]']").eq(0);
-      var selected=p.i && zonas.val().indexOf(p.i)>=0;
-      selected = !selected;
-      zonas.find("option").prop("selected", false);
-      if (selected) {
-        zonas.find("option[value='"+p.i+"']").prop("selected", true);
-      }
-      zonas.change();
-    },
-    contextmenu: function(e) {
-      selectProvincia.apply(this, arguments);
-    }
-  });
-  ly.selected=[];
-  layers.provincias=ly;
-  return ly;
-}
-
 function centerMap(ly) {
-  var bounds = (ly || layers.provincias).getBounds();
+  var bounds = (ly || LAYERS.provincias).getBounds();
   if (Object.keys(bounds).length) {
     var bottom = Math.floor($(".leaflet-bottom.leaflet-right").height());
     var left = Math.floor($("#sidebar").width()/3);
@@ -115,12 +151,39 @@ function resetMap() {
         }
         L.control.sidebar('sidebar').addTo(mymap);
     } else clearMap();
-    mymap.addLayer(layerProvincias());
+    mymap.addLayer(buildLayer(geoprovincias, {
+      "selected": "select[name='zona[]']",
+      "id": "provincias"
+    }));
     centerMap();
 }
 
+var tab_sidebar_observer = new MutationObserver(function(mutations) {
+  mutations.forEach(function(mutation) {
+    if (mutation.attributeName === "class") {
+      elem = $(mutation.target);
+      if (elem.is(".active")) {
+        var ly = elem.data("layer");
+        if (ly!=null) {
+
+        }
+      }
+    }
+  });
+});
+
+
 $(document).ready(function() {
 /** READY: INI **/
+$("div.sidebar-tabs li").each(function() {
+  var li=$(this);
+  var ly = li.data("layer");
+  if (ly==null) {
+    ly = li.parents("[data-layer]").data("layer");
+    if (ly!=null) li.data("layer", ly);
+  }
+  if (ly!=null) tab_sidebar_observer.observe(this, {attributes: true});
+});
 resetMap();
 
 $("select[name='zona[]']").change(function(){
@@ -129,10 +192,10 @@ $("select[name='zona[]']").change(function(){
   var bVals=other.eq(0).val();
   other.val(aVals);
   var df = aVals.diff(bVals);
-  layers.provincias.eachLayer(function(l){
+  LAYERS.provincias.eachLayer(function(l){
     var p = l.feature.properties;
     if (p.i && df.indexOf(p.i)>=0) {
-      layers.provincias.resetStyle(l);
+      LAYERS.provincias.resetStyle(l);
     }
   })
 }).change();

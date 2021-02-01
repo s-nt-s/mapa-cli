@@ -13,13 +13,13 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
     if (textStatus!="success") return false;
     this.form.find("input[type=submit]").attr("disabled", true).val("Renderizando...");
     //$("#resultado .ld_footer").removeClass("hide").text("Renderizando");
-    if (layers.municipios) mymap.removeLayer(layers.municipios);
-    layers.municipios={"riesgos":data}
+    if (LAYERS.municipios) mymap.removeLayer(LAYERS.municipios);
     TXT["municipios"]={}
-    var ly = L.geoJSON(geomunicipios, {
+    var ly = geoJSON(geomunicipios, {
+        id: "municipios",
         style: function(f, l) {
           var p = f.properties;
-          var v = layers.municipios.riesgos.mun[p.i].riesgo;
+          var v = this.layer.riesgos.mun[p.i].riesgo;
           var color="red";
           if (v==0) {
               color="green"
@@ -35,7 +35,7 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
           }
         },
         onEachFeature: function(f, l) {
-          var rsg = layers.municipios.riesgos.mun[f.properties.i]
+          var rsg = this.layer.riesgos.mun[f.properties.i]
           var v = riesgoTxt(rsg.riesgo);
           l.bindTooltip(f.properties.n);
           TXT.municipios[f.properties.i]=f.properties.n;
@@ -54,7 +54,7 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
             `,
           ];
           var vp = meta_info.p4.ultimo_parametros[f.properties.i];
-          var orden = rsg.orden.length?rsg.orden:layers.municipios.riesgos.orden;
+          var orden = rsg.orden.length?rsg.orden:this.layer.riesgos.orden;
           orden.forEach(function(k, index) {
               var pr=TXT.params[k];
               var vr = (vp && vp.hasOwnProperty(k))?vp[k]:"";
@@ -69,66 +69,62 @@ ON_ENDPOINT["__predecir"]=function(data, textStatus, jqXHR) {
         },
         filter: function (f, layer) {
           var p = f.properties;
-          return p.i in layers.municipios.riesgos.mun;
+          return p.i in this.layer.riesgos.mun;
+        },
+        mouseover: function(e) {
+          e.originalEvent.preventDefault();
+          e.originalEvent.stopPropagation();
+          e.originalEvent.stopImmediatePropagation();
+          e.layer.setStyle({opacity: 1, weight: 2});
+        },
+        mouseout: function(e) {
+          e.originalEvent.preventDefault();
+          e.originalEvent.stopPropagation();
+          e.originalEvent.stopImmediatePropagation();
+          this.layer.resetStyle(e.layer);
+          if (e.layer._contextmenu) e.layer.setStyle({fillOpacity: 0.6});
+        },
+        contextmenu: function(e){
+          var preTable = $("#preTable");
+          if (preTable.length==0) return;
+          e.originalEvent.preventDefault();
+          e.originalEvent.stopPropagation();
+          e.originalEvent.stopImmediatePropagation();
+          var p = e.layer.feature.properties;
+          var tdMun = preTable.find(".mun"+p.i);
+          if (tdMun.length) {
+            e.layer._contextmenu=false;
+            tdMun.remove();
+            this.layer.resetStyle(e.layer);
+            if (preTable.find(".mun").length==0) preTable.find(".modelogeneral").hide();
+            return;
+          }
+          e.layer._contextmenu=true;
+          e.layer.setStyle({fillOpacity: 0.6});
+          if (!(p.i in this.layer.riesgos.mun)) return;
+          var rsg = this.layer.riesgos.mun[p.i];
+          var hide = rsg.orden.length?"":"hide";
+          var colspan = rsg.orden.length?3:2;
+          var v = riesgoTxt(rsg.riesgo);
+          preTable.find("thead tr:eq(0)").append("<th colspan='"+colspan+"' class='mun mun"+p.i+"' style='text-align: center;'>"+p.n+"<br/><small>(riesgo "+v+")</small></th>");
+          preTable.find("thead tr:eq(1)").append("<th class='mun"+p.i+"' title='Vacío cuando se ha usado un valor inferido'>Valor real</th><th class='mun"+p.i+"'>Percentil (%)</th><th class='mun"+p.i+" "+hide+"'>Influencia (%)</th>");
+          var vp = meta_info.p4.ultimo_parametros[p.i];
+          var trs = preTable.find("tbody tr");
+          this.layer.riesgos.orden.forEach(function(k, index) {
+              var tr = trs.eq(index);
+              var pr=TXT.params[k];
+              var vr = (vp && vp.hasOwnProperty(k))?vp[k]:"";
+              var v_p = `<code>${spanNumber(rsg.percentil[k])}</code>`;
+              var v_i = `<code>${spanNumber(rsg.influencia[k])}</code>`;
+              tr.append(`<td class='mun${p.i}'><code>${vr}</code></td><td class='mun${p.i}'>${v_p}</td><td class='mun${p.i} inf ${hide}'>${v_i}</td>`);
+          });
+          preTable.find(".modelogeneral").removeClass("hide").show();
         }
     });
-    ly.on({
-      mouseover: function(e) {
-        e.originalEvent.preventDefault();
-        e.originalEvent.stopPropagation();
-        e.originalEvent.stopImmediatePropagation();
-        e.layer.setStyle({opacity: 1, weight: 2});
-      },
-      mouseout: function(e) {
-        e.originalEvent.preventDefault();
-        e.originalEvent.stopPropagation();
-        e.originalEvent.stopImmediatePropagation();
-        layers.municipios.resetStyle(e.layer);
-        if (e.layer._contextmenu) e.layer.setStyle({fillOpacity: 0.6});
-      },
-      contextmenu: function(e){
-        var preTable = $("#preTable");
-        if (preTable.length==0) return;
-        e.originalEvent.preventDefault();
-        e.originalEvent.stopPropagation();
-        e.originalEvent.stopImmediatePropagation();
-        var p = e.layer.feature.properties;
-        var tdMun = preTable.find(".mun"+p.i);
-        if (tdMun.length) {
-          e.layer._contextmenu=false;
-          tdMun.remove();
-          layers.municipios.resetStyle(e.layer);
-          if (preTable.find(".mun").length==0) preTable.find(".modelogeneral").hide();
-          return;
-        }
-        e.layer._contextmenu=true;
-        e.layer.setStyle({fillOpacity: 0.6});
-        if (!(p.i in layers.municipios.riesgos.mun)) return;
-        var rsg = layers.municipios.riesgos.mun[p.i];
-        var hide = rsg.orden.length?"":"hide";
-        var colspan = rsg.orden.length?3:2;
-        var v = riesgoTxt(rsg.riesgo);
-        preTable.find("thead tr:eq(0)").append("<th colspan='"+colspan+"' class='mun mun"+p.i+"' style='text-align: center;'>"+p.n+"<br/><small>(riesgo "+v+")</small></th>");
-        preTable.find("thead tr:eq(1)").append("<th class='mun"+p.i+"' title='Vacío cuando se ha usado un valor inferido'>Valor real</th><th class='mun"+p.i+"'>Percentil (%)</th><th class='mun"+p.i+" "+hide+"'>Influencia (%)</th>");
-        var vp = meta_info.p4.ultimo_parametros[p.i];
-        var trs = preTable.find("tbody tr");
-        layers.municipios.riesgos.orden.forEach(function(k, index) {
-            var tr = trs.eq(index);
-            var pr=TXT.params[k];
-            var vr = (vp && vp.hasOwnProperty(k))?vp[k]:"";
-            var v_p = `<code>${spanNumber(rsg.percentil[k])}</code>`;
-            var v_i = `<code>${spanNumber(rsg.influencia[k])}</code>`;
-            tr.append(`<td class='mun${p.i}'><code>${vr}</code></td><td class='mun${p.i}'>${v_p}</td><td class='mun${p.i} inf ${hide}'>${v_i}</td>`);
-        });
-        preTable.find(".modelogeneral").removeClass("hide").show();
-      }
-    });
-    if (layers.provincias) mymap.removeLayer(layers.provincias)
+    ly.riesgos=data;
+    if (LAYERS.provincias) mymap.removeLayer(LAYERS.provincias)
     mymap.addLayer(ly);
-    layers.municipios=ly;
-    layers.municipios.riesgos=data;
-
-    centerMap(layers.municipios);
+    centerMap(ly);
 
     var html = `
     <p class='avoidMd'>Haga click con el botón secundario en los municipios que desee comparar para agregarlos a la tabla que ve aquí abajo.</p>
@@ -203,26 +199,26 @@ Incendios;${obj.inc_usados}
 
 ;;
     `.trim();
-    var mun1 = Object.values(layers.municipios.riesgos.mun)[0];
+    var mun1 = Object.values(LAYERS.municipios.riesgos.mun)[0];
     var infl = mun1 && mun1.orden && mun1.orden.length;
     var k,m;
-    for (k in layers.municipios.riesgos.mun) {
+    for (k in LAYERS.municipios.riesgos.mun) {
       csv = csv+";"+k+";";
       if (infl) csv = csv + ";";
     }
     csv = csv+"\n;;"
-    for (k in layers.municipios.riesgos.mun) {
+    for (k in LAYERS.municipios.riesgos.mun) {
       csv = csv+";"+TXT["municipios"][k]+";";
 
       if (infl) csv = csv + ";";
     }
     csv = csv+"\n;;"
-    for (k in layers.municipios.riesgos.mun) {
-      csv = csv+";riesgo "+riesgoTxt(layers.municipios.riesgos.mun[k].riesgo)+";";
+    for (k in LAYERS.municipios.riesgos.mun) {
+      csv = csv+";riesgo "+riesgoTxt(LAYERS.municipios.riesgos.mun[k].riesgo)+";";
       if (infl) csv = csv + ";";
     }
     csv = csv+"\n#;Parámetro;Importancia (%)"
-    for (k in layers.municipios.riesgos) {
+    for (k in LAYERS.municipios.riesgos) {
       csv = csv+";Valor real;Percentil (%)";
       if (infl) csv = csv + ";Influencia (%)";
     }
@@ -230,11 +226,11 @@ Incendios;${obj.inc_usados}
         var pr=TXT.params[k];
         var v=obj.importancia[k];
         csv = csv+"\n"+(index+1)+";"+pr+";"+v;
-        for (m in layers.municipios.riesgos.mun) {
+        for (m in LAYERS.municipios.riesgos.mun) {
           var vp = meta_info.p4.ultimo_parametros[m];
           var vr = (vp && vp.hasOwnProperty(k))?vp[k]:"";
-          csv = csv+";"+vr+";"+layers.municipios.riesgos.mun[m].percentil[k];
-          if (infl) csv = csv +";"+layers.municipios.riesgos.mun[m].influencia[k];
+          csv = csv+";"+vr+";"+LAYERS.municipios.riesgos.mun[m].percentil[k];
+          if (infl) csv = csv +";"+LAYERS.municipios.riesgos.mun[m].influencia[k];
         }
     });
     csv = csv.replace(/\./g, ",");

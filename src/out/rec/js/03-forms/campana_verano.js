@@ -677,53 +677,50 @@ ON_ENDPOINT["prediccion_semana_provincia"]=function(data, textStatus, jqXHR) {
       if (t.data("prov_color")==str_prov_color) return;
 
       clearMap();
-      layers.prediccion_semana_provincia = L.geoJSON(geoprovincias, {
-          style: function(f, l) {
-            var fp = f.properties;
-            var v=prov_color[fp.i];
-            var cnf = {
-              "color": "red",
-              "weight": 5,
-              "opacity": 0.10,
-              "fillOpacity": 0.4
-            };
-            if (v==null) {
-              cnf.color = "grey";
-            } else {
-              if (v==0) {
-                  cnf.color="green"
-              } else if (v==1) {
-                  cnf.color="yellow"
-              }
+      var ly = geoJSON(geoprovincias, {
+        style: function(f, l) {
+          var fp = f.properties;
+          var v=prov_color[fp.i];
+          var cnf = {
+            "color": "red",
+            "weight": 5,
+            "opacity": 0.10,
+            "fillOpacity": 0.4
+          };
+          if (v==null) {
+            cnf.color = "grey";
+          } else {
+            if (v==0) {
+                cnf.color="green"
+            } else if (v==1) {
+                cnf.color="yellow"
             }
-            return cnf;
-          },
-          onEachFeature: function(f, l) {
-            var val = obj.prediccion[f.properties.i];
-            if (val==null) {
-              l.bindTooltip(f.properties.n+"<br/>Faltan predictores o datos en la ventana");
-              return;
-            }
-            var d = Math.pow(10, obj.decimales)
-            val = Math.round(val*d)/d;
-            val = val+" "+obj.unidades;
-            l.bindTooltip(f.properties.n+"<br/>"+val);
-          },
-          filter: function(f, layer) {
-            var fp = f.properties;
-            return fp.i in obj.prediccion;
           }
-        }
-      );
-      layers.prediccion_semana_provincia.on({
+          return cnf;
+        },
+        onEachFeature: function(f, l) {
+          var val = obj.prediccion[f.properties.i];
+          if (val==null) {
+            l.bindTooltip(f.properties.n+"<br/>Faltan predictores o datos en la ventana");
+            return;
+          }
+          var d = Math.pow(10, obj.decimales)
+          val = Math.round(val*d)/d;
+          val = val+" "+obj.unidades;
+          l.bindTooltip(f.properties.n+"<br/>"+val);
+        },
+        filter: function(f, layer) {
+          var fp = f.properties;
+          return fp.i in obj.prediccion;
+        },
         mouseover: function(e) {
           e.layer.setStyle({opacity: 1});
         },
         mouseout: function(e) {
-          layers.prediccion_semana_provincia.resetStyle(e.layer);
+          this.layer.resetStyle(e.layer);
         }
-      });
-      mymap.addLayer(layers.prediccion_semana_provincia);
+      })
+      mymap.addLayer(ly);
 
       t.data("prov_color", str_prov_color);
     }
