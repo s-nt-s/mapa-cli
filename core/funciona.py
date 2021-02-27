@@ -9,7 +9,9 @@ import time
 
 from .common import (DAYNAME, _str, dict_style, get_config, html_to_md,
                      js_print, parse_dia, parse_mes, print_response, js_print, read_pdf, to_num)
-from .web import FF, get_query
+from .web import FF, get_query, buildSoup
+
+re_sp = re.compile(r"\s+")
 
 def get_int_match(txt, *regx):
     for r in regx:
@@ -100,6 +102,17 @@ def __dwn_funciona_nominas(ff, target, cnf, m_year, m_mes):
                     continue
                 s = ff.pass_cookies()
                 r = s.get(href)
+                if "text/html" in r.headers["content-type"]:
+                    error = buildSoup(href, r.content)
+                    error = error.select_one("div.box-bbr")
+                    if error:
+                        error = error.get_text()
+                        error = re_sp.sub(" ", error)
+                        error = error.strip()
+                    if not error:
+                        error = "No es un pdf"
+                    print(q['file'], error)
+                    continue
                 flag = True
                 with open(absn, "wb") as f:
                     f.write(r.content)
