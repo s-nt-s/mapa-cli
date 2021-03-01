@@ -111,7 +111,7 @@ def __dwn_funciona_nominas(ff, target, cnf, m_year, m_mes):
                         error = error.strip()
                     if not error:
                         error = "No es un pdf"
-                    print(q['file'], error)
+                    print("{year}-{mes:02d}".format(**q), error)
                     continue
                 flag = True
                 with open(absn, "wb") as f:
