@@ -960,6 +960,8 @@ class Api:
                                     cYear = dt.year
                                 if nombre == "Lunes siguiente a todos los santos":
                                     nombre = "'Todos los santos'"
+                                elif nombre == "Lunes siguiente al dia de la comunidad de madrid":
+                                    nombre = "Día de la Comunidad de Madrid"
                                 elif nombre == "Lunes siguiente al dia de la constitución española":
                                     nombre = "'Día de la Constitucion'"
                                 elif nombre == "Nuestra señora de la almudena":
