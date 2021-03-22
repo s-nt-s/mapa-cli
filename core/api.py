@@ -13,11 +13,10 @@ from bunch import Bunch
 from glob import glob
 import textwrap
 from requests.auth import HTTPBasicAuth
-import tabula
-from io import StringIO
 
 from .common import (DAYNAME, _str, dict_style, get_config, html_to_md,
                      js_print, parse_dia, parse_mes, print_response, js_print, read_pdf, to_num)
+from .retribuciones import retribucion_to_json
 from .hm import HM, IH
 from .user import User
 from .web import FF
@@ -42,49 +41,6 @@ default_headers = {
 re_hm = re.compile(r"\d\d:\d\d")
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
-
-def retribucion_to_json(file):
-    if file is None or not os.path.isfile(file):
-        return
-    jfile = file.rsplit(".", 1)[0]+".json"
-    if os.path.isfile(jfile):
-        with open(jfile, "r") as f:
-            data = json.load(f)
-            data = {int(k):v for k,v in data.items()}
-            return data
-    table = None
-    for t in tabula.read_pdf(file, pages=1, multiple_tables=True):
-        if 'COMPLEMENTO DE DESTINO' in t.columns:
-            table = t
-    if table is None:
-        return None
-    s = StringIO()
-    table.to_csv(s, index=False, header=False)
-    s=s.getvalue()
-    s=s.strip()
-    data={}
-    for row in s.split("\n"):
-        row = row.replace('",,"', '","')
-        row = row.replace('","', " ")
-        row = row.replace('"', "")
-        row = row.split()
-        if not row[0].isdigit():
-            continue
-        row = [to_num(r) for i, r in enumerate(row) if i%2==0]
-        row = iter(row)
-        nivel = next(row)
-        data[nivel]={
-            "complemento_destino":next(row),
-            "A1":next(row),
-            "A2":next(row),
-            "B":next(row),
-            "C1":next(row),
-            "C2":next(row),
-            "E":next(row),
-        }
-    with open(jfile, "w") as f:
-        json.dump(data, f, indent=2)
-    return data
 
 def get_select_text(soup, *selects, index=0, extract=False):
     r = []
@@ -1190,11 +1146,15 @@ class Api:
                 elif kv[clave] != valor:
                     kv[clave] = kv[clave] + " (%s)" % valor
 
-        if mi_nivel and retri and retri.data.get(mi_nivel):
-            drt = retri.data[mi_nivel]
-            kv["Compl. D."] = drt.get("complemento_destino")
-            if drt.get(mi_grupo):
-                kv["Sueldo B."] = drt[mi_grupo]
+        if retri and retri.data:
+            rg = retri.data.get(mi_grupo)
+            rn = retri.data["niveles"].get(str(mi_nivel))
+            if rn:
+                kv["Compl. D."] = rn
+            if rg:
+                kv["Sueldo B."] = rg.get("base", {}).get("sueldo")
+                kv["Extra Ju."] = rg.get("base", {}).get("junio")
+                kv["Extra Di."] = rg.get("base", {}).get("diciembre")
 
         trienios = {}
         self.gesper("Consulta/Trienios.aspx")
@@ -1213,7 +1173,7 @@ class Api:
             total = sum(v for k, v in trienios.items())
             desglose = ", ".join("%s %s" % (v, k) for k, v in trienios.items())
             kv["Trienios"] = str(total)+" [%s]" % desglose
-        euros = ["Compl. D.", "Base", "Compl. E.", "Sueldo B.", "Sueldo T.", "Sueldo"]
+        euros = ["Compl. D.", "Base", "Compl. E.", "Sueldo B.", "Sueldo T.", "Sueldo", "Extra Ju.", "Extra Di."]
         canti = []
         for e in euros:
             if e in kv:

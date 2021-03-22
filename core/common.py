@@ -259,7 +259,12 @@ def read_pdf(*files):
                 yield page
 
 
-def to_num(s):
+def to_num(s, safe=False):
+    if safe is True:
+        try:
+            return to_num(s)
+        except ValueError:
+            return s
     if isinstance(s, str):
         s = s.replace("€", "")
         s = s.replace(".", "")
