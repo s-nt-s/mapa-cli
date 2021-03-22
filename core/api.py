@@ -683,7 +683,7 @@ class Api:
 
         return sorted(nominas, key=lambda n: (n.year, n.mes, -n.index))
 
-    def nominas(self, target=None, enBruto=False, agrupar=True):
+    def nominas(self, target=None, enBruto=False, agrupar=False):
         target = target or self.cnf.nominas
         if target and not os.path.isdir(target):
             self.print("No existe el directorio", target)
@@ -1097,6 +1097,8 @@ class Api:
             "Grupos Adscritos": "Grupo",
             "Nivel": None,
             "Sueldo B.": None,
+            "Extra Ju.": None,
+            "Extra Di.": None,
             "Complemento Específico": "Compl. E.",
             "Compl. D.": None,
             "Sueldo T.": None,
@@ -1138,7 +1140,7 @@ class Api:
         for clave, valor in tr_clave_valor(self.soup, "TablaFuncionario", "Grupo", Grado="Nivel"):
             if clave == "Grupo":
                 mi_grupo = valor
-            if clave == "Nivel" and mi_nivel is not None:
+            if clave == "Nivel" and mi_nivel is None:
                 mi_nivel = int(valor)
             if clave in ("Grupo", "Nivel"):
                 if clave not in kv:
@@ -1149,13 +1151,13 @@ class Api:
 
         if retri and retri.data:
             rg = retri.data.get(mi_grupo)
-            rn = retri.data["niveles"].get(str(mi_nivel))
+            rn = retri.data["niveles"].get(mi_nivel)
             if rn:
                 kv["Compl. D."] = rn
             if rg:
                 kv["Sueldo B."] = rg.get("base", {}).get("sueldo")
-                kv["Extra Ju."] = rg.get("base", {}).get("junio")
-                kv["Extra Di."] = rg.get("base", {}).get("diciembre")
+                kv["Extra Ju."] = rg.get("junio", {}).get("sueldo")
+                kv["Extra Di."] = rg.get("diciembre", {}).get("sueldo")
 
         trienios = {}
         self.gesper("Consulta/Trienios.aspx")
@@ -1185,7 +1187,7 @@ class Api:
                 else:
                     kv[e] = v
                     canti.append(v)
-        if len(canti)>2:
+        if len(canti)>4:
             total = sum(canti)
             kv["Sueldo T."] = total
             canti.append(total)
