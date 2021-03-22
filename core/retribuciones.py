@@ -33,7 +33,9 @@ def retribucion_to_json(file, overwrite=False):
     if not overwrite and os.path.isfile(jfile):
         with open(jfile, "r") as f:
             data = json.load(f)
-            data = {int(k):v for k,v in data.items()}
+            nvl = data.get("niveles")
+            if nvl:
+                data["niveles"]={int(k):v for k,v in nvl.items()}
             return data
 
     tableC = None

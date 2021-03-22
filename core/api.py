@@ -1146,6 +1146,7 @@ class Api:
                 elif kv[clave] != valor:
                     kv[clave] = kv[clave] + " (%s)" % valor
 
+
         if retri and retri.data:
             rg = retri.data.get(mi_grupo)
             rn = retri.data["niveles"].get(str(mi_nivel))
