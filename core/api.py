@@ -1179,8 +1179,11 @@ class Api:
             if e in kv:
                 v = kv[e]
                 v = to_num(v)
-                kv[e] = v
-                canti.append(v)
+                if v is None:
+                    del kv[e]
+                else:
+                    kv[e] = v
+                    canti.append(v)
         if len(canti)>2:
             total = sum(canti)
             kv["Sueldo T."] = total

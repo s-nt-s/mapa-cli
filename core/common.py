@@ -260,6 +260,8 @@ def read_pdf(*files):
 
 
 def to_num(s, safe=False):
+    if s is None:
+        return None
     if safe is True:
         try:
             return to_num(s)
