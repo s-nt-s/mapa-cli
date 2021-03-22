@@ -13,6 +13,8 @@ from bunch import Bunch
 from glob import glob
 import textwrap
 from requests.auth import HTTPBasicAuth
+import tabula
+from io import StringIO
 
 from .common import (DAYNAME, _str, dict_style, get_config, html_to_md,
                      js_print, parse_dia, parse_mes, print_response, js_print, read_pdf, to_num)
@@ -41,6 +43,49 @@ re_hm = re.compile(r"\d\d:\d\d")
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
 
+def retribucion_to_json(file):
+    if file is None or not os.path.isfile(file):
+        return
+    jfile = file.rsplit(".", 1)[0]+".json"
+    if os.path.isfile(jfile):
+        with open(jfile, "r") as f:
+            data = json.load(f)
+            data = {int(k):v for k,v in data.items()}
+            return data
+    table = None
+    for t in tabula.read_pdf(file, pages=1, multiple_tables=True):
+        if 'COMPLEMENTO DE DESTINO' in t.columns:
+            table = t
+    if table is None:
+        return None
+    s = StringIO()
+    table.to_csv(s, index=False, header=False)
+    s=s.getvalue()
+    s=s.strip()
+    data={}
+    for row in s.split("\n"):
+        row = row.replace('",,"', '","')
+        row = row.replace('","', " ")
+        row = row.replace('"', "")
+        row = row.split()
+        if not row[0].isdigit():
+            continue
+        row = [to_num(r) for i, r in enumerate(row) if i%2==0]
+        row = iter(row)
+        nivel = next(row)
+        data[nivel]={
+            "complemento_destino":next(row),
+            "A1":next(row),
+            "A2":next(row),
+            "B":next(row),
+            "C1":next(row),
+            "C2":next(row),
+            "E":next(row),
+        }
+    with open(jfile, "w") as f:
+        json.dump(data, f, indent=2)
+    return data
+
 def get_select_text(soup, *selects, index=0, extract=False):
     r = []
     for select in selects:
@@ -65,6 +110,7 @@ def to_strint(f):
 
 
 def tr_clave_valor(soup, id, *args, **keys):
+    ok_key = tuple(args) + tuple(keys.keys())
     for tr in soup.select("#"+id+" tr"):
         tds = [td.get_text().strip() for td in tr.findAll("td")]
         if len(tds) < 2:
@@ -73,12 +119,10 @@ def tr_clave_valor(soup, id, *args, **keys):
         valor = tds[1]
         if not clave or not valor:
             continue
-        if args and clave not in args:
+        if ok_key and clave not in ok_key:
             continue
-        if keys:
-            if clave not in keys:
-                continue
-            clave = keys[clave] or clave
+        if keys and keys.get(clave) is not None:
+            clave = keys[clave]
         if valor == valor.upper():
             valor = valor.capitalize()
         if clave == "Dirección":
@@ -1052,7 +1096,7 @@ class Api:
         return None
 
     def get_retribuciones(self, target=None):
-        retribucion = set()
+        retribucion = []
         self.verify = False
         target = target or self.cnf.retribuciones
         soup = self.get(
@@ -1064,10 +1108,17 @@ class Api:
                 if yr and yr[0] > 2000:
                     url = a.attrs["href"]
                     yr = yr[0]
-                    retribucion.add((yr, url))
                     name = "%s.pdf" % yr
+                    retribucion.append(Bunch(
+                        year=yr,
+                        url=url,
+                        name=name,
+                        file=None,
+                        data=None
+                    ))
                     if target:
                         absn = os.path.join(target, name)
+                        retribucion[-1].file=absn
                         if not os.path.isfile(absn):
                             r = self.s.get(url, verify=self.verify)
                             with open(absn, "wb") as f:
@@ -1075,18 +1126,24 @@ class Api:
         self.verify = True
         if not retribucion:
             return None
-        _, url = sorted(retribucion).pop()
-        return url
+        r = sorted(retribucion, key=lambda r:(r.year, r.url)).pop()
+        data = None
+        try:
+            data = retribucion_to_json(r.file)
+        except:
+            pass
+        r.data = (data or {})
+        return r
 
     def puesto(self):
         keys = {
             "Denominación": None,
             "Grupos Adscritos": "Grupo",
             "Nivel": None,
-            "Base": None,
+            "Sueldo B.": None,
             "Complemento Específico": "Compl. E.",
             "Compl. D.": None,
-            "Sueldo": None,
+            "Sueldo T.": None,
             "Trienios": None,
             "Teléfono": None,
             "Correo Electrónico": "Correo",
@@ -1099,6 +1156,9 @@ class Api:
         grupo = None
         kv = {}
 
+        mi_grupo = None
+        mi_nivel = None
+        retri = self.get_retribuciones()
         rpt = self.get_rpt()
         self.gesper("Consulta/Puesto.aspx")
         for clave, valor in tr_clave_valor(self.soup, "TablaFuncionario", **keys):
@@ -1110,19 +1170,31 @@ class Api:
                 continue
             if clave == "Grupo":
                 valor = valor.upper()
+                mi_grupo = valor
+            if clave == "Nivel":
+                mi_nivel = int(valor)
             kv[clave] = valor
         self.gesper("Default.aspx")
         for clave, valor in tr_clave_valor(self.soup, "TablaPersonales", **keys):
             kv[clave] = valor
 
         self.gesper("Consulta/Profesionales.aspx")
-        for clave, valor in tr_clave_valor(self.soup, "TablaFuncionario", "Grupo"):
+        for clave, valor in tr_clave_valor(self.soup, "TablaFuncionario", "Grupo", Grado="Nivel"):
             if clave == "Grupo":
-                grupo = valor
+                mi_grupo = valor
+            if clave == "Nivel" and mi_nivel is not None:
+                mi_nivel = int(valor)
+            if clave in ("Grupo", "Nivel"):
                 if clave not in kv:
                     kv[clave] = valor
                 elif kv[clave] != valor:
                     kv[clave] = kv[clave] + " (%s)" % valor
+
+        if mi_nivel and retri and retri.data.get(mi_nivel):
+            drt = retri.data[mi_nivel]
+            kv["Compl. D."] = drt.get("complemento_destino")
+            if drt.get(mi_grupo):
+                kv["Sueldo B."] = drt[mi_grupo]
 
         trienios = {}
         self.gesper("Consulta/Trienios.aspx")
@@ -1141,7 +1213,7 @@ class Api:
             total = sum(v for k, v in trienios.items())
             desglose = ", ".join("%s %s" % (v, k) for k, v in trienios.items())
             kv["Trienios"] = str(total)+" [%s]" % desglose
-        euros = ["Compl. D.", "Base", "Compl. E."]
+        euros = ["Compl. D.", "Base", "Compl. E.", "Sueldo B.", "Sueldo T.", "Sueldo"]
         canti = []
         for e in euros:
             if e in kv:
@@ -1149,6 +1221,10 @@ class Api:
                 v = to_num(v)
                 kv[e] = v
                 canti.append(v)
+        if len(canti)>2:
+            total = sum(canti)
+            kv["Sueldo T."] = total
+            canti.append(total)
         for e in euros:
             line = max(len(str(round(i))) for i in canti)
             line = "%"+str(line+1)+"s €"
@@ -1159,9 +1235,8 @@ class Api:
         line = "%-"+str(max_campo)+"s: %s"
         for i in sorted(kv.items(), key=lambda x: (orden.index(x[0]), x)):
             self.print(line % i)
-        url = self.get_retribuciones()
-        if url:
-            self.print(url)
+        if retri:
+            self.print(retri.url)
 
     def servicios(self):
         inicio = None

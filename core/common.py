@@ -260,8 +260,11 @@ def read_pdf(*files):
 
 
 def to_num(s):
-    s = s.replace("€", "")
-    s = s.replace(".", "")
-    s = s.replace(",", ".")
-    s = float(s)
+    if isinstance(s, str):
+        s = s.replace("€", "")
+        s = s.replace(".", "")
+        s = s.replace(",", ".")
+        s = float(s)
+    if int(s)==s:
+        s=int(s)
     return s
