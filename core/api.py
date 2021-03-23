@@ -1467,6 +1467,11 @@ class Api:
                 if "." in tt and len(tt.split()) == 1:
                     tt = tt.lower()
                 self.print("*", tt)
+                url = o.select_one("a.ico-website")
+                if url:
+                    url = url.attrs["href"]
+                    url = url.rstrip(".")
+                    self.print(" ", url)
 
     def _informe_de_horas(self, ini, fin):
         self.gesper(
