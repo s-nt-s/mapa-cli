@@ -1468,7 +1468,7 @@ class Api:
                     tt = tt.lower()
                 self.print("*", tt)
                 url = o.select_one("a.ico-website")
-                if url:
+                if url and False:
                     url = url.attrs["href"]
                     url = url.rstrip(".")
                     self.print(" ", url)
