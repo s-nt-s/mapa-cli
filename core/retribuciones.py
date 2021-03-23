@@ -81,6 +81,7 @@ def retribucion_to_json(file, overwrite=False):
         nivel = next(row)
         compd = next(row)
         data["niveles"][nivel]=compd
+
     with open(jfile, "w") as f:
         json.dump(data, f, indent=2)
     return data
