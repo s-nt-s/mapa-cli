@@ -683,7 +683,9 @@ class Api:
 
         return sorted(nominas, key=lambda n: (n.year, n.mes, -n.index))
 
-    def nominas(self, target=None, enBruto=False, agrupar=False):
+    def nominas(self, target=None, enBruto=False, agrupar=None):
+        if agrupar is None:
+            agrupar = enBruto is False
         target = target or self.cnf.nominas
         if target and not os.path.isdir(target):
             self.print("No existe el directorio", target)
