@@ -912,13 +912,17 @@ class Api:
             name = "%s - %s - %s.pdf" % (fecha, tipo, desc)
             name = re_sp.sub(" ", name)
             exps.append(Bunch(
+                fecha=fecha,
                 name=name,
+                tipo=tipo,
+                desc=desc,
                 url=url,
-                index=len(exps)
+                index=len(exps),
             ))
-        exps = sorted(exps, key=lambda x:(x.name, x.index))
+        exps = sorted(exps, key=lambda x:(x.fecha, x.index))
+        frmt = "{fecha} {tipo:>%s} {desc}" % max(len(e.tipo) for e in exps)
         for e in exps:
-            self.print(e.name)
+            self.print(frmt.format(**dict(e)))
             if target:
                 absn = os.path.join(target, e.name)
                 files.append(absn)
