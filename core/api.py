@@ -895,6 +895,7 @@ class Api:
             self.print("No existe el directorio", target)
             target = None
         self.gesper("Expediente/Consulta.aspx")
+        exps = []
         for tr in reversed(self.soup.select("#TablaDocumentos tr")):
             a = [a for a in tr.findAll("a") if a.attrs.get(
                 "href").startswith("http")]
@@ -910,16 +911,23 @@ class Api:
             fecha = ".".join(reversed(fecha.split("-")))
             name = "%s - %s - %s.pdf" % (fecha, tipo, desc)
             name = re_sp.sub(" ", name)
-            self.print(name)
+            exps.append(Bunch(
+                name=name,
+                url=url,
+                index=len(exps)
+            ))
+        exps = sorted(exps, key=lambda x:(x.name, x.index))
+        for e in exps:
+            self.print(e.name)
             if target:
-                absn = os.path.join(target, name)
+                absn = os.path.join(target, e.name)
                 files.append(absn)
                 if not os.path.isfile(absn):
-                    r = self.s.get(url, verify=self.verify)
+                    r = self.s.get(e.url, verify=self.verify)
                     with open(absn, "wb") as f:
                         f.write(r.content)
             else:
-                self.print(url)
+                self.print(e.url)
         return files
 
     def _find_mes(self, *tds):
