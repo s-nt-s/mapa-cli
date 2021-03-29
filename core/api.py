@@ -917,7 +917,7 @@ class Api:
                 tipo=tipo,
                 desc=desc,
                 url=url,
-                index=len(exps),
+                index=len(exps)
             ))
         exps = sorted(exps, key=lambda x:(x.fecha, x.index))
         frmt = "{fecha} {tipo:>%s} {desc}" % max(len(e.tipo) for e in exps)
