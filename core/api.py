@@ -920,7 +920,7 @@ class Api:
                 index=len(exps)
             ))
         exps = sorted(exps, key=lambda x:(x.fecha, x.index))
-        frmt = "{fecha} {tipo:>%s} {desc}" % max(len(e.tipo) for e in exps)
+        frmt = "{fecha} {tipo:%s} {desc}" % max(len(e.tipo) for e in exps)
         for e in exps:
             self.print(frmt.format(**dict(e)))
             if target:
