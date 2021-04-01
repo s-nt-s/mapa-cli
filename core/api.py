@@ -921,7 +921,8 @@ class Api:
                 index=len(exps)
             ))
         exps = sorted(exps, key=lambda x:(x.fecha, x.index))
-        frmt = "{fecha:%-d.%m} {tipo:%s} {desc}" % max(len(e.tipo) for e in exps)
+        mx_tipo = max(len(e.tipo) for e in exps)
+        frmt = "{fecha:%-d.%m} {tipo:"+str(mx_tipo)+"} {desc}"
         for inx, e in enumerate(exps):
             if inx == 0 or e.fecha.year != exps[inx-1].fecha.year:
                 self.print("===", e.fecha.year, "===")
