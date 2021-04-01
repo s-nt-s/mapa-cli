@@ -908,8 +908,9 @@ class Api:
             desc = desc.capitalize()
             desc = desc.replace("/", " - ")
             desc = desc.replace("\\", " - ")
-            fecha = ".".join(reversed(fecha.split("-")))
-            name = "%s - %s - %s.pdf" % (fecha, tipo, desc)
+            dia, mes, year = map(int, fecha.split("-"))
+            fecha = date(year, mes, dia)
+            name = "{:%Y.%m.%d} - {} - {}.pdf".format(fecha, tipo, desc)
             name = re_sp.sub(" ", name)
             exps.append(Bunch(
                 fecha=fecha,
@@ -920,9 +921,14 @@ class Api:
                 index=len(exps)
             ))
         exps = sorted(exps, key=lambda x:(x.fecha, x.index))
-        frmt = "{fecha} {tipo:%s} {desc}" % max(len(e.tipo) for e in exps)
-        for e in exps:
-            self.print(frmt.format(**dict(e)))
+        frmt = "{fecha:%-d.%m} {tipo:%s} {desc}" % max(len(e.tipo) for e in exps)
+        for inx, e in enumerate(exps):
+            if inx == 0 or e.fecha.year != exps[inx-1].fecha.year:
+                self.print("===", e.fecha.year, "===")
+            line = frmt.format(**dict(e))
+            if e.fecha.day<10:
+                line = " "+line
+            self.print(line)
             if target:
                 absn = os.path.join(target, e.name)
                 files.append(absn)
