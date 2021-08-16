@@ -1,18 +1,22 @@
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.firefox.options import Options
+import re
+import time
+from urllib.parse import urljoin, urlparse
+
+from bs4 import BeautifulSoup
+import requests
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as ec
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.proxy import Proxy, ProxyType
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import WebDriverWait
 import sys
-import bs4
-from urllib.parse import urljoin, urlparse
-import requests
-import time
 from urllib import parse
+
+re_sp = re.compile(r"\s+")
+re_emb = re.compile(r"^image/[^;]+;base64,.*", re.IGNORECASE)
 
 def get_query(url):
     q = parse.urlsplit(url)
@@ -20,18 +24,25 @@ def get_query(url):
     q = dict(q)
     return q
 
-def buildSoup(root, source):
-    soup = bs4.BeautifulSoup(source, "lxml")
+def iterhref(soup):
+    """Recorre los atriburos href o src de los tags"""
     for n in soup.findAll(["img", "form", "a", "iframe", "frame", "link", "script"]):
         attr = "href" if n.name in ("a", "link") else "src"
         if n.name == "form":
             attr = "action"
         val = n.attrs.get(attr)
-        if val and not (val.startswith("#") or val.startswith("javascript:")):
-            val = urljoin(root, val)
-            val = val.replace(":443/", "/")
-            val = val.replace("/default.aspx", "")
-            n.attrs[attr] = val
+        if val is None or re_emb.search(val):
+            continue
+        if not(val.startswith("#") or val.startswith("javascript:")):
+            yield n, attr, val
+
+def buildSoup(root, source, parser="lxml"):
+    soup = BeautifulSoup(source, parser)
+    for n, attr, val in iterhref(soup):
+        val = urljoin(root, val)
+        val = val.replace(":443/", "/")
+        val = val.replace("/default.aspx", "")
+        n.attrs[attr] = val
     return soup
 
 
@@ -39,6 +50,7 @@ default_profile = {
     "browser.tabs.drawInTitlebar": True,
     "browser.uidensity": 1,
 }
+
 
 class FF:
     def __init__(self, visible=False, wait=60):
@@ -96,6 +108,9 @@ class FF:
         return self._driver.page_source
 
     def wait(self, id, seconds=None):
+        if isinstance(id, (int, float)):
+            time.sleep(id)
+            return
         my_by = By.ID
         seconds = seconds or self._wait
         if id.startswith("//"):
@@ -105,7 +120,6 @@ class FF:
         if id.startswith("//"):
             return self._driver.find_element_by_xpath(id)
         return self._driver.find_element_by_id(id)
-
 
     def val(self, id, val=None):
         if self._driver is None:
