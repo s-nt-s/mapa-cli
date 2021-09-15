@@ -226,6 +226,7 @@ def html_to_md(node, links=False, unwrap=None):
     md = md.replace(r"\r", "")
     md = re.sub(r"[ \t\r]+$", "", md, flags=re.MULTILINE)
     md = re.sub(r"\n\n\n+", r"\n\n", md)
+    md = md.lstrip("\n")
     return md
 
 
