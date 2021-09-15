@@ -27,6 +27,8 @@ tag_round = ['u', 'i', 'em', 'span', 'strong', 'a', 'b']
 tag_trim = ['li', 'th', 'td', 'div', 'caption', 'h[1-6]']
 tag_right = ['p']
 
+re_url = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
+
 
 def get_html(soup):
     h = str(soup)
@@ -207,8 +209,13 @@ def html_to_md(node, links=False, unwrap=None):
             href = None
             if links and n.name == "a":
                 href = n.attrs.get("href")
+                txt = n.get_text().strip()
+                if href and (href in txt or re_url.match(txt)) and len(n.select(":scope *"))==0:
+                    n.string = href
+                    n.unwrap()
+                    continue
             n.attrs.clear()
-            if href and n.get_text() not in href:
+            if href:
                 n.attrs["href"] = href
     if unwrap:
         for n in node.findAll(unwrap):

@@ -41,6 +41,12 @@ default_headers = {
 re_hm = re.compile(r"\d\d:\d\d")
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
+re_url = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
+fix_url = (
+    (re.compile(r"^(https?://[^/]*\.?)mapama\.es"), r"\1mapa.es"),
+    (re.compile(r"^(https?://[^/]+):443/"), r"\1/"),
+    (re.compile(r"/default\.aspx"), ""),
+)
 
 def get_select_text(soup, *selects, index=0, extract=False):
     r = []
@@ -102,6 +108,29 @@ def print_dict(kv, _print, prefix=""):
             else:
                 _print(" "+str(v))
 
+
+def iterhref(soup, *args):
+    if len(args)==0:
+        args = ("img", "form", "a", "iframe", "frame", "link", "script")
+    for n in soup.findAll(args):
+        attr = "href" if n.name in ("a", "link") else "src"
+        if n.name == "form":
+            attr = "action"
+        val = n.attrs.get(attr)
+        if val and not (val.startswith("#") or val.startswith("javascript:")):
+            yield n, attr, val
+
+
+def buildSoup(response):
+    soup = bs4.BeautifulSoup(response.content, "lxml")
+    for n, attr, val in iterhref(soup):
+        val = urljoin(response.url, val)
+        for r, txt  in fix_url:
+            val = r.sub(txt, val)
+        n.attrs[attr] = val
+    return soup
+
+
 class Api:
     def __init__(self, refer=None, bot=None):
         self.cnf = get_config()
@@ -157,19 +186,9 @@ class Api:
         if "VerInforme.ashx" in url:
             return self.response
         self.refer = self.response.url
-        self.soup = bs4.BeautifulSoup(self.response.content, "lxml")
-        for n in self.soup.findAll(["img", "form", "a", "iframe", "frame", "link", "script"]):
-            attr = "href" if n.name in ("a", "link") else "src"
-            if n.name == "form":
-                attr = "action"
-            val = n.attrs.get(attr)
-            if val and not (val.startswith("#") or val.startswith("javascript:")):
-                val = urljoin(url, val)
-                val = val.replace(":443/", "/")
-                val = val.replace("/default.aspx", "")
-                n.attrs[attr] = val
-                if n.name in ("script", ):
-                    self.s.get(n.attrs[attr], verify=self.verify)
+        self.soup = buildSoup(self.response)
+        for n, attr, val in iterhref(self.soup, "script"):
+            self.s.get(n.attrs[attr], verify=self.verify)
 
         if self.debug:
             fl = ""
@@ -285,7 +304,7 @@ class Api:
         url = url + user+"/speedDials"
         self.response = self.s.get(url, auth=HTTPBasicAuth(user, self.cnf.mapa.pssw))
         self.log_response()
-        self.soup = bs4.BeautifulSoup(self.response.content, "lxml")
+        self.soup = buildSoup(self.response)
         return self.soup
 
     def intranet(self, *args, **kargv):
@@ -1440,7 +1459,7 @@ class Api:
                     txt = a.get_text().strip().lower()
                     s_txt = txt.split()
                     urls.add(a.attrs["href"])
-                    if "ver" in s_txt or "enlace" in txt or txt.startswith("más información"):
+                    if "ver" in s_txt or "enlace" in txt or re.match(r"^(para )?más información.*", txt):
                         a.string = a.attrs["href"]
                         a.name = "span"
                 if len(urls) == 1:
@@ -1448,9 +1467,26 @@ class Api:
                         for n in i.node.select(".lista-documentos"):
                             n.extract()
                     for a in i.node.findAll(["span", "a"]):
-                        if a.get_text().strip() in urls:
+                        txt = a.get_text().strip()
+                        for r, ntxt  in fix_url:
+                            txt = r.sub(ntxt, txt)
+                        if txt in urls:
                             a.extract()
                     i.url = urls.pop()
+                last = None
+                while True:
+                    last = i.node.select(":scope > *")
+                    if len(last)==0:
+                        last = None
+                        break
+                    last = last[-1]
+                    if len(last.get_text().strip())==0 and len(last.select(":scope > *"))==0:
+                        last.extract()
+                        continue
+                    break
+                if last is not None:
+                    if re.match(r"^(para |Puedes consultar )?más información.*", last.get_text().strip(), flags=re.IGNORECASE):
+                        last.extract()
                 i.descripcion = html_to_md(
                     i.node, links=True, unwrap=('span', 'strong', "b"))
             if i.url:
