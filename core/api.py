@@ -1487,6 +1487,10 @@ class Api:
                 if last is not None:
                     if re.match(r"^(para |Puedes consultar )?más información.*", last.get_text().strip(), flags=re.IGNORECASE):
                         last.extract()
+                if i.url:
+                    a = i.node.find("a", attrs={"href":i.url})
+                    if a and len(a.get_text().strip())<3:
+                        a.unwrap()
                 i.descripcion = html_to_md(
                     i.node, links=True, unwrap=('span', 'strong', "b"))
             if i.url:
