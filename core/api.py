@@ -726,6 +726,14 @@ class Api:
         meses = sorted(set((n.year, n.mes) for n in nominas), reverse=True)
         nominas = (n for n in nominas if (n.year, n.mes) in meses and ((n.bruto and enBruto) or (n.neto and not enBruto)))
         nominas = sorted(nominas, key=lambda n: (n.year, n._mes, -n.index))
+        for y in sorted(set(n.year for n in nominas)):
+            y_nom = list(n for n in nominas if n.year == y)
+            y_eur = sum(n.bruto if enBruto else n.neto for n in nominas if n.year == y)
+            y_mes = len(set((n.year, n.mes) for n in y_nom))
+            euros = to_strint(y_eur / y_mes)
+            self.print("{year}: {meses:>2} x {euros:>5}€ = {total}€".format(year=y, euros=euros, meses=y_mes, total=to_strint(y_eur)))
+
+        self.print("")
         for n in nominas:
             euros = to_strint(n.bruto if enBruto else n.neto)
             self.print("{year}-{mes:02d} __ {euros:>5}€".format(euros=euros, **dict(n)))
