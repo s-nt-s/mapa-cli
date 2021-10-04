@@ -85,7 +85,7 @@ def tr_clave_valor(soup, id, *args, **keys):
             continue
         if keys and keys.get(clave) is not None:
             clave = keys[clave]
-        if valor == valor.upper():
+        if valor == valor.upper() and clave not in ("N.R.P.", ):
             valor = valor.capitalize()
         if clave == "Dirección":
             valor = valor.split(", madrid")[0]
@@ -1142,6 +1142,7 @@ class Api:
     def puesto(self):
         keys = {
             "Denominación": None,
+            "N.R.P.": None,
             "Grupos Adscritos": "Grupo",
             "Nivel": None,
             "Sueldo B.": None,
@@ -1180,6 +1181,11 @@ class Api:
             if clave == "Nivel":
                 mi_nivel = int(valor)
             kv[clave] = valor
+
+        self.gesper("Consulta/Personales.aspx")
+        for clave, valor in tr_clave_valor(self.soup, "TablaPersonales", **keys):
+            kv[clave] = valor
+
         self.gesper("Default.aspx")
         for clave, valor in tr_clave_valor(self.soup, "TablaPersonales", **keys):
             kv[clave] = valor
