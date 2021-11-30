@@ -41,6 +41,12 @@ default_headers = {
 re_hm = re.compile(r"\d\d:\d\d")
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
+re_url = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
+fix_url = (
+    (re.compile(r"^(https?://[^/]*\.?)mapama\.es"), r"\1mapa.es"),
+    (re.compile(r"^(https?://[^/]+):443/"), r"\1/"),
+    (re.compile(r"/default\.aspx"), ""),
+)
 
 def get_select_text(soup, *selects, index=0, extract=False):
     r = []
@@ -79,7 +85,7 @@ def tr_clave_valor(soup, id, *args, **keys):
             continue
         if keys and keys.get(clave) is not None:
             clave = keys[clave]
-        if valor == valor.upper():
+        if valor == valor.upper() and clave not in ("N.R.P.", ):
             valor = valor.capitalize()
         if clave == "Dirección":
             valor = valor.split(", madrid")[0]
@@ -101,6 +107,29 @@ def print_dict(kv, _print, prefix=""):
                 print_dict(v, _print, prefix="  ")
             else:
                 _print(" "+str(v))
+
+
+def iterhref(soup, *args):
+    if len(args)==0:
+        args = ("img", "form", "a", "iframe", "frame", "link", "script")
+    for n in soup.findAll(args):
+        attr = "href" if n.name in ("a", "link") else "src"
+        if n.name == "form":
+            attr = "action"
+        val = n.attrs.get(attr)
+        if val and not (val.startswith("#") or val.startswith("javascript:")):
+            yield n, attr, val
+
+
+def buildSoup(response):
+    soup = bs4.BeautifulSoup(response.content, "lxml")
+    for n, attr, val in iterhref(soup):
+        val = urljoin(response.url, val)
+        for r, txt  in fix_url:
+            val = r.sub(txt, val)
+        n.attrs[attr] = val
+    return soup
+
 
 class Api:
     def __init__(self, refer=None, bot=None):
@@ -157,19 +186,9 @@ class Api:
         if "VerInforme.ashx" in url:
             return self.response
         self.refer = self.response.url
-        self.soup = bs4.BeautifulSoup(self.response.content, "lxml")
-        for n in self.soup.findAll(["img", "form", "a", "iframe", "frame", "link", "script"]):
-            attr = "href" if n.name in ("a", "link") else "src"
-            if n.name == "form":
-                attr = "action"
-            val = n.attrs.get(attr)
-            if val and not (val.startswith("#") or val.startswith("javascript:")):
-                val = urljoin(url, val)
-                val = val.replace(":443/", "/")
-                val = val.replace("/default.aspx", "")
-                n.attrs[attr] = val
-                if n.name in ("script", ):
-                    self.s.get(n.attrs[attr], verify=self.verify)
+        self.soup = buildSoup(self.response)
+        for n, attr, val in iterhref(self.soup, "script"):
+            self.s.get(n.attrs[attr], verify=self.verify)
 
         if self.debug:
             fl = ""
@@ -285,7 +304,7 @@ class Api:
         url = url + user+"/speedDials"
         self.response = self.s.get(url, auth=HTTPBasicAuth(user, self.cnf.mapa.pssw))
         self.log_response()
-        self.soup = bs4.BeautifulSoup(self.response.content, "lxml")
+        self.soup = buildSoup(self.response)
         return self.soup
 
     def intranet(self, *args, **kargv):
@@ -707,6 +726,14 @@ class Api:
         meses = sorted(set((n.year, n.mes) for n in nominas), reverse=True)
         nominas = (n for n in nominas if (n.year, n.mes) in meses and ((n.bruto and enBruto) or (n.neto and not enBruto)))
         nominas = sorted(nominas, key=lambda n: (n.year, n._mes, -n.index))
+        for y in sorted(set(n.year for n in nominas)):
+            y_nom = list(n for n in nominas if n.year == y)
+            y_eur = sum(n.bruto if enBruto else n.neto for n in nominas if n.year == y)
+            y_mes = len(set((n.year, n.mes) for n in y_nom))
+            euros = to_strint(y_eur / y_mes)
+            self.print("{year}: {meses:>2} x {euros:>5}€ = {total}€".format(year=y, euros=euros, meses=y_mes, total=to_strint(y_eur)))
+
+        self.print("")
         for n in nominas:
             euros = to_strint(n.bruto if enBruto else n.neto)
             self.print("{year}-{mes:02d} __ {euros:>5}€".format(euros=euros, **dict(n)))
@@ -1115,6 +1142,7 @@ class Api:
     def puesto(self):
         keys = {
             "Denominación": None,
+            "N.R.P.": None,
             "Grupos Adscritos": "Grupo",
             "Nivel": None,
             "Sueldo B.": None,
@@ -1153,6 +1181,11 @@ class Api:
             if clave == "Nivel":
                 mi_nivel = int(valor)
             kv[clave] = valor
+
+        self.gesper("Consulta/Personales.aspx")
+        for clave, valor in tr_clave_valor(self.soup, "TablaPersonales", **keys):
+            kv[clave] = valor
+
         self.gesper("Default.aspx")
         for clave, valor in tr_clave_valor(self.soup, "TablaPersonales", **keys):
             kv[clave] = valor
@@ -1440,7 +1473,7 @@ class Api:
                     txt = a.get_text().strip().lower()
                     s_txt = txt.split()
                     urls.add(a.attrs["href"])
-                    if "ver" in s_txt or "enlace" in txt or txt.startswith("más información"):
+                    if "ver" in s_txt or "enlace" in txt or re.match(r"^(para )?más información.*", txt):
                         a.string = a.attrs["href"]
                         a.name = "span"
                 if len(urls) == 1:
@@ -1448,9 +1481,30 @@ class Api:
                         for n in i.node.select(".lista-documentos"):
                             n.extract()
                     for a in i.node.findAll(["span", "a"]):
-                        if a.get_text().strip() in urls:
+                        txt = a.get_text().strip()
+                        for r, ntxt  in fix_url:
+                            txt = r.sub(ntxt, txt)
+                        if txt in urls:
                             a.extract()
                     i.url = urls.pop()
+                last = None
+                while True:
+                    last = i.node.select(":scope > *")
+                    if len(last)==0:
+                        last = None
+                        break
+                    last = last[-1]
+                    if len(last.get_text().strip())==0 and len(last.select(":scope > *"))==0:
+                        last.extract()
+                        continue
+                    break
+                if last is not None:
+                    if re.match(r"^(para |Puedes consultar )?más información.*", last.get_text().strip(), flags=re.IGNORECASE):
+                        last.extract()
+                if i.url:
+                    a = i.node.find("a", attrs={"href":i.url})
+                    if a and len(a.get_text().strip())<3:
+                        a.unwrap()
                 i.descripcion = html_to_md(
                     i.node, links=True, unwrap=('span', 'strong', "b"))
             if i.url:
