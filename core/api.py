@@ -1351,44 +1351,51 @@ class Api:
         print_dict(kv, self.print)
 
     def menu(self):
+        menus = []
         today = datetime.today()
         self.intranet("servicios-internos/cafeteria/menu/default.aspx")
         for div in self.soup.select("div.panel-heading"):
             h3 = div.get_text().strip()
-            if self.cnf.sede in h3:
-                div = div.find_parent("div")
-                fecha = div.select("span.fecha-menu")[0]
-                fecha = fecha.get_text().strip()
-                dt = reversed(tuple(int(i) for i in fecha.split("/")))
-                dt = datetime(*dt).date()
-                if dt < date.today():
-                    self.print(DAYNAME[dt.weekday()], fecha)
-                    self.print("")
-                menu = div.select("div.menu")[0]
-                precios = [p for p, _ in re.findall(
-                    r"(\d+([.,]\d+))\s*€", str(menu))]
-                flag = False
-                for li in menu.findAll("li"):
-                    txt = re_sp.sub(" ", li.get_text()).strip().lower()
-                    if txt.startswith("menú "):
-                        li.append(" (%s€)" % precios.pop(0))
-                        flag = False
-                    elif txt.startswith("pan, bebida y postre"):
-                        flag = True
-                    if flag:
-                        li.extract()
-                for li in menu.findAll("li"):
-                    lis = li.findAll("li")
-                    if len(lis) == 1:
-                        li.replaceWith(lis[0])
-                menu = html_to_md(menu, unwrap=('p', 'span'))
-                menu = re.sub(r"^[ \t]*\* (Menú .+?)$", r"\1\n",
-                              menu, flags=re.MULTILINE)
-                menu = re.sub(r"^[ \t]+\*\s*", r"* ", menu, flags=re.MULTILINE)
-                menu = re.sub(r"^[ \t]+\+\s*", r"  + ",
-                              menu, flags=re.MULTILINE)
-                menu = re.sub(r"\n\n\n+", r"\n\n", menu)
-                self.print(menu)
+            if self.cnf.sede not in h3:
+                continue
+            div = div.find_parent("div")
+            fecha = div.select("span.fecha-menu")[0]
+            fecha = fecha.get_text().strip()
+            dt = reversed(tuple(int(i) for i in fecha.split("/")))
+            dt = datetime(*dt).date()
+            if dt < date.today():
+                continue
+                #self.print(DAYNAME[dt.weekday()], fecha)
+                #self.print("")
+            menu = div.select("div.menu")[0]
+            precios = [p for p, _ in re.findall(r"(\d+([.,]\d+))\s*€", str(menu))]
+            flag = False
+            for li in menu.findAll("li"):
+                txt = re_sp.sub(" ", li.get_text()).strip().lower()
+                if txt.startswith("menú "):
+                    (li.find("span") or li).append(" (%s€)" % precios.pop(0))
+                    flag = False
+                elif txt.startswith("pan, bebida y postre"):
+                    flag = True
+                if flag:
+                    li.extract()
+            for li in menu.findAll("li"):
+                lis = li.findAll("li")
+                if len(lis) == 1:
+                    li.replaceWith(lis[0])
+            menu = html_to_md(menu, unwrap=('p', 'span'))
+            menu = re.sub(r"^[ \t]*\* (Menú .+?)$", r"\n\1\n", menu, flags=re.MULTILINE)
+            menu = re.sub(r"^[ \t]+\*\s*", r"* ", menu, flags=re.MULTILINE)
+            menu = re.sub(r"^[ \t]+\+\s*", r"  + ", menu, flags=re.MULTILINE)
+            menu = re.sub(r"\n\s*\n\s*\n+", r"\n\n", menu)
+            menus.append((dt, fecha, menu.strip()))
+
+        for i, (dt, fecha, menu) in enumerate(menus):
+            if i>0:
+                self.print("")
+            self.print("#", DAYNAME[dt.weekday()], fecha)
+            self.print("")
+            self.print(menu)
 
     def novedades(self, desde=None):
         if isinstance(desde, int):
