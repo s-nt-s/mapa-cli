@@ -326,7 +326,7 @@ class Api:
         if dias == 0:
             return None
 
-        jZer = HM("07:30")
+        jZer = HM("07:00")
         jIni = HM("09:00")
         jFin = HM("14:30")
         jMin = jFin - jIni
@@ -374,6 +374,7 @@ class Api:
         return e
 
     def horas_semana(self):
+        festi = {f.date.date():f for f in self.get_festivos(max_iter=1)}
         lapso = self.lapso_dias()
         today = date.today()
         self.gesper("ControlHorario/Fichajes.aspx")
@@ -386,40 +387,49 @@ class Api:
         isTrabajando = False
         parcial_lapso = None
         parcial_lapso_hoy = HM("00:00")
+        count_festivos = 0
         for fch, id, style, td in self.dias:
+            if style != "lightgrey":
+                continue
+            fst = festi.get(fch)
+            if fst:
+                self.print("%2d: %s " % (fst.dia, fst.nombre))
+                count_festivos = count_festivos + 1
+                continue
             parcial_lapso = HM("00:00")
-            if style == "lightgrey":
-                txt = td.get_text().strip()
-                hms = [HM(hm) for hm in re_hm.findall(txt)]
-                if fch in lapso:
-                    self.print("%2d: %s " % (fch.day, lapso[fch].txt))
-                    parcial_lapso = lapso[fch].h_dur
-                if len(hms) > 0:
-                    isHoy = (fch == today)
-                    ini = hms[0]
-                    if fch in lapso and len(hms) == 1 and not isHoy:
-                        laburo.append(parcial_lapso)
-                        continue
-                    if len(hms) > 1:
-                        fin = hms[-1]
-                        itr = HM.intervalo(*hms)
-                        laburo.append(itr + parcial_lapso)
-                    else:
-                        isTrabajando = isHoy
-                        parcial_lapso_hoy = parcial_lapso
-                        hoy = ini
-                        fin = HM(time.strftime("%H:%M"))
-                        itr = HM.intervalo(ini, fin)
-                    if isTrabajando:
-                        self.print("%2d: %s - %s = %s" % (fch.day, ini,
-                                                          fin, itr), "y subiendo")
-                    elif len(hms) == 1:
-                        self.print("%2d: %s - --_-- = --:--" % (fch.day, ini))
-                    else:
-                        self.print("%2d: %s - %s = %s" %
-                                   (fch.day, ini, fin, itr))
+            txt = td.get_text().strip()
+            hms = [HM(hm) for hm in re_hm.findall(txt)]
+            if fch in lapso:
+                self.print("%2d: %s " % (fch.day, lapso[fch].txt))
+                parcial_lapso = lapso[fch].h_dur
+            if len(hms) > 0:
+                isHoy = (fch == today)
+                ini = hms[0]
+                if fch in lapso and len(hms) == 1 and not isHoy:
+                    laburo.append(parcial_lapso)
+                    continue
+                if len(hms) > 1:
+                    fin = hms[-1]
+                    itr = HM.intervalo(*hms)
+                    laburo.append(itr + parcial_lapso)
+                else:
+                    isTrabajando = isHoy
+                    parcial_lapso_hoy = parcial_lapso
+                    hoy = ini
+                    fin = HM(time.strftime("%H:%M"))
+                    itr = HM.intervalo(ini, fin)
+                if isTrabajando:
+                    self.print("%2d: %s - %s = %s" % (fch.day, ini,
+                                                      fin, itr), "y subiendo")
+                elif len(hms) == 1:
+                    self.print("%2d: %s - --_-- = --:--" % (fch.day, ini))
+                else:
+                    self.print("%2d: %s - %s = %s" %
+                               (fch.day, ini, fin, itr))
 
         jornada = total.safe_jornada
+        if jornada and count_festivos:
+            falta = falta - jornada.mul(count_festivos)
 
         ahora = HM(datetime.now().strftime("%H:%M"))
         flag = True
@@ -978,18 +988,20 @@ class Api:
                     mes = parse_mes(spl[0][:3])
                     return year, mes
 
-    def festivos(self):
+    def get_festivos(self, max_iter=-1):
         today = datetime.today()
-        cYear = today.year
         self.gesper("CalendarioLaboral.aspx")
         while True:
+            if max_iter == 0:
+                break
+            max_iter = max_iter -1
             table = self.soup.select("#CalFestivos")[0]
             nxt = table.findAll("a")[-1]
             tds = table.findAll("td")
             year, mes = self._find_mes(*tds)
             delta = (year - today.year)
             if delta > 1 or (delta == 1 and mes > 1):
-                return
+                break
             if year > today.year or (year == today.year and mes >= today.month):
                 for td in tds:
                     style = dict_style(td)
@@ -1003,9 +1015,6 @@ class Api:
                             if dt >= today and dt.weekday() not in (5, 6):
                                 nombre = nombre.capitalize()
                                 semana = parse_dia(dt)
-                                if cYear != dt.year:
-                                    self.print("===", dt.year, "===")
-                                    cYear = dt.year
                                 if nombre == "Lunes siguiente a todos los santos":
                                     nombre = "'Todos los santos'"
                                 elif nombre == "Lunes siguiente al dia de la comunidad de madrid":
@@ -1020,11 +1029,25 @@ class Api:
                                     nombre = "Día del trabajo"
                                 elif nombre == "Natividad del señor":
                                     nombre = "Navidad"
-                                self.print("%s %2d.%02d %s" %
-                                           (semana, dia, mes, nombre))
+                                yield Bunch(
+                                    date=dt,
+                                    year=dt.year,
+                                    semana=semana,
+                                    dia=dia,
+                                    mes=mes,
+                                    nombre=nombre
+                                )
             nxt = nxt.attrs["href"].split("'")[-2]
-            self.submit("#Form1", __EVENTARGUMENT=nxt,
-                        __EVENTTARGET="CalFestivos")
+            self.submit("#Form1", __EVENTARGUMENT=nxt, __EVENTTARGET="CalFestivos")
+
+    def festivos(self):
+        today = datetime.today()
+        cYear = today.year
+        for f in self.get_festivos():
+            if cYear != f.year:
+                self.print("===", f.year, "===")
+                cYear = f.year
+            self.print("%s %2d.%02d %s" % (f.semana, f.dia, f.mes, f.nombre))
 
     def get_vacaciones(self, year=None):
         if year is None:
