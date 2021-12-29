@@ -20,8 +20,8 @@ def get_query(url):
     q = dict(q)
     return q
 
-def buildSoup(root, source):
-    soup = bs4.BeautifulSoup(source, "lxml")
+def buildSoup(root, source, parser="lxml"):
+    soup = bs4.BeautifulSoup(source, parser)
     for n in soup.findAll(["img", "form", "a", "iframe", "frame", "link", "script"]):
         attr = "href" if n.name in ("a", "link") else "src"
         if n.name == "form":
@@ -87,7 +87,7 @@ class FF:
     def get_soup(self):
         if self._driver is None:
             return None
-        return buildSoup(self._driver.current_url, self._driver.page_source)
+        return buildSoup(self._driver.current_url, self._driver.page_source, parser="html.parser")
 
     @property
     def source(self):

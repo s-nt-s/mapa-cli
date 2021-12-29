@@ -4,6 +4,7 @@ lapso.js
 debug/*
 msg/*.txt
 nohup.out
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
