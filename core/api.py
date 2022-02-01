@@ -741,7 +741,7 @@ class Api:
             y_eur = sum(n.bruto if enBruto else n.neto for n in nominas if n.year == y)
             y_mes = len(set((n.year, n.mes) for n in y_nom))
             euros = to_strint(y_eur / y_mes)
-            self.print("{year}: {meses:>2} x {euros:>5}€ = {total}€".format(year=y, euros=euros, meses=y_mes, total=to_strint(y_eur)))
+            self.print("{year}: {meses:>2} x {euros:>5}€ = {total:>6}€".format(year=y, euros=euros, meses=y_mes, total=to_strint(y_eur)))
 
         self.print("")
         for n in nominas:
