@@ -791,7 +791,7 @@ class Api:
             self.print("Sueldo anual: "+to_strint(sueldo.bruto))
             if sueldo.hora:
                 cotizar = 6.35
-                self.print("Si trabajaras 8h/día y tuvieras 22 días de vacaciones y cotizaras {}%:".format(cotizar))
+                self.print("Si trabajaras 8h/día con 22 días de vacaciones y cotizando {}%:".format(cotizar))
                 self.print("Sueldo anual: "+to_strint((260-22)*8*sueldo.hora*(100+cotizar)/100))
 
 
