@@ -99,7 +99,7 @@ class FF:
     def get_soup(self):
         if self._driver is None:
             return None
-        return buildSoup(self._driver.current_url, self._driver.page_source)
+        return buildSoup(self._driver.current_url, self._driver.page_source, parser="html.parser")
 
     @property
     def source(self):

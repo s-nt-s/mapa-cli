@@ -133,3 +133,9 @@ def dwn_funciona_nominas(target, cnf, m_year, m_mes):
     finally:
         ff.close()
     return r
+
+if __name__ == "__main__":
+    today = date.today()
+    today = today - timedelta(days=(today.day+1))
+    cnf = get_config()
+    dwn_funciona_nominas(cnf.nominas, cnf, today.year, today.month)
