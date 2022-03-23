@@ -16,6 +16,8 @@ class HM:
     def intervalo(cls, *args):
         args = sorted(args)
         intervalo = args[-1] - args[0]
+        for i in range(1, len(args)-1, 2):
+            intervalo = intervalo - (args[i+1] - args[i])
         return intervalo
 
     @classmethod

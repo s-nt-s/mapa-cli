@@ -424,8 +424,9 @@ class Api:
                 elif len(hms) == 1:
                     self.print("%2d: %s - --_-- = --:--" % (fch.day, ini))
                 else:
-                    self.print("%2d: %s - %s = %s" %
-                               (fch.day, ini, fin, itr))
+                    str_hms = ["{} - {}".format(hms[i], (hms+["--_--"])[i+1]) for i in range(0, len(hms), 2)]
+                    str_hms = " + ".join(str_hms)
+                    self.print("%2d: %s = %s" % (fch.day, str_hms, itr))
 
         jornada = total.safe_jornada
         if jornada and count_festivos:
