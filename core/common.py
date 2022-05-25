@@ -28,6 +28,7 @@ tag_trim = ['li', 'th', 'td', 'div', 'caption', 'h[1-6]']
 tag_right = ['p']
 
 re_url = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
+re_mail = re.compile(r"^([a-záéíóú0-9_\-\.]+)@([a-záéíóú0-9_\-\.]+)\.([a-záéíóú]{2,5})$", re.IGNORECASE)
 
 
 def get_html(soup):
@@ -196,27 +197,31 @@ def html_to_md(node, links=False, unwrap=None):
         hr.extract()
     for i in node.select(":scope > span"):
         i.name = "p"
-    for p in node.select("p"):
-        if not p.get_text().strip():
-            ch = [i.name for i in p.select(
-                ":scope > *") if i.name not in ("br",)]
-            if not ch:
-                p.extract()
+    for p in node.findAll("p", text=re.compile(r"^\s*$")):
+        ch = [i.name for i in p.select(":scope > *") if i.name not in ("br",)]
+        if len(ch)==0:
+            p.extract()
     for n in node.select(":scope *"):
-        if not n.get_text().strip():
+        if len(n.get_text().strip())==0:
             n.extract()
-        else:
-            href = None
-            if links and n.name == "a":
-                href = n.attrs.get("href")
-                txt = n.get_text().strip()
-                if href and (href in txt or re_url.match(txt)) and len(n.select(":scope *"))==0:
-                    n.string = href
-                    n.unwrap()
-                    continue
-            n.attrs.clear()
-            if href:
-                n.attrs["href"] = href
+    if links:
+        for n in node.select(":scope a[href]"):
+            if len(n.select(":scope *"))>0:
+                continue
+            href = n.attrs["href"]
+            txt = n.get_text().strip()
+            if ("mailto:"+txt)==href or re_mail.match(txt):
+                n.unwrap()
+                continue
+            if href in txt or re_url.match(txt):
+                n.string = href
+                n.unwrap()
+                continue
+    for n in node.select(":scope *"):
+        href = n.attrs.get("href")
+        n.attrs.clear()
+        if href:
+            n.attrs["href"] = href
     if unwrap:
         for n in node.findAll(unwrap):
             n.unwrap()
