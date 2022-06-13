@@ -1414,7 +1414,9 @@ class Api:
             menu = re.sub(r"^[ \t]+\+\s*", r"  + ", menu, flags=re.MULTILINE)
             menu = re.sub(r"\n\s*\n\s*\n+", r"\n\n", menu)
             menus.append((dt, fecha, menu.strip()))
-
+        if len(menus)==0:
+            self.print("Menú no publicado")
+            return
         for i, (dt, fecha, menu) in enumerate(menus):
             if i>0:
                 self.print("")
