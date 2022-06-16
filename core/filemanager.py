@@ -5,6 +5,7 @@ from os.path import dirname, realpath
 from pathlib import Path, PurePosixPath
 from tempfile import gettempdir
 from munch import Munch
+import pdftotext
 
 import pandas as pd
 import yaml
@@ -162,8 +163,12 @@ class FileManager:
         file = self.resolve_path(file, wr=True)
         makedirs(file.parent, exist_ok=True)
 
-        ext = self.normalize_ext(file.suffix)
+        if len(args) == 0 and len(kvargs) == 0 and isinstance(obj, bytes):
+            with open(file, "wb") as fl:
+                fl.write(obj)
+            return
 
+        ext = self.normalize_ext(file.suffix)
         dump_fl = getattr(self, "dump_" + ext, None)
         if dump_fl is None:
             raise Exception(
@@ -207,6 +212,12 @@ class FileManager:
             txt = txt.format(*args, **kvargs)
         with open(file, "w") as f:
             f.write(txt)
+
+    def load_pdf(self, file, *args, **kvargs):
+        with open(file, 'rb') as fl:
+            pdf = pdftotext.PDF(fl)
+            return "\n".join(pdf)
+
 
 CNF = Munch.fromDict(FileManager.get().load("config.yml"))
 

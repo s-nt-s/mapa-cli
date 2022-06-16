@@ -1,4 +1,4 @@
-from bunch import Bunch
+from munch import Munch
 import re
 
 re_sp = re.compile(r"\s+")
@@ -37,7 +37,7 @@ def join_str(*args, sep=" "):
     w=[i for i in args if i]
     return sep.join(w) if w else None
 
-class User(Bunch):
+class User(Munch):
     def __init__(self, *args, **karg):
         c = karg.get("centro")
         u = karg.get("unidad")

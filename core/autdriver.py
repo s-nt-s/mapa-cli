@@ -16,7 +16,7 @@ class AutenticaWeakPassword(Exception):
 def mk_re(text):
     re_text = []
     for word in text.strip().split():
-        re_text.append(re.scape(word))
+        re_text.append(re.escape(word))
     return r"\s+".join(re_text)
 
 re_autentica_error = re.compile(
@@ -24,7 +24,7 @@ re_autentica_error = re.compile(
     re.IGNORECASE)
 
 
-class MapDriver(Driver):
+class AutDriver(Driver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._in_autentica = False
@@ -32,7 +32,8 @@ class MapDriver(Driver):
     def autentica_login(self):
         if self._in_autentica:
             return
-        if not self.get_soup().select_one("#username"):
+        time.sleep(2)
+        if self.get_soup().select_one("#username") is None:
             self.click("//a")
         self.val("username", CNF.autentica.user)
         self.val("password", CNF.autentica.pssw)
@@ -48,3 +49,4 @@ class MapDriver(Driver):
         dom = urlparse(url).netloc.lower()
         if dom in NEED_AUTENTICA:
             self.autentica_login()
+

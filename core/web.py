@@ -1,6 +1,7 @@
 import re
+import os
 import time
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlsplit, parse_qsl
 
 import requests
 from bs4 import BeautifulSoup
@@ -22,6 +23,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 re_sp = re.compile(r"\s+")
 re_emb = re.compile(r"^image/[^;]+;base64,.*", re.IGNORECASE)
+is_s5h = os.environ.get('http_proxy', "").startswith("socks5h://")
+if is_s5h:
+    proxy_ip, proxy_port = os.environ['http_proxy'].split("//", 1)[-1].split(":")
+    proxy_port = int(proxy_port)
 
 default_headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:54.0) Gecko/20100101 Firefox/54.0',
@@ -38,13 +43,14 @@ default_headers = {
 
 
 def get_query(url):
-    q = parse.urlsplit(url)
-    q = parse.parse_qsl(q.query)
+    q = urlsplit(url)
+    q = parse_qsl(q.query)
     q = dict(q)
     return q
 
+
 def retry(times, exceptions, sleep=0, skip_in_error=False):
-    #https://stackoverflow.com/a/64030200/5204002
+    # https://stackoverflow.com/a/64030200/5204002
     """
     Retry Decorator
     Retries the wrapped function/method `times` times if the exceptions listed
@@ -54,6 +60,7 @@ def retry(times, exceptions, sleep=0, skip_in_error=False):
     :param Exceptions: Lists of exceptions that trigger a retry attempt
     :type Exceptions: Tuple of Exceptions
     """
+
     def decorator(func):
         def newfn(*args, **kwargs):
             attempt = 0
@@ -68,14 +75,19 @@ def retry(times, exceptions, sleep=0, skip_in_error=False):
             if skip_in_error or isinstance(last_exc, SkipRetryException):
                 return None
             return func(*args, **kwargs)
+
         return newfn
+
     return decorator
+
 
 class RetryException(Exception):
     pass
 
+
 class SkipRetryException(Exception):
     pass
+
 
 def iterhref(soup):
     """Recorre los atriburos href o src de los tags"""
@@ -86,7 +98,7 @@ def iterhref(soup):
         val = n.attrs.get(attr)
         if val is None or re_emb.search(val):
             continue
-        if not(val.startswith("#") or val.startswith("javascript:")):
+        if not (val.startswith("#") or val.startswith("javascript:")):
             val = val.replace(":443/", "/")
             val = val.replace("/default.aspx", "")
             yield n, attr, val
@@ -110,15 +122,15 @@ class Web:
         self.refer = refer
         self.verify = verify
 
-    def _get(self, url, allow_redirects=True, **kargv):
+    def _get(self, url, allow_redirects=True, auth=None, **kargv):
         if kargv:
-            return self.s.post(url, data=kargv, allow_redirects=allow_redirects, verify=self.verify)
-        return self.s.get(url, allow_redirects=allow_redirects, verify=self.verify)
+            return self.s.post(url, data=kargv, allow_redirects=allow_redirects, verify=self.verify, auth=auth)
+        return self.s.get(url, allow_redirects=allow_redirects, verify=self.verify, auth=auth)
 
-    def get(self, url, **kargv):
+    def get(self, url, auth=None, **kargv):
         if self.refer:
             self.s.headers.update({'referer': self.refer})
-        self.response = self._get(url, **kargv)
+        self.response = self._get(url, auth=auth, **kargv)
         self.refer = self.response.url
         self.soup = buildSoup(url, self.response.content)
         return self.soup
@@ -179,8 +191,14 @@ class Web:
 FF_DEFAULT_PROFILE = {
     "browser.tabs.drawInTitlebar": True,
     "browser.uidensity": 1,
-    "dom.webdriver.enabled": False
+    "dom.webdriver.enabled": False,
+    'network.proxy.type': 1,
 }
+if is_s5h:
+    FF_DEFAULT_PROFILE['network.proxy.socks'] = proxy_ip
+    FF_DEFAULT_PROFILE['network.proxy.socks_port'] = proxy_port
+    FF_DEFAULT_PROFILE['network.proxy.socks_remote_dns'] = True
+
 
 class Driver:
     def __init__(self, visible=False, wait=60, useragent=None, browser=None):
@@ -201,8 +219,7 @@ class Driver:
         options.headless = not self.visible
         profile = webdriver.FirefoxProfile()
         if self.useragent:
-            profile.set_preference(
-                "general.useragent.override", self.useragent)
+            profile.set_preference("general.useragent.override", self.useragent)
         for k, v in FF_DEFAULT_PROFILE.items():
             profile.set_preference(k, v)
             profile.DEFAULT_PREFERENCES['frozen'][k] = v
@@ -218,14 +235,24 @@ class Driver:
         if not self.visible:
             options.add_argument('headless')
         if self.useragent:
-            options.add_argument('user-agent='+self.useragent)
+            options.add_argument('user-agent=' + self.useragent)
         options.add_argument("start-maximized")
         options.add_argument("--disable-extensions")
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument("--lang=es-ES")
         options.add_experimental_option('excludeSwitches', ['enable-automation'])
         options.add_experimental_option('useAutomationExtension', False)
-        driver = webdriver.Chrome(options=options)
+
+        if is_s5h:
+            prox = Proxy()
+            prox.proxy_type = ProxyType.MANUAL
+            prox.socks_proxy = "{}:{}".format(proxy_ip, proxy_port)
+            prox.socksVersion = 5
+            capabilities = webdriver.DesiredCapabilities.CHROME
+            prox.add_to_capabilities(capabilities)
+            driver = webdriver.Chrome(options=options, desired_capabilities=capabilities)
+        else:
+            driver = webdriver.Chrome(options=options)
         driver.maximize_window()
         driver.implicitly_wait(5)
         return driver
@@ -277,10 +304,10 @@ class Driver:
             sleep = int(sleep / 3)
             self.close()
         else:
-            sleep = sleep*2
+            sleep = sleep * 2
         if intentos > 20:
             time.sleep(10)
-        time.sleep(2 * (int(intentos/10)+1))
+        time.sleep(2 * (int(intentos / 10) + 1))
         return True, sleep
 
     def get(self, url):
@@ -313,7 +340,7 @@ class Driver:
         if id.startswith("//"):
             my_by = By.XPATH
         if id.startswith("."):
-            #id = id[1:]
+            # id = id[1:]
             my_by = By.CSS_SELECTOR
         wait = WebDriverWait(self._driver, seconds)
         if presence:
@@ -360,7 +387,7 @@ class Driver:
         return True
 
     def safe_click(self, *ids, after=None, force_return=False, **kvarg):
-        if len(ids)==1 and not isinstance(ids[0], str):
+        if len(ids) == 1 and not isinstance(ids[0], str):
             n = ids[0]
         else:
             n = self.safe_wait(*ids, **kvarg)
@@ -371,36 +398,23 @@ class Driver:
                 n.click()
             else:
                 n.send_keys(Keys.RETURN)
-        except (ElementNotInteractableException, StaleElementReferenceException, ElementNotVisibleException, WebDriverException):
+        except (ElementNotInteractableException, StaleElementReferenceException, ElementNotVisibleException,
+                WebDriverException):
             return 0
         if after is not None:
             time.sleep(after)
         return 1
 
-    def get_session(self):
-        if self._driver is None:
-            return None
-        s = requests.Session()
-        for cookie in self._driver.get_cookies():
-            s.cookies.set(cookie['name'], cookie['value'])
-        #h = self._driver.requests[-1]
-        #s.headers = h.headers
-        return s
-
     def pass_cookies(self, session=None):
+        if self._driver is None:
+            return session
         if session is None:
             session = requests.Session()
         for cookie in self._driver.get_cookies():
             session.cookies.set(cookie['name'], cookie['value'])
         return session
 
-
-
-def get_session(url):
-    f = FF()
-    f.get(url)
-    w = Web()
-    w.s = f.get_session()
-    w.get(url)
-    f.close()
-    return w
+    def to_web(self):
+        w = Web()
+        self.pass_cookies(w.s)
+        return w
