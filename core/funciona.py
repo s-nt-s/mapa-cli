@@ -9,7 +9,7 @@ import time
 
 from .common import (DAYNAME, _str, dict_style, get_config, html_to_md,
                      js_print, parse_dia, parse_mes, print_response, js_print, read_pdf, to_num)
-from .web import FF, get_query, buildSoup
+from .web import Driver, get_query, buildSoup
 
 re_sp = re.compile(r"\s+")
 
@@ -125,13 +125,11 @@ def dwn_funciona_nominas(target, cnf, m_year, m_mes):
     mes, year = today.month, today.year
     if (year<m_year or (year==m_year and mes<=m_mes)):
         return False
-    ff = FF()
-    try:
-        r = __dwn_funciona_nominas(ff, target, cnf, m_year, m_mes)
-    except selenium.common.exceptions.TimeoutException:
-       return False
-    finally:
-        ff.close()
+    with Driver(browser='firefox') as ff:
+        try:
+            r = __dwn_funciona_nominas(ff, target, cnf, m_year, m_mes)
+        except selenium.common.exceptions.TimeoutException:
+           return False
     return r
 
 if __name__ == "__main__":
