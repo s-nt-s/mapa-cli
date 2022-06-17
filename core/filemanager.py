@@ -6,6 +6,7 @@ from pathlib import Path, PurePosixPath
 from tempfile import gettempdir
 from munch import Munch
 import pdftotext
+import pickle
 
 import pandas as pd
 import yaml
@@ -218,6 +219,13 @@ class FileManager:
             pdf = pdftotext.PDF(fl)
             return "\n".join(pdf)
 
+    def load_pickle(self, file, *args, **kvargs):
+        with open(file, "rb") as f:
+            return pickle.load(f)
+
+    def dump_pickle(self, file, obj, *args, **kvargs):
+        with open(file, "wb") as f:
+            pickle.dump(obj, f)
 
 CNF = Munch.fromDict(FileManager.get().load("config.yml"))
 

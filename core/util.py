@@ -175,3 +175,11 @@ def to_num(s, safe=False):
     if int(s)==s:
         s=int(s)
     return s
+
+
+def to_strint(f):
+    if f is None:
+        return None
+    f = round(f)
+    f = '{:,}'.format(f).replace(",", ".")
+    return f

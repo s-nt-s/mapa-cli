@@ -8,6 +8,7 @@ from os.path import isdir, join, isfile, expanduser
 from .filemanager import FileManager
 from .hm import HM
 import json
+from .retribuciones import Retribuciones
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
@@ -240,7 +241,7 @@ class Gesper(Web):
             "Sueldo B.": "sueldo.base",
             "Extra Ju.": "sueldo.extra.junio",
             "Extra Di.": "sueldo.extra.diciembre",
-            "Complemento Específico": "sueldo.complemento.espeficio",
+            "Complemento Específico": "sueldo.complemento.especifico",
             "Compl. D.": "sueldo.complement.destino",
             "Trienios": "sueldo.trienios",
             "Correo Electrónico": "contacto.correo",
@@ -252,11 +253,16 @@ class Gesper(Web):
         }
 
         kv = {}
+        mi_grupo = None
+        mi_nivel = None
 
         self.get("https://intranet.mapa.es/app/GESPER/Consulta/Puesto.aspx")
         for clave, valor in tr_clave_valor(self.soup, "TablaFuncionario", **keys):
             if clave == "grupo":
                 valor = valor.upper()
+                mi_grupo = valor
+            if clave == "nivel":
+                mi_nivel = int(valor)
             kv[clave] = valor
 
         self.get("https://intranet.mapa.es/app/GESPER/Consulta/Personales.aspx")
@@ -269,27 +275,36 @@ class Gesper(Web):
 
         self.get("https://intranet.mapa.es/app/GESPER/Consulta/Profesionales.aspx")
         for clave, valor in tr_clave_valor(self.soup, "TablaFuncionario", Grupo="grupo", Grado="nivel"):
-            if clave in ("grupo", "nivel"):
-                if clave not in kv:
-                    kv[clave] = valor
-                elif kv[clave] != valor:
-                    kv[clave] = kv[clave] + " (%s)" % valor
+            if clave not in ("grupo", "nivel"):
+                continue
+            if clave == "grupo":
+                mi_grupo = valor
+            if clave == "nivel" and mi_nivel is None:
+                mi_nivel = int(valor)
+            if clave not in kv:
+                kv[clave] = valor
+            elif kv[clave] != valor:
+                kv[clave] = kv[clave] + " (%s)" % valor
+
 
         self.get("https://intranet.mapa.es/app/GESPER/Consulta/Trienios.aspx")
         for clave, valor in tr_clave_valor(self.soup, "TablaFuncionario"):
             if valor.isdigit() and valor != "0":
+                valor = int(valor)
                 grupo = clave.split()[-1]
                 grupo = grupo.upper()
-                kv["trienios."+grupo] = int(valor)
+                kv["trienios."+grupo] = valor
 
-        for k in list(kv.keys()):
-            if not k.startswith("sueldo."):
+
+        for k, v in list(kv.items()):
+            if not(k.startswith("sueldo.") and isinstance(v, (str, float))):
                 continue
-            v = to_num(kv[k])
+            v = to_num(v)
             if v is None:
                 del kv[k]
             else:
                 kv[k] = v
+
 
         #kv = dict(sorted(kv.items(), key=lambda x: orden.index(x[0])))
 
@@ -304,7 +319,6 @@ class Gesper(Web):
         if inicio:
             kv["inicio"] = inicio
 
-        dlt = set()
         for k, v in sorted(kv.items()):
             path = k.split(".")
             if len(path) == 1:
@@ -316,6 +330,11 @@ class Gesper(Web):
                 obj = obj[w]
             obj[path[-1]] = v
             del kv[k]
+
+        kv = Munch.fromDict(kv)
+        rt = Retribuciones().get_sueldo(mi_grupo, mi_nivel, kv.sueldo.complemento.especifico, kv.trienios)
+        if rt:
+            kv.sueldo = rt
 
         return kv
 

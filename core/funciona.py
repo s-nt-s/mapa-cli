@@ -7,6 +7,7 @@ from .web import Driver, get_query, buildSoup
 from .autdriver import AutDriver
 from .filemanager import CNF, FileManager
 from .util import get_text, to_num
+from .cache import MunchCache
 
 re_sp = re.compile(r"\s+")
 
@@ -26,9 +27,6 @@ def query_nom(href):
     return q
 
 
-
-
-
 def get_int_match(txt, *regx):
     for r in regx:
         c = re.search(r, txt, flags=re.MULTILINE | re.IGNORECASE)
@@ -37,6 +35,8 @@ def get_int_match(txt, *regx):
 
 
 class Funciona:
+
+    @MunchCache(file="data/nominas.json", maxOld=(1/24))
     def get_nominas(self):
         """
         Devuelve las información de las nominas
@@ -44,7 +44,7 @@ class Funciona:
         """
         w = None
         r = []
-        with AutDriver(browser='firefox', visible=True) as ff:
+        with AutDriver(browser='firefox', visible=False) as ff:
             ff.get("https://www.funciona.es/servinomina/action/Retribuciones.do")
             soup = ff.get_soup()
             a = soup.select_one(".mod_ultimas_nominas a[href]")
@@ -89,8 +89,8 @@ class Funciona:
                 FileManager.get().dump(nom.file, rq.content)
             if isfile(expanduser(nom.file)):
                 txt = FileManager.get().load(nom.file)
-                nom.bruto = get_int_match(txt, r"TRANSFERENCIA DEL LIQUIDO A PERCIBIR:\s+([\d\.,]+)")
-                nom.neto = get_int_match(txt, r"R\s*E\s*T\s*R\s*I\s*B\s*U\s*C\s*I\s*O\s*N\s*E\s*S\s*\.+\s*([\d\.,]+)",
+                nom.neto = get_int_match(txt, r"TRANSFERENCIA DEL LIQUIDO A PERCIBIR:\s+([\d\.,]+)")
+                nom.bruto = get_int_match(txt, r"R\s*E\s*T\s*R\s*I\s*B\s*U\s*C\s*I\s*O\s*N\s*E\s*S\s*\.+\s*([\d\.,]+)",
                                          r"^ +([\d\.,]+) *$")
 
         return r

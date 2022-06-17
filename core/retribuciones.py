@@ -16,6 +16,15 @@ urllib3.disable_warnings()
 
 re_cellnb = re.compile(r'\s([\d\.,]+)\s')
 
+class RtCache(Cache):
+    def read(self, file, *args, **kvargs):
+        d = super().read(file, *args, **kvargs)
+        if d is None:
+            return d
+        if d["niveles"]:
+            d["niveles"]={int(k):v for k,v in d["niveles"].items()}
+        d = Munch.fromDict(d)
+        return d
 
 def parseTb(table):
     if table is None:
@@ -70,7 +79,7 @@ class Retribuciones:
             return {}
         return self._get(max(rts.keys()))
 
-    @Cache(file="data/retribuciones/{}.json", maxOld=30)
+    @RtCache(file="data/retribuciones/{}.json", maxOld=30)
     def _get(self, year):
         rts = self.get_docs()
         if len(rts) == 0 or year not in rts:
@@ -134,6 +143,37 @@ class Retribuciones:
             data.niveles[nivel] = compd
 
         return data
+
+    def get_sueldo(self, grupo, nivel, especifico, trienios):
+        rt = self.get()
+        rg = rt.get(grupo)
+
+        sl = Munch(
+            fuente=rt.fuente,
+            base=rg.base.sueldo,
+            complemento=Munch(
+                destino=rt.niveles.get(nivel),
+                especifico=especifico
+            ),
+            extra=Munch(
+                junio=rg.junio.sueldo,
+                diciembre=rg.diciembre.sueldo
+            ),
+            trienios=Munch(
+                base=0,
+                extra=Munch(
+                    junio=0,
+                    diciembre=0
+                )
+            )
+        )
+
+        for grupo, num in (trienios or {}).items():
+            sl.trienios.base = sl.trienios.base + rt[grupo].base.trienio
+            sl.trienios.extra.junio = sl.trienios.extra.junio + rt[grupo].junio.trienio
+            sl.trienios.extra.diciembre = sl.trienios.extra.diciembre + rt[grupo].diciembre.trienio
+
+        return sl
 
 
 if __name__ == '__main__':

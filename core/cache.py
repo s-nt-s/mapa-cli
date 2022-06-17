@@ -3,6 +3,7 @@ from os.path import isfile
 from os import stat
 import time
 from .filemanager import FileManager
+from munch import Munch
 
 
 class Cache:
@@ -50,5 +51,9 @@ class Cache:
         self.func = func
         return lambda *args, **kvargs: self.callCache(*args, **kvargs)
 
-
-
+class MunchCache(Cache):
+    def read(self, *args, **kvargs):
+        d = super().read(*args, **kvargs)
+        if isinstance(d, dict) or (isinstance(d, list) and len(d)>0 and isinstance(d[0], dict)):
+            return Munch.fromDict(d)
+        return d

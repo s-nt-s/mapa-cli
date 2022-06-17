@@ -52,12 +52,15 @@ class User(Munch):
                 return False
         return True
 
-    def print(self, _print):
-        _print(self.nombre, self.apellido1, self.apellido2, avoidEmpty=True)
-        _print(self.puesto, avoidEmpty=True)
-        _print(self.centro, self.unidad, sep=" > ", avoidEmpty=True)
-        _print(self.despacho, self.planta, self.ubicacion, sep=" - ", avoidEmpty=True)
-        _print(self.telefono, self.telefonoext, self.correo, sep=" - ", avoidEmpty=True)
+    def __str__(self):
+        fl = lambda *args: tuple(a for a in args if a is not None)
+        lines = [" ".join(fl(self.nombre, self.apellido1, self.apellido2))]
+        if self.puesto:
+            lines.append(self.puesto)
+        lines.append(" > ".join(fl(self.centro, self.unidad)))
+        lines.append(" - ".join(fl(self.despacho, self.planta, self.ubicacion)))
+        lines.append(" - ".join(fl(self.telefono, self.telefonoext, self.correo)))
+        return "\n".join(l for l in lines if l)
 
     @property
     def centro_unidad(self):

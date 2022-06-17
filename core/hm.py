@@ -6,7 +6,7 @@ class HM:
 
     def __init__(self, hm):
         if isinstance(hm, str):
-            h, m, s = 0, 0, 0
+            h, m, s = "0 0 0".split()
             shm = hm.split(":")
             if len(shm) == 2:
                 h, m = shm

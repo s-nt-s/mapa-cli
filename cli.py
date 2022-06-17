@@ -107,7 +107,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         prm = sys.argv[1]
         if prm == "parametros":
-            print(" ".join(get_options()))
+            print(" ".join(arg_options()))
             sys.exit()
         if prm in arg_options:
             arg = parser.parse_args(["--"+prm] + sys.argv[2:])
