@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from munch import Munch
 
 from .autdriver import AutDriver
-from .util import json_serial, tmap
+from .util import json_serial, tmap, get_text
 import re
 
 re_sp = re.compile(r"\s+")
@@ -13,15 +13,6 @@ def get_times(ini, fin, delta):
         end = ini + delta
         yield ini, min(fin, end)
         ini = ini + delta
-
-
-def get_text(node):
-    txt = re_sp.sub(" ", node.get_text()).strip()
-    if len(txt) == 0:
-        return None
-    return txt
-
-
 
 
 class Autentica:

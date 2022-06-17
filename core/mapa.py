@@ -4,7 +4,7 @@ import re
 from .util import html_to_md
 from munch import Munch
 from .web import Web
-from .util import json_serial, tmap, parse_mes, parse_dia
+from .util import json_serial, tmap, parse_mes, parse_dia, get_text
 from requests.auth import HTTPBasicAuth
 from .user import User
 
@@ -15,13 +15,6 @@ fix_url = (
     (re.compile(r"^(https?://[^/]+):443/"), r"\1/"),
     (re.compile(r"/default\.aspx"), ""),
 )
-
-
-def get_text(node):
-    txt = re_sp.sub(" ", node.get_text()).strip()
-    if len(txt) == 0:
-        return None
-    return txt
 
 
 def _find_mes(*tds):
@@ -41,15 +34,14 @@ def dict_style(n):
     style = {k: v for k, v in style}
     return style
 
-class Mapa:
+class Mapa(Web):
     def get_menu(self):
         """
         Obtiene el menú de la sede definida en config.yml
         """
         menus = []
-        w = Web()
-        w.get("https://intranet.mapa.es/servicios-internos/cafeteria/menu/default.aspx")
-        for div in w.soup.select("div.panel-heading"):
+        self.get("https://intranet.mapa.es/servicios-internos/cafeteria/menu/default.aspx")
+        for div in self.soup.select("div.panel-heading"):
             h3 = div.get_text().strip()
             if CNF.sede not in h3:
                 continue
@@ -89,9 +81,8 @@ class Mapa:
 
     def get_novedades(self):
         items = []
-        w = Web()
-        w.get("https://intranet.mapa.es/comunicaciones-internas/novedades/default.aspx")
-        for li in w.soup.select("ul.listado-novedades li"):
+        self.get("https://intranet.mapa.es/comunicaciones-internas/novedades/default.aspx")
+        for li in self.soup.select("ul.listado-novedades li"):
             tt = li.find("h3")
             dt = get_text(li.select_one("span.novedad-fecha"))
             dt = datetime.strptime(dt, "%d/%m/%Y %H:%M:%S")
@@ -118,8 +109,8 @@ class Mapa:
                     r"\s*(Más información|Ver declaración)\s*\.?$", "", item.descripcion)
             items.append(item)
 
-        w.get("https://intranet.mapa.es/comunicaciones-internas/tablon-de-anuncios/default.aspx")
-        for li in w.soup.select("li.anuncio"):
+        self.get("https://intranet.mapa.es/comunicaciones-internas/tablon-de-anuncios/default.aspx")
+        for li in self.soup.select("li.anuncio"):
             dt = li.select_one("span.fechacontenido")
             dt.extract()
             dt = get_text(dt)
@@ -143,8 +134,8 @@ class Mapa:
 
         for item in items:
             if item.node is None and item.url and item.tipo == "N":
-                w.get(item.url)
-                item.node = w.soup.select_one("div.novedad-descripcion")
+                self.get(item.url)
+                item.node = self.soup.select_one("div.novedad-descripcion")
             if item.node:
                 flag = False
                 for n in item.node.select("span.novedad-lista-documentos"):
@@ -203,9 +194,8 @@ class Mapa:
 
     def get_ofertas(self):
         links = set()
-        w = Web()
-        w.get("https://intranet.mapa.es/empleado-publico/ofertas-comerciales-para-los-empleados")
-        for a in w.soup.select("ul.fotos-polaroid a[href]"):
+        self.get("https://intranet.mapa.es/empleado-publico/ofertas-comerciales-para-los-empleados")
+        for a in self.soup.select("ul.fotos-polaroid a[href]"):
             links.add((a.attrs["title"].strip(), a.attrs["href"]))
         r = []
         for tipo, url in sorted(links):
@@ -215,8 +205,8 @@ class Mapa:
                 url=url,
                 ofertas=[]
             ))
-            w.get(url)
-            for o in w.soup.select("div.oferta-detalle"):
+            self.get(url)
+            for o in self.soup.select("div.oferta-detalle"):
                 tt = get_text(o.select_one("h3"))
                 if tt.upper() == tt:
                     tt = tt.capitalize()
@@ -239,9 +229,8 @@ class Mapa:
             "Centralita": None,
             "C.A.U.": {},
         }
-        w = Web()
-        w.get("https://intranet.mapa.es/servicios-internos/servicio-medico/")
-        for table in w.soup.select("table"):
+        self.get("https://intranet.mapa.es/servicios-internos/servicio-medico/")
+        for table in self.soup.select("table"):
             cap = get_text(table)
             if CNF.sede in cap:
                 td1 = tmap(get_text, table.select("tr > *:nth-of-type(1)"))
@@ -258,8 +247,8 @@ class Mapa:
                                 kv[v] = t
 
         fnd_tlf = re.compile(r"(\d[\d ]+\d)")
-        w.get("https://intranet.mapa.es/servicios-internos/atencion-usuarios/default.aspx")
-        for div in w.soup.select("div"):
+        self.get("https://intranet.mapa.es/servicios-internos/atencion-usuarios/default.aspx")
+        for div in self.soup.select("div"):
             if div.select_one("div"):
                 continue
             txt = (get_text(div) or "").strip(" .")
@@ -272,17 +261,17 @@ class Mapa:
                 if tlf:
                     kv["C.A.U."]["Teléfono"] = tlf
 
-        w.get("https://intranet.mapa.es/app/Intranet_Form_Web/Web/Directory/DirectorySearch.aspx")
-        ctr = w.soup.select_one("#telefonos-centralita")
+        self.get("https://intranet.mapa.es/app/Intranet_Form_Web/Web/Directory/DirectorySearch.aspx")
+        ctr = self.soup.select_one("#telefonos-centralita")
         if ctr:
             kv["Centralita"] = [i.strip().replace(" ", "") for i in fnd_tlf.findall(get_text(ctr))]
 
         user = CNF.mapa.user.split("@")[0]
         url = "https://servicio.mapama.gob.es/cucm-uds/user/"
         url = url + user + "/speedDials"
-        w.get(url, auth=HTTPBasicAuth(user, CNF.mapa.pssw))
+        self.get(url, auth=HTTPBasicAuth(user, CNF.mapa.pssw))
 
-        for s in w.soup.select("speedDial"):
+        for s in self.soup.select("speedDial"):
             n = get_text(s.find("number"))
             l = get_text(s.find("label"))
             if len(n) == 10 and n.startswith("0"):
@@ -322,17 +311,16 @@ class Mapa:
                 searchMethod = (3, 4)
         elif isinstance(searchMethod, int):
             searchMethod = (searchMethod,)
-        w = Web()
-        w.get("https://intranet.mapa.es//app/Intranet_Form_Web/Web/Directory/DirectorySearch.aspx")
+        self.get("https://intranet.mapa.es//app/Intranet_Form_Web/Web/Directory/DirectorySearch.aspx")
         nodos = []
         users = set()
         keys = set()
         url = "https://intranet.mapa.es//app/Intranet_Form_Web/Web/Directory/DirectoryWebService.asmx/ResultadoBusquedaList?count=1&contextKey=3&prefixText=" + args
         for sm in searchMethod:
-            w.get(url + "&searchMethod=" + str(sm))
+            self.get(url + "&searchMethod=" + str(sm))
             keys = keys.union(
-                k.name.lower() for k in w.soup.select("UserDirectoryInfo > *") if k.name.lower() != "id")
-            nodos.extend(w.soup.select("UserDirectoryInfo"))
+                k.name.lower() for k in self.soup.select("UserDirectoryInfo > *") if k.name.lower() != "id")
+            nodos.extend(self.soup.select("UserDirectoryInfo"))
         keys = sorted(keys)
         for n in nodos:
             u = {k: None for k in keys}
@@ -348,74 +336,9 @@ class Mapa:
         return users
 
 
-    def login_gesper(self, *args, **kargv):
-        w = Web()
-        for url in ("https://intranet.mapa.es/", "https://intranet.mapa.es/app/gesper/", "https://intranet.mapa.es/app/gesper/Default.aspx"):
-            w.get(url)
-        w.submit("#Form1", TxtDNI=CNF.gesper.user, TxtClave=CNF.gesper.pssw)
-        return w
-
-    def get_festivos(self, max_iter=-1):
-        r = []
-        today = datetime.today()
-        w = self.login_gesper()
-        w.get("https://intranet.mapa.es/app/GESPER/CalendarioLaboral.aspx")
-        while True:
-            if max_iter == 0:
-                break
-            max_iter = max_iter -1
-            table = w.soup.select("#CalFestivos")[0]
-            nxt = table.findAll("a")[-1]
-            tds = table.findAll("td")
-            year, mes = _find_mes(*tds)
-            delta = (year - today.year)
-            if delta > 1 or (delta == 1 and mes > 1):
-                break
-            if year > today.year or (year == today.year and mes >= today.month):
-                for td in tds:
-                    style = dict_style(td)
-                    if not(style.get("background-color") == "pink" and style.get("font-style") != "italic"):
-                        continue
-                    br = td.find("br")
-                    if br is None:
-                        continue
-                    br.replaceWith(" ")
-                    dia, nombre = td.get_text().strip().split(None, 1)
-                    dia = int(dia)
-                    dt = datetime(year, mes, dia)
-                    if dt >= today and dt.weekday() not in (5, 6):
-                        nombre = nombre.capitalize()
-                        semana = parse_dia(dt)
-                        if nombre == "Lunes siguiente a todos los santos":
-                            nombre = "'Todos los santos'"
-                        elif nombre == "Lunes siguiente al dia de la comunidad de madrid":
-                            nombre = "Día de la Comunidad de Madrid"
-                        elif nombre == "Lunes siguiente al dia de la constitución española":
-                            nombre = "'Día de la Constitucion'"
-                        elif nombre == "Nuestra señora de la almudena":
-                            nombre = "La Almudena"
-                        elif nombre == "Fiesta nacional de españa":
-                            nombre = "Fiesta nacional"
-                        elif nombre == "Fiesta del trabajo":
-                            nombre = "Día del trabajo"
-                        elif nombre == "Natividad del señor":
-                            nombre = "Navidad"
-                        r.append(Munch(
-                            date=dt,
-                            year=dt.year,
-                            semana=semana,
-                            dia=dia,
-                            mes=mes,
-                            nombre=nombre
-                        ))
-            nxt = nxt.attrs["href"].split("'")[-2]
-            w.submit("#Form1", __EVENTARGUMENT=nxt, __EVENTTARGET="CalFestivos")
-        return r
-
-
 if __name__ == "__main__":
     f = Mapa()
-    r = f.get_festivos()
+    r = f.get_contactos()
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))

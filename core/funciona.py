@@ -6,6 +6,7 @@ from os.path import isfile, join, expanduser, basename
 from .web import Driver, get_query, buildSoup
 from .autdriver import AutDriver
 from .filemanager import CNF, FileManager
+from .util import get_text, to_num
 
 re_sp = re.compile(r"\s+")
 
@@ -25,31 +26,7 @@ def query_nom(href):
     return q
 
 
-def get_text(node):
-    if node is None:
-        return None
-    txt = re_sp.sub(" ", node.get_text()).strip()
-    if len(txt) == 0:
-        return None
-    return txt
 
-
-def to_num(s, safe=False):
-    if s is None:
-        return None
-    if safe is True:
-        try:
-            return to_num(s)
-        except ValueError:
-            return s
-    if isinstance(s, str):
-        s = s.replace("€", "")
-        s = s.replace(".", "")
-        s = s.replace(",", ".")
-        s = float(s)
-    if int(s) == s:
-        s = int(s)
-    return s
 
 
 def get_int_match(txt, *regx):
@@ -98,28 +75,23 @@ class Funciona:
                     )
                     r.append(nom)
             w = ff.to_web()
-        for nom in r:
-            file = str(nom.file)
-            if file.startswith("~"):
-                file = expanduser(file)
-            if isfile(file):
-                continue
-            rq = w.s.get(nom.url)
-            if "text/html" in rq.headers["content-type"]:
-                error = get_text(w.soup.select_one("div.box-bbr"))
-                if error is None:
-                    error = "No es un pdf"
-                nom.error = error
-                continue
-            FileManager.get().dump(nom.file, rq.content)
 
         r = sorted(r, key=lambda x: basename(x.file))
         for index, nom in enumerate(r):
-            txt = FileManager.get().load(nom.file)
-            nom.bruto = get_int_match(txt, r"TRANSFERENCIA DEL LIQUIDO A PERCIBIR:\s+([\d\.,]+)")
-            nom.neto = get_int_match(txt, r"R\s*E\s*T\s*R\s*I\s*B\s*U\s*C\s*I\s*O\s*N\s*E\s*S\s*\.+\s*([\d\.,]+)",
-                                     r"^ +([\d\.,]+) *$")
             nom.index = index
+            if not isfile(expanduser(nom.file)):
+                rq = w.s.get(nom.url)
+                if "text/html" in rq.headers["content-type"]:
+                    error = get_text(w.soup.select_one("div.box-bbr"))
+                    if error is None:
+                        error = "No es un pdf"
+                    nom.error = error
+                FileManager.get().dump(nom.file, rq.content)
+            if isfile(expanduser(nom.file)):
+                txt = FileManager.get().load(nom.file)
+                nom.bruto = get_int_match(txt, r"TRANSFERENCIA DEL LIQUIDO A PERCIBIR:\s+([\d\.,]+)")
+                nom.neto = get_int_match(txt, r"R\s*E\s*T\s*R\s*I\s*B\s*U\s*C\s*I\s*O\s*N\s*E\s*S\s*\.+\s*([\d\.,]+)",
+                                         r"^ +([\d\.,]+) *$")
 
         return r
 

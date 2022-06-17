@@ -1,6 +1,7 @@
 import re
 from markdownify import markdownify
 from datetime import date, datetime
+from .hm import HM
 
 DAYNAME = ['Lunes', 'Martes', 'Miércoles',
            'Jueves', 'Viernes', 'Sábado', 'Domingo']
@@ -14,6 +15,16 @@ tag_right = ['p']
 
 re_url = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
 re_mail = re.compile(r"^([a-záéíóú0-9_\-\.]+)@([a-záéíóú0-9_\-\.]+)\.([a-záéíóú]{2,5})$", re.IGNORECASE)
+re_sp = re.compile(r"\s+")
+
+
+def get_text(node, default=None):
+    if node is None:
+        return default
+    txt = re_sp.sub(" ", node.get_text()).strip()
+    if len(txt) == 0:
+        return default
+    return txt
 
 
 def get_html(soup):
@@ -109,9 +120,13 @@ def json_serial(obj):
         return obj.strftime("%Y-%m-%d")
     if isinstance(obj, datetime):
         return obj.strftime("%Y-%m-%d %H:%M")
-
+    if isinstance(obj, HM):
+        return str(obj)
 
 def parse_mes(m):
+    if m is None:
+        return None
+    m = m.strip().lower()[:3]
     if m == "ene":
         return 1
     if m == "feb":
@@ -142,3 +157,21 @@ def parse_mes(m):
 def parse_dia(d):
     d = d.weekday()
     return ["L", "M", "X", "J", "V", "S", "D"][d]
+
+
+def to_num(s, safe=False):
+    if s is None:
+        return None
+    if safe is True:
+        try:
+            return to_num(s)
+        except ValueError:
+            return s
+    if isinstance(s, str):
+        s = s.replace("€", "")
+        s = s.replace(".", "")
+        s = s.replace(",", ".")
+        s = float(s)
+    if int(s)==s:
+        s=int(s)
+    return s
