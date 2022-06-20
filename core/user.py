@@ -1,5 +1,6 @@
 from munch import Munch
 import re
+from .util import notnull
 
 re_sp = re.compile(r"\s+")
 ORDINAL = ['primer', 'segund', 'tercer', 'cuart', 'quint', 'sext', 'septim', 'octav', 'noven', 'decim']
@@ -53,13 +54,12 @@ class User(Munch):
         return True
 
     def __str__(self):
-        fl = lambda *args: tuple(a for a in args if a is not None)
-        lines = [" ".join(fl(self.nombre, self.apellido1, self.apellido2))]
+        lines = [notnull(self.nombre, self.apellido1, self.apellido2, sep=" ")]
         if self.puesto:
             lines.append(self.puesto)
-        lines.append(" > ".join(fl(self.centro, self.unidad)))
-        lines.append(" - ".join(fl(self.despacho, self.planta, self.ubicacion)))
-        lines.append(" - ".join(fl(self.telefono, self.telefonoext, self.correo)))
+        lines.append(notnull(self.centro, self.unidad, sep=" > "))
+        lines.append(notnull(self.despacho, self.planta, self.ubicacion, sep=" - "))
+        lines.append(notnull(self.telefono, self.telefonoext, self.correo, sep=" - "))
         return "\n".join(l for l in lines if l)
 
     @property

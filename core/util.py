@@ -123,6 +123,7 @@ def json_serial(obj):
     if isinstance(obj, HM):
         return str(obj)
 
+
 def parse_mes(m):
     if m is None:
         return None
@@ -172,8 +173,8 @@ def to_num(s, safe=False):
         s = s.replace(".", "")
         s = s.replace(",", ".")
         s = float(s)
-    if int(s)==s:
-        s=int(s)
+    if int(s) == s:
+        s = int(s)
     return s
 
 
@@ -183,3 +184,15 @@ def to_strint(f):
     f = round(f)
     f = '{:,}'.format(f).replace(",", ".")
     return f
+
+
+def notnull(*args, sep=None):
+    arr = []
+    for a in args:
+        if isinstance(a, str):
+            a = a.strip()
+        if a not in (None, ""):
+            arr.append(a)
+    if sep:
+        return sep.join(arr)
+    return tuple(arr)

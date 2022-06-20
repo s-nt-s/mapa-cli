@@ -4,15 +4,15 @@ import re
 import sys
 from io import StringIO
 
-from core.api import Api
+#from core.api import Api
+from core.printer import Printer
 
 parser = argparse.ArgumentParser(
     description='Comando para los servicios de intranet.mapa.es', add_help=False)
 group = parser.add_mutually_exclusive_group()
 group.add_argument('-h', '--horas', action='store_true',
                    help="Muestra el control horario para la semana en curso")
-group.add_argument('-m', '--mes', action='store_true',
-                   help="Muestra el control horario para el mes en curso")
+#group.add_argument('-m', '--mes', action='store_true', help="Muestra el control horario para el mes en curso")
 group.add_argument('-v', '--vacaciones', action='store_true',
                    help="Muestra los días de vacaciones que te quedan")
 group.add_argument('-l', '--lapso', action='store_true',
@@ -33,50 +33,46 @@ group.add_argument('--novedades', action='store_true',
                    help="Muestra las novedades de intranet.mapa.es (con antigüedad máxima de 30 días)")
 group.add_argument('--ofertas', action='store_true',
                    help="Muestra ofertas para los empleados de MAPA")
-group.add_argument('--servicios', action='store_true',
-                   help="Servicios prestados")
+#group.add_argument('--servicios', action='store_true', help="Servicios prestados")
 group.add_argument('--contactos', action='store_true', help="Contactos de interés")
 group.add_argument('--busca', nargs="+", type=str, help="Busca en el directorio de personal")
-group.add_argument('--nomina', type=str, help="Muetra la nómina pasada como parámetro, formato YYYY.MM")
 
 arg_options = re.findall(r"--([a-z]+)", parser.format_help())
 
 
 def main(arg, *args, bot=None, **kargv):
-    api = Api(bot=bot)
+    prt = Printer()
 
     if arg.horas:
-        api.horas_semana(*args, **kargv)
-    if arg.mes:
-        api.horas_mes(*args, **kargv)
+        prt.horas_semana(*args, **kargv)
+    #if arg.mes:
+    #    api.horas_mes(*args, **kargv)
     if arg.nominas:
-        api.nominas(*args, **kargv)
+        prt.nominas(*args, sueldo='neto', **kargv)
     if arg.bruto:
-        api.nominas(*args, enBruto=True, **kargv)
+        prt.nominas(*args, sueldo='bruto', **kargv)
     if arg.festivos:
-        api.festivos(*args, **kargv)
+        prt.festivos(*args, **kargv)
     if arg.expediente:
-        api.expediente(*args, **kargv)
+        prt.expediente(*args, **kargv)
     if arg.vacaciones:
-        api.vacaciones(*args, **kargv)
+        prt.vacaciones(*args, **kargv)
     if arg.menu:
-        api.menu(*args, **kargv)
+        prt.menu(*args, **kargv)
     if arg.lapso:
-        api.lapso(*args, **kargv)
+        prt.lapso(*args, **kargv)
     if arg.puesto:
-        api.puesto(*args, **kargv)
+        prt.puesto(*args, **kargv)
     if arg.novedades:
-        api.novedades(*args, **kargv)
+        prt.novedades(*args, **kargv)
     if arg.ofertas:
-        api.ofertas(*args, **kargv)
-    if arg.servicios:
-        api.servicios(*args, **kargv)
+        prt.ofertas(*args, **kargv)
+    #if arg.servicios:
+    #    api.servicios(*args, **kargv)
     if arg.contactos:
-        api.contactos(*args, **kargv)
+        prt.contactos(*args, **kargv)
     if arg.busca:
-        api.busca(*arg.busca, **kargv)
-    if arg.nomina:
-        api.nomina(arg.nomina, **kargv)
+        prt.busca(*arg.busca, **kargv)
 
 
 def str_main(text, *args, bot=None, **kargv):

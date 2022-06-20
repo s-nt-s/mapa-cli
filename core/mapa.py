@@ -317,7 +317,7 @@ class Mapa(Web):
         keys = set()
         url = "https://intranet.mapa.es//app/Intranet_Form_Web/Web/Directory/DirectoryWebService.asmx/ResultadoBusquedaList?count=1&contextKey=3&prefixText=" + args
         for sm in searchMethod:
-            self.get(url + "&searchMethod=" + str(sm))
+            self.get(url + "&searchMethod=" + str(sm), parser="xml")
             keys = keys.union(
                 k.name.lower() for k in self.soup.select("UserDirectoryInfo > *") if k.name.lower() != "id")
             nodos.extend(self.soup.select("UserDirectoryInfo"))

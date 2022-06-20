@@ -7,7 +7,7 @@ from .mapa import Mapa
 from .filemanager import CNF
 from .hm import HM
 import time
-from .util import to_strint, DAYNAME, parse_dia
+from .util import to_strint, DAYNAME, parse_dia, notnull
 
 re_rtrim = re.compile(r"^\s*\n")
 dt_now = datetime.now()
@@ -35,98 +35,78 @@ class Printer:
 
     def horas_semana(self):
         t = Trama()
-        monday = dt_now - timedelta(days=dt_now.weekday())
-        sunday = monday + timedelta(days=6)
-        horas = t.get_calendario(monday, sunday)
-        teorico = sum((h.teorico for h in horas), HM("00:00"))
+        cal = t.get_semana()
 
-        isTrabajando = False
-        iHoy = None
-        total = HM("00:00")
-        teorico = HM("00:00")
-        ahora = HM(time.strftime("%H:%M"))
-        jornadas = 0
-        trabajado = 0
-        for h in horas:
-            total = total + h.total
-            teorico = teorico + h.teorico
-            jornadas = jornadas + int(h.teorico.minutos != 0)
-            trabajado = trabajado + int(len(h.marcajes) > 0)
+        quedan = cal.jornadas - cal.fichado
+        idx_trabajando = None
+        if cal.sal_ahora is not None and cal.sal_ahora.index is not None:
+            idx_trabajando = cal.sal_ahora.index
 
-        quedan = jornadas - trabajado
-
-        print("Semana:", teorico)
+        print("Semana:", cal.teorico.div(cal.jornadas), "*", cal.jornadas, "=", cal.teorico)
         print("")
-        for index, dia in enumerate(horas):
+        for index, dia in enumerate(cal.dias):
             hms = list(dia.marcajes)
             if not hms:
                 continue
             print("%2d:" % dia.fecha.day, end=" ")
-            isTrabajando = (dia.fecha == dt_now.date() and len(hms) % 2)
-            if isTrabajando:
+            if idx_trabajando == index:
                 hms.append("--_--")
-                total = total - dia.total
-                dia.total = dia.total + (ahora - dia.marcajes[-1])
-                iHoy = index
             str_hms = ["{} - {}".format(hms[i], (hms + ["--_--"])[i + 1]) for i in range(0, len(hms), 2)]
             str_hms = " + ".join(str_hms)
-            print("%s = %s" % (str_hms, dia.total), end="")
-            if isTrabajando:
-                print(" y subiendo")
+            if idx_trabajando == index:
+                print("%s = %s" % (str_hms, cal.sal_ahora.hoy_total), "y subiendo")
             else:
-                print("")
+                print("%s = %s" % (str_hms, dia.total))
         print("")
-        if isTrabajando:
-            print("Media:", total.div(trabajado - 1), "*", trabajado, "=", total)
-            print("Media:", (total + (horas[iHoy].total)).div(trabajado), "*", trabajado, "=", total)
-        else:
-            print("Media:", total.div(trabajado), "*", trabajado, "=", total)
-        ttl = HM(total.minutos)
-        if isTrabajando:
-            ttl = (ttl + (horas[iHoy].total))
-        flt = teorico - ttl
-        if flt.minutos != 0:
-            if quedan > 1:
-                line = [None, flt.div(quedan), "*", quedan, "=", flt]
-            else:
-                line = [None, flt]
-            if ttl.minutos > teorico.minutos:
-                line[0] = "Sobra:"
-                if isTrabajando:
-                    line.append("y subiendo")
-            else:
-                line[0] = "Falta:"
-                if isTrabajando:
-                    line.append("y bajando")
+        nln = False
+        if cal.fichado > 1:
+            nln = True
+            print("Media:", cal.total.div(cal.fichado), "*", cal.fichado, "=", cal.total)
+            if idx_trabajando is not None:
+                print("Media:", cal.sal_ahora.total.div(cal.fichado + 1), "*", cal.fichado + 1, "=",
+                      cal.sal_ahora.total)
+
+        sld, dqn = cal.saldo, quedan
+        if idx_trabajando is not None:
+            sld, dqn = cal.sal_ahora.saldo, quedan - 1
+        if (quedan - (int(idx_trabajando is not None))) > 0:
+            nln = True
+            sgn = sld.minutos > 0
+            us_sld = HM(abs(sld.minutos))
+            line = ["Falta:", us_sld.div(dqn), "*", dqn, "=", us_sld]
+            if sgn > 0:
+                line[0] = "Queda:"
+            if idx_trabajando is not None:
+                line.append("y subiendo" if sgn else "y bajando")
             print(*line)
+        if nln:
+            print("")
+
+        wf_sld = sld - cal.futuro
+        sgn = wf_sld.minutos > 0
+        print("Desfase:", wf_sld, "y subiendo" if sgn else "y bajando")
+
+        if idx_trabajando is None:
+            return
 
         print("")
-        desfase = total - teorico
-        if isTrabajando:
-            desfase = desfase + horas[iHoy].total
-        if desfase.minutos != 0:
-            signo = (teorico < total)
-            s_sig = "+" if signo else "-"
-            print("Desfase de", s_sig + str(desfase), end="")
-            if isTrabajando:
-                if signo:
-                    print(" y subiendo")
-                else:
-                    print(" y bajando")
-            print("")
-        if isTrabajando and desfase.minutos >= 0:
-            if quedan == 0:
-                print("¡¡SAL AHORA!!")
-            elif iHoy < len(horas) - 1:
-                outhm = HM("14:30")
-                man = horas[iHoy + 1]
-                if man.teoricas.minutos < HM("07:30"):
-                    outhm = HM("14:00")
-                if ahora.minutos > outhm.minutos:
-                    man = man.teoricas - desfase
-                    print("Sal ahora y mañana haz", man)
-                    print(" 07:00 -", HM("07:00") + man)
-                    print("", outhm - man, "-", outhm)
+        if quedan == 0 and wf_sld.minutos > 0:
+            print("¡¡SAL AHORA!!")
+            return
+        if wf_sld.minutos <= 0:
+            print("Sal a las", cal.sal_ahora.ahora - wf_sld)
+            return
+        if len(cal.dias) <= cal.sal_ahora.index:
+            return
+        man = cal.dias[cal.sal_ahora.index + 1]
+        outhm = HM("14:30")
+        if man.teoricas.minutos < HM("07:30"):
+            outhm = HM("14:00")
+        if cal.sal_ahora.ahora.minutos > outhm.minutos:
+            man = man.teoricas - wf_sld
+            print("Sal ahora y mañana haz", man)
+            print(" 07:00 -", HM("07:00") + man)
+            print("", outhm - man, "-", outhm)
 
     def nominas(self, sueldo='neto'):
         f = Funciona()
@@ -371,13 +351,13 @@ class Printer:
                 unidad = True
             for i, u in enumerate(_resto):
                 print("")
-                print(u.nombre, u.apellido1, u.apellido2)
+                print(notnull(u.nombre, u.apellido1, u.apellido2, sep=" "))
                 if unidad and ctun != u.unidad and u.unidad:
                     print(u.unidad)
                 if u.puesto:
                     print(u.puesto)
-                print(u.despacho, u.planta, u.ubicacion, sep=" - ")
-                print(u.telefono, u.telefonoext, u.correo, sep=" - ")
+                print(notnull(u.despacho, u.planta, u.ubicacion, sep=" - "))
+                print(notnull(u.telefono, u.telefonoext, u.correo, sep=" - "))
 
         if nocu:
             print("")
@@ -391,11 +371,11 @@ class Printer:
             print("Otros:")
         for u in empt:
             print("*", end=" ")
-            print(u.nombre, u.apellido1, u.apellido2)
+            print(notnull(u.nombre, u.apellido1, u.apellido2, sep=" "))
 
         return users
 
 
 if __name__ == "__main__":
     p = Printer()
-    p.busca("Hernanz")
+    p.horas_semana()
