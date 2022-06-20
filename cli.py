@@ -40,7 +40,7 @@ group.add_argument('--busca', nargs="+", type=str, help="Busca en el directorio 
 arg_options = re.findall(r"--([a-z]+)", parser.format_help())
 
 
-def main(arg, *args, bot=None, **kargv):
+def main(arg, *args, **kargv):
     prt = Printer()
 
     if arg.horas:
@@ -75,7 +75,7 @@ def main(arg, *args, bot=None, **kargv):
         prt.busca(*arg.busca, **kargv)
 
 
-def str_main(text, *args, bot=None, **kargv):
+def str_main(text, *args, **kargv):
     if text not in arg_options:
         return
     if text in ("busca", "nomina"):
@@ -88,7 +88,7 @@ def str_main(text, *args, bot=None, **kargv):
     old_stdout = sys.stdout
     result = StringIO()
     sys.stdout = result
-    main(arg, *args, bot=bot, **kargv)
+    main(arg, *args, **kargv)
     sys.stdout = old_stdout
     result_string = result.getvalue()
     return result_string.rstrip()

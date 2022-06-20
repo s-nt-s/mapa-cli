@@ -1,12 +1,11 @@
 from datetime import datetime, date, timedelta
-from .filemanager import CNF
+from .filemanager import CNF, FileManager
 import re
 from munch import Munch
 from .web import Web
-from .util import json_serial, parse_mes, parse_dia, get_text, tmap, to_num
+from .util import json_serial, parse_mes, parse_dia, get_text, tmap, to_num, get_times
 from os.path import isdir, join, isfile, expanduser
-from .filemanager import FileManager
-from .hm import HM
+from .hm import HM, IH
 import json
 from .retribuciones import Retribuciones
 
@@ -338,10 +337,81 @@ class Gesper(Web):
 
         return kv
 
+    def get_horas(self, ini, fin=date(2022, 6, 5)):
+        hoy = date.today()
+        if isinstance(ini, (date, datetime)):
+            if ini >= hoy:
+                return None
+        if isinstance(fin, (date, datetime)):
+            if fin >= hoy:
+                return None
+        if ini > fin:
+            return None
+        _fin = date(fin.year, fin.month, fin.day)
+        rst = []
+        ini = ini.replace(year=ini.year-1)
+        while ini <= _fin:
+            ini = ini.replace(year=ini.year+1)
+            fin = date(ini.year, 12, 31)
+            if fin>_fin:
+                fin = date(_fin.year, _fin.month, _fin.day)
+            s_ini = ini.strftime("%Y-%m-%d")
+            s_fin = fin.strftime("%Y-%m-%d")
+            name = s_ini+"_"+s_fin+".pdf"
+            absn = join(CNF.informe_horas, name)
+            if not isfile(absn):
+                r = self.s.get("https://intranet.mapa.es/app/GESPER/ControlHorario/VerInforme.ashx?action=report&inicio="+s_ini+"&fin="+s_fin)
+                FileManager.get().dump(absn, r.content)
+            jornadas = 0
+            laborables = 0
+            vacaciones = HM("00:00")
+            festivos = HM("00:00")
+            fiestas_patronales = 0
+            for page in FileManager.get().load(absn, as_list=True):
+                n_fechas = len(re.findall(r"\b\d\d/\d\d/\d\d\d\d\b", page))
+                jornadas = jornadas + n_fechas - 3
+                laborables = laborables + n_fechas - 3
+                for i in re.findall(r"([\d:\.]+)\s+((?:VAC|FESTIVO|PCI|PAP|FP)\b\S*)", page):
+                    h = HM(i[0])
+                    t = tuple(a.strip() for a in i[1].strip().lower().split(","))
+                    if "festivo" in t:
+                        jornadas = jornadas - 1
+                        laborables = laborables - 1
+                        festivos = festivos + h
+                    elif "vac" in t or "pap" in t:
+                        jornadas = jornadas - 1
+                        vacaciones = vacaciones + h
+                    elif "fp" in t:
+                        fiestas_patronales = fiestas_patronales + 1
+
+            m = re.search(
+                r"^\s*(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d,\.]+)\s*$", page, re.MULTILINE)
+
+            if m is None:
+                continue
+            porcentaje = to_num(m.groups()[-1])
+            trabajadas, incidencias, total, teoricas, saldo = (HM(i) for i in m.groups()[:-1])
+            rst.append(IH(
+                laborables=laborables,
+                jornadas=jornadas,
+                trabajadas=trabajadas,
+                incidencias=incidencias,
+                total=total,
+                teoricas=teoricas,
+                saldo=saldo,
+                porcentaje=porcentaje,
+                festivos=festivos,
+                vacaciones=vacaciones,
+                fiestas_patronales=HM("02:30").mul(fiestas_patronales),
+                pdf=absn,
+                ini=ini,
+                fin=fin
+            ))
+        return rst
 
 
 if __name__ == "__main__":
     f = Gesper()
     r = f.get_puesto()
-
+    r = f.get_horas(r['inicio'])
     print(json.dumps(r, indent=2, default=json_serial))

@@ -2,7 +2,7 @@ from datetime import datetime, date, timedelta
 from munch import Munch
 
 from .autdriver import AutDriver
-from .util import json_serial, tmap, get_text
+from .util import json_serial, tmap, get_text, get_times
 from .hm import HM
 from .cache import Cache
 import re
@@ -11,13 +11,6 @@ import time
 re_sp = re.compile(r"\s+")
 today = date.today()
 now = datetime.now()
-
-
-def get_times(ini, fin, delta):
-    while ini < fin:
-        end = ini + delta
-        yield ini, min(fin, end)
-        ini = ini + delta
 
 
 class Trama:

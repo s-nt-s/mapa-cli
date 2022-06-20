@@ -214,9 +214,11 @@ class FileManager:
         with open(file, "w") as f:
             f.write(txt)
 
-    def load_pdf(self, file, *args, **kvargs):
+    def load_pdf(self, file, *args, as_list=False, **kvargs):
         with open(file, 'rb') as fl:
             pdf = pdftotext.PDF(fl)
+            if as_list:
+                return list(pdf)
             return "\n".join(pdf)
 
     def load_pickle(self, file, *args, **kvargs):

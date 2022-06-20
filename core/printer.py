@@ -84,7 +84,10 @@ class Printer:
 
         wf_sld = sld - cal.futuro
         sgn = wf_sld.minutos > 0
-        print("Desfase:", wf_sld, "y subiendo" if sgn else "y bajando")
+        if idx_trabajando is not None:
+            print("Desfase:", wf_sld, "y subiendo" if sgn else "y bajando")
+        else:
+            print("Desfase:", wf_sld)
 
         if idx_trabajando is None:
             return

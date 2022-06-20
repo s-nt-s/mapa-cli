@@ -17,6 +17,11 @@ re_url = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a
 re_mail = re.compile(r"^([a-záéíóú0-9_\-\.]+)@([a-záéíóú0-9_\-\.]+)\.([a-záéíóú]{2,5})$", re.IGNORECASE)
 re_sp = re.compile(r"\s+")
 
+def get_times(ini, fin, delta):
+    while ini < fin:
+        end = ini + delta
+        yield ini, min(fin, end)
+        ini = ini + delta
 
 def get_text(node, default=None):
     if node is None:

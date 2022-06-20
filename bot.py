@@ -7,6 +7,7 @@ import sys
 
 import slixmpp
 import time
+from textwrap import dedent
 
 from cli import str_main
 from core.common import get_config, read_file, write_file
@@ -15,11 +16,11 @@ from datetime import date, timedelta
 
 parser = argparse.ArgumentParser(
     description='Arranca un bot xmpp para interactuar con mapa-cli')
-parser.add_argument('--amistoso', action='store_true', help='''
-Autoaceptar peticiones de amistad.
-Usa este parámetro solo la primera vez, para que el bot accepte tu petición de amistad.
-Cuando el bot ya sea tu amigo, omite este parámetro para evitar que responda a otra gente.
-'''.strip())
+parser.add_argument('--amistoso', action='store_true', help=dedent('''
+    Autoaceptar peticiones de amistad.
+    Usa este parámetro solo la primera vez, para que el bot accepte tu petición de amistad.
+    Cuando el bot ya sea tu amigo, omite este parámetro para evitar que responda a otra gente.
+    '''.strip()))
 parser.add_argument(
     '--send', help="Manda por chat el resultado del comando pasado como argumento")
 
