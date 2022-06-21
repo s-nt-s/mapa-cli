@@ -24,6 +24,15 @@ class Trama:
             ff.click("//a[text()='Calendario']")
             return ff.to_web()
 
+    @Cache(file="data/autentica/trama.incedencias.pickle", maxOld=(1 / 48))
+    def _get_inc_session(self):
+        with AutDriver(browser='firefox') as ff:
+            ff.get("https://trama.administracionelectronica.gob.es/portal/")
+            ff.click("//div[@id='appMenu']//a[text()='Incidencias']")
+            time.sleep(2)
+            ff.click("//div[@id='mainWindow']//a[text()='Enviadas']")
+            return ff.to_web()
+
     def _get_dias(self, ini, fin):
         dias = []
         w = self._get_cal_session()
@@ -243,10 +252,56 @@ class Trama:
         vac = sorted(rst, key=lambda v: (v.year, v.key))
         return vac
 
+    def get_incidencias(self, ini, fin):
+        w = self._get_inc_session()
+        w.get("https://trama.administracionelectronica.gob.es/incidencias/bandejaEnviadas.html")
+        mx = w.soup.select("#maximoElementosPagina option")[-1]
+        mx = mx.attrs["value"]
+        action, data = w.prepare_submit("#formularioPrincipal")
+        data["maximoElementosPagina"] = mx
+        w.get(action, **data)
+        r = []
+        to_date = lambda x: date(*map(int, reversed(x.split("/"))))
+        to_hm = lambda x: HM(x) if x is not None else None
+        for tr in w.soup.select("#listaTablaMaestra tbody tr"):
+            tds = tmap(get_text, tr.findAll("td"))
+            id, tipo, solicitud, validador, autorizador, incidencias, estado, tarea = tds
+            r.append(Munch(
+                id=int(id),
+                tipo=tipo,
+                solicitud=to_date(solicitud),
+                validador=validador,
+                autorizador=autorizador,
+                incidencias=incidencias,
+                estado=estado,
+                tarea=to_date(tarea),
+            ))
+        for i in list(r):
+            data['accion'] = 'REDIRIGIR_SOLICITUDES'
+            data['idProceso'] = str(i.id)
+            w.get(action, **data)
+            tb = w.soup.select_one("#tablaIncidencias")
+            if tb is None:
+                continue
+            i.incidencias = []
+            tb.select_one("thead").extract()
+            for tr in tb.select("tr"):
+                tds = tmap(get_text, tr.findAll("td"))
+                tipo, fecha, inicio, fin, observaciones, mensaje = tds
+                i.incidencias.append(Munch(
+                    tipo=tipo,
+                    fecha=to_date(fecha),
+                    inicio=to_hm(inicio),
+                    fin=to_hm(fin),
+                    observaciones=observaciones,
+                    mensaje=mensaje
+                ))
+        return r
+
 
 if __name__ == "__main__":
     a = Trama()
-    r = a.get_informe()
+    r = a.get_incidencias(None, None)
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))
