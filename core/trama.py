@@ -301,7 +301,7 @@ class Trama:
 
 if __name__ == "__main__":
     a = Trama()
-    r = a.get_incidencias(None, None)
+    r = a.get_semana()
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))

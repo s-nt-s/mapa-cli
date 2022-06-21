@@ -201,9 +201,9 @@ if is_s5h:
 
 
 class Driver:
-    def __init__(self, visible=False, wait=60, useragent=None, browser=None):
+    def __init__(self, visible=None, wait=60, useragent=None, browser=None):
         self._driver = None
-        self.visible = visible
+        self.visible = visible or (os.environ.get("DRIVER_VISIBLE")=="1")
         self._wait = wait
         self.useragent = useragent
         self.browser = browser

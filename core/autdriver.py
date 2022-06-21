@@ -38,7 +38,12 @@ class AutDriver(Driver):
         self.val("username", CNF.autentica.user)
         self.val("password", CNF.autentica.pssw)
         self.click("submitAutentica")
-        time.sleep(5)
+        time.sleep(2)
+        if self.get_soup().select_one("div.botonera #grabar"):
+            self.click("grabar")
+            time.sleep(2)
+            self.click("modal-btn-si")
+            time.sleep(2)
         error = self.get_soup().find("p", text=re_autentica_error)
         if error:
             raise AutenticaWeakPassword(error.get_text().strip())
