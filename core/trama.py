@@ -5,42 +5,27 @@ from .autdriver import AutDriver
 from .util import json_serial, tmap, get_text, get_times
 from .hm import HM
 from .cache import Cache
+from .gesper import Gesper
+from .filemanager import FileManager
+from os.path import isfile
 import re
 import time
 
 re_sp = re.compile(r"\s+")
-today = date.today()
-now = datetime.now()
+JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"
 
 
 class Trama:
 
-    @Cache(file="data/autentica/trama.calendario.pickle", maxOld=(1/48))
+    @Cache(file="data/autentica/trama.calendario.pickle", maxOld=(1 / 48))
     def _get_cal_session(self):
         with AutDriver(browser='firefox') as ff:
             ff.get("https://trama.administracionelectronica.gob.es/portal/")
             ff.click("//a[text()='Calendario']")
             return ff.to_web()
 
-    def get_calendario(self, ini, fin):
-        """
-        Devuelve el control horario entre dos fechas
-        """
-        r = Munch(
-            total=None,
-            teorico=None,
-            saldo=None,
-            jornadas=0,
-            fichado=0,
-            sal_ahora=Munch(
-                index=None,
-                ahora=HM(time.strftime("%H:%M")),
-                total=None,
-                saldo=None,
-            ),
-            futuro=HM(0),
-            dias=[]
-        )
+    def _get_dias(self, ini, fin):
+        dias = []
         w = self._get_cal_session()
         for a, z in get_times(ini, fin, timedelta(days=59)):
             w.get("https://trama.administracionelectronica.gob.es/calendario/marcajesRango.html",
@@ -48,15 +33,12 @@ class Trama:
                   fechaFin=z.strftime("%d/%m/%Y"),
                   )
             for tr in w.soup.select("tr"):
-                tds = tmap(get_text, tr.findAll("td"))
-                if tr.select_one("td.total"):
-                    r.total, r.teorico, r.saldo = map(HM, tds[-3:])
-                    continue
                 cls = tr.attrs.get("class")
                 if isinstance(cls, list):
                     cls = cls[0]
                 if cls not in ("even", "odd"):
                     continue
+                tds = tmap(get_text, tr.findAll("td"))
                 fec, mar, obs, ttt, tto, sld = tds
                 fec = fec[:-1].split("(", 1)[-1]
                 fec = tmap(int, reversed(fec.split("/")))
@@ -72,15 +54,70 @@ class Trama:
                     teorico=HM(tto),
                     saldo=HM(sld)
                 )
-                if i.fecha == today:
-                    r.sal_ahora.index = len(r.dias)
-                elif i.fecha > today:
-                    r.futuro = i.saldo + r.futuro
-                if i.teorico.minutos > 0:
-                    r.jornadas = r.jornadas + 1
-                if len(i.marcajes) > 0:
-                    r.fichado = r.fichado + 1
-                r.dias.append(i)
+                dias.append(i)
+        return dias
+
+    def get_dias(self, ini, fin):
+        dias = []
+        fln_dias = JS_DIAS.format(ini)
+        if isfile(fln_dias):
+            for d in FileManager.get().load(fln_dias):
+                for k, v in list(d.items()):
+                    if isinstance(v, str) and ":" in v:
+                        d[k] = HM(v)
+                d = Munch.fromDict(d)
+                if d.ini >= ini and d.fin <= fin:
+                    dias.append(d)
+        if len(dias) == 0:
+            dias = self._get_dias(ini, fin)
+        elif len(dias) > 0:
+            _ini = dias[0].fecha
+            _fin = dias[-1].fecha
+            pre, pst = [], []
+            if ini < _ini:
+                pre = self._get_dias(ini, _ini - timedelta(days=1))
+            if fin > _fin:
+                pst = self._get_dias(_fin + timedelta(days=1), fin)
+            dias = pre + dias + pst
+        today = date.today()
+        dt_top = today - timedelta(days=59)
+        sv_dias = [d for d in dias if d.fecha < dt_top]
+        if len(sv_dias):
+            FileManager.get().dump(fln_dias, sv_dias, default=json_serial)
+        return dias
+
+    def get_calendario(self, ini, fin):
+        """
+        Devuelve el control horario entre dos fechas
+        """
+        today = date.today()
+        r = Munch(
+            total=HM(0),
+            teorico=HM(0),
+            saldo=HM(0),
+            jornadas=0,
+            fichado=0,
+            sal_ahora=Munch(
+                index=None,
+                ahora=HM(time.strftime("%H:%M")),
+                total=None,
+                saldo=None,
+            ),
+            futuro=HM(0),
+            dias=self.get_dias(ini, fin)
+        )
+        for index, i in enumerate(r.dias):
+            r.total = r.total + i.total
+            r.teorico = r.teorico + i.teorico
+            r.saldo = r.saldo + i.saldo
+            if i.fecha == today:
+                r.sal_ahora.index = index
+            elif i.fecha > today:
+                r.futuro = i.saldo + r.futuro
+            if i.teorico.minutos > 0:
+                r.jornadas = r.jornadas + 1
+            if len(i.marcajes) > 0:
+                r.fichado = r.fichado + 1
         if r.sal_ahora.index is None:
             r.sal_ahora = None
         else:
@@ -110,10 +147,106 @@ class Trama:
         fin = ini + timedelta(days=6)
         return self.get_calendario(ini, fin)
 
+    def get_informe(self, ini=date(2022, 5, 29), fin=None):
+        hoy = date.today()
+        if ini is None:
+            raise ValueError("ini is mandatory")
+        if fin is None or fin >= hoy:
+            fin = hoy - timedelta(days=1)
+        if ini >= hoy:
+            return None
+        if fin >= hoy:
+            fin = hoy - timedelta(days=1)
+        if ini > fin:
+            return None
+        r = Munch(
+            total=HM(0),
+            teorico=HM(0),
+            saldo=HM(0)
+        )
+        for i in self.get_dias(ini, fin):
+            r.total = r.total + i.total
+            r.teorico = r.teorico + i.teorico
+            r.saldo = r.saldo + i.saldo
+        return r
+
+    def get_vacaciones(self, year=None):
+        GESPER_BREAK = 2022
+        vac = {}
+        cyr = datetime.today().year
+        if year is None:
+            for v in self.get_vacaciones(-1):
+                if v.total > v.usados:
+                    vac[(v.year, v.key)] = v
+            year = cyr
+        if year < 0:
+            year = cyr + year
+        if year > cyr:
+            return []
+        if year < GESPER_BREAK:
+            # hack gesper
+            return Gesper().get_vacaciones(year)
+
+        def _add(v):
+            vac[(v.year, v.key)] = v
+
+        w = self._get_cal_session()
+        w.get("https://trama.administracionelectronica.gob.es/calendario/calendario.html")
+        yrs = set()
+        while True:
+            yr = None
+            for tr in w.soup.select("div.resumenMarcajes tbody tr"):
+                tds = tmap(get_text, tr.select("td"))
+                yr = int(tds[0])
+                yrs.add(yr)
+                vc = tmap(int, re.findall(r"\d+", tds[1]))
+                pe = tmap(int, re.findall(r"\d+", tds[2]))
+                _add(Munch(
+                    key="permiso",
+                    total=pe[1],
+                    usados=pe[0],
+                    year=yr
+                ))
+                _add(Munch(
+                    key="vacaciones",
+                    total=vc[1],
+                    usados=vc[0],
+                    year=yr
+                ))
+            if yrs and (year in range(min(yrs), max(yrs) + 1)):
+                break
+            if yr == GESPER_BREAK:
+                # hack gesper
+                break
+            prv = w.soup.select_one("#retrocedeAnyo")
+            if prv is None:
+                break
+            action, data = w.prepare_submit("#formularioPrincipal")
+            data[prv.attrs["name"]] = prv.attrs["value"]
+            w.get(action, **data)
+
+        if year == GESPER_BREAK:
+            # hack gesper
+            for gv in Gesper().get_vacaciones(year):
+                k = (gv.year, gv.key)
+                if k not in vac:
+                    vac[k] = gv
+                else:
+                    tv = vac[k]
+                    tv.total = gv.total
+                    tv.usados = gv.usados + tv.usados
+
+        rst = []
+        for v in vac.values():
+            if v.year == year or (v.year == year - 1 and v.total > v.usados):
+                rst.append(v)
+        vac = sorted(rst, key=lambda v: (v.year, v.key))
+        return vac
+
 
 if __name__ == "__main__":
     a = Trama()
-    r = a.get_semana()
+    r = a.get_informe()
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))

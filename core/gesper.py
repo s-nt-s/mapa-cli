@@ -5,9 +5,10 @@ from munch import Munch
 from .web import Web
 from .util import json_serial, parse_mes, parse_dia, get_text, tmap, to_num, get_times
 from os.path import isdir, join, isfile, expanduser
-from .hm import HM, IH
+from .hm import HM, IH, IHCache
 import json
 from .retribuciones import Retribuciones
+from functools import lru_cache
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
@@ -39,7 +40,7 @@ def dict_style(n):
 
 def tr_clave_valor(soup, id, *args, **keys):
     ok_key = tuple(args) + tuple(keys.keys())
-    for tr in soup.select("#"+id+" tr"):
+    for tr in soup.select("#" + id + " tr"):
         tds = [td.get_text().strip() for td in tr.findAll("td")]
         if len(tds) < 2:
             continue
@@ -51,7 +52,7 @@ def tr_clave_valor(soup, id, *args, **keys):
             continue
         if keys and keys.get(clave) is not None:
             clave = keys[clave]
-        if valor == valor.upper() and clave not in ("N.R.P.", ):
+        if valor == valor.upper() and clave not in ("N.R.P.",):
             valor = valor.capitalize()
         if clave == "Dirección":
             valor = valor.split(", madrid")[0]
@@ -159,7 +160,7 @@ class Gesper(Web):
                     r = self.s.get(exp.url, verify=self.verify)
                     FileManager.get().dump(exp.file, r.content)
 
-        exps = sorted(exps, key=lambda x:(x.fecha, x.index))
+        exps = sorted(exps, key=lambda x: (x.fecha, x.index))
         return exps
 
     def get_vacaciones(self, year=None):
@@ -171,7 +172,7 @@ class Gesper(Web):
                     vac.append(v)
             year = cyr
         if year < 0:
-             year = cyr + year
+            year = cyr + year
         self.get("https://intranet.mapa.es/app/GESPER/Permisos/Lapso.aspx")
         r = self.s.post("https://intranet.mapa.es/app/GESPER/JSon/Permiso.ashx",
                         data={"accion": "enjoy", "anio": year}, verify=self.verify)
@@ -199,7 +200,6 @@ class Gesper(Web):
                 year=year
             ))
         return vac
-
 
     def get_lapso(self):
         self.get("https://intranet.mapa.es/app/GESPER/Permisos/Lapso.aspx")
@@ -285,18 +285,16 @@ class Gesper(Web):
             elif kv[clave] != valor:
                 kv[clave] = kv[clave] + " (%s)" % valor
 
-
         self.get("https://intranet.mapa.es/app/GESPER/Consulta/Trienios.aspx")
         for clave, valor in tr_clave_valor(self.soup, "TablaFuncionario"):
             if valor.isdigit() and valor != "0":
                 valor = int(valor)
                 grupo = clave.split()[-1]
                 grupo = grupo.upper()
-                kv["trienios."+grupo] = valor
-
+                kv["trienios." + grupo] = valor
 
         for k, v in list(kv.items()):
-            if not(k.startswith("sueldo.") and isinstance(v, (str, float))):
+            if not (k.startswith("sueldo.") and isinstance(v, (str, float))):
                 continue
             v = to_num(v)
             if v is None:
@@ -304,8 +302,7 @@ class Gesper(Web):
             else:
                 kv[k] = v
 
-
-        #kv = dict(sorted(kv.items(), key=lambda x: orden.index(x[0])))
+        # kv = dict(sorted(kv.items(), key=lambda x: orden.index(x[0])))
 
         inicio = None
         self.get("https://intranet.mapa.es/app/GESPER/Consulta/Servicios.aspx")
@@ -325,7 +322,7 @@ class Gesper(Web):
             obj = kv
             for w in path[:-1]:
                 if w not in obj:
-                    obj[w]=Munch()
+                    obj[w] = Munch()
                 obj = obj[w]
             obj[path[-1]] = v
             del kv[k]
@@ -337,30 +334,26 @@ class Gesper(Web):
 
         return kv
 
-    def get_horas(self, ini, fin=date(2022, 6, 5)):
-        hoy = date.today()
-        if isinstance(ini, (date, datetime)):
-            if ini >= hoy:
-                return None
-        if isinstance(fin, (date, datetime)):
-            if fin >= hoy:
-                return None
-        if ini > fin:
-            return None
+    @property
+    @lru_cache(maxsize=None)
+    def fecha_inicio(self):
+        return self.get_puesto()['inicio']
+
+    @IHCache(file="data/gesper/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial)
+    def _get_informe(self, ini, fin):
         _fin = date(fin.year, fin.month, fin.day)
         rst = []
-        ini = ini.replace(year=ini.year-1)
         while ini <= _fin:
-            ini = ini.replace(year=ini.year+1)
             fin = date(ini.year, 12, 31)
-            if fin>_fin:
+            if fin > _fin:
                 fin = date(_fin.year, _fin.month, _fin.day)
             s_ini = ini.strftime("%Y-%m-%d")
             s_fin = fin.strftime("%Y-%m-%d")
-            name = s_ini+"_"+s_fin+".pdf"
+            name = s_ini + "_" + s_fin + ".pdf"
             absn = join(CNF.informe_horas, name)
             if not isfile(absn):
-                r = self.s.get("https://intranet.mapa.es/app/GESPER/ControlHorario/VerInforme.ashx?action=report&inicio="+s_ini+"&fin="+s_fin)
+                r = self.s.get(
+                    "https://intranet.mapa.es/app/GESPER/ControlHorario/VerInforme.ashx?action=report&inicio=" + s_ini + "&fin=" + s_fin)
                 FileManager.get().dump(absn, r.content)
             jornadas = 0
             laborables = 0
@@ -385,7 +378,8 @@ class Gesper(Web):
                         fiestas_patronales = fiestas_patronales + 1
 
             m = re.search(
-                r"^\s*(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d,\.]+)\s*$", page, re.MULTILINE)
+                r"^\s*(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d,\.]+)\s*$",
+                page, re.MULTILINE)
 
             if m is None:
                 continue
@@ -407,11 +401,32 @@ class Gesper(Web):
                 ini=ini,
                 fin=fin
             ))
-        return rst
+            ini = ini.replace(year=ini.year + 1, month=1, day=1)
+        if len(rst) == 0:
+            return None
+        r = rst[0]
+        del r['porcentaje']
+        del r['pdf']
+        r.fin = rst[-1].fin
+        for i in rst[1:]:
+            for k in ('laborables', 'jornadas', 'trabajadas', 'incidencias', 'total', 'teoricas', 'saldo', 'festivos',
+                      'vacaciones', 'fiestas_patronales'):
+                r[k] = r[k] + i[k]
+        return r
 
+    def get_informe(self, ini=None, fin=date(2022, 5, 29)):#fin=date(2022, 6, 5)):
+        hoy = date.today()
+        if ini is None:
+            ini = self.fecha_inicio
+        if ini >= hoy:
+            return None
+        if fin >= hoy:
+            fin = hoy - timedelta(days=1)
+        if ini > fin:
+            return None
+        return self._get_informe(ini, fin)
 
 if __name__ == "__main__":
     f = Gesper()
-    r = f.get_puesto()
-    r = f.get_horas(r['inicio'])
+    r = f.get_vacaciones()
     print(json.dumps(r, indent=2, default=json_serial))

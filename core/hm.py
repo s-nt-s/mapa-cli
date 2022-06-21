@@ -1,5 +1,8 @@
 from munch import Munch
 from math import modf
+from datetime import date
+from .cache import Cache
+import re
 
 
 class HM:
@@ -100,3 +103,18 @@ class IH(Munch):
     @property
     def sin_vacaciones(self):
         return self.teoricas - self.festivos - self.fiestas_patronales
+
+
+class IHCache(Cache):
+    def read(self, *args, **kvargs):
+        d = super().read(*args, **kvargs)
+        if d is None:
+            return None
+        for k, v in list(d.items()):
+            if isinstance(v, str):
+                if re.match(r"[\-+]?\d+:\d+(:\d+)?", v):
+                    d[k] = HM(v)
+                elif re.match(r"\d+-\d+-\d+", v):
+                    d[k] = date(*map(int, v.split("-")))
+        d = IH(d)
+        return d

@@ -6,9 +6,8 @@ msg/*.txt
 nohup.out
 .idea
 env.sh
-autentica/
-nominas.json
-*.pickle
+data/*/*
+!data/retribuciones/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

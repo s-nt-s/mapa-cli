@@ -81,7 +81,7 @@ class ApiBot(BaseBot):
             return None
         if text == "ping":
             return "pong"
-        return str_main(*text.split(), bot=self)
+        return str_main(*text.split())
 
 
 class SendBot(BaseBot):

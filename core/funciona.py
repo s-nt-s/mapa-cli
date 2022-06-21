@@ -8,6 +8,7 @@ from .autdriver import AutDriver
 from .filemanager import CNF, FileManager
 from .util import get_text, to_num
 from .cache import MunchCache
+from glob import glob
 
 re_sp = re.compile(r"\s+")
 
@@ -22,7 +23,7 @@ def query_nom(href):
         q["year"] = year
         try:
             q["file"] = "{year}.{mes:02d}-{cdcierre}-{cdcalculo}.pdf".format(**q)
-        except KeyError:
+        except KeyError as e:
             pass
     return q
 
@@ -36,14 +37,20 @@ def get_int_match(txt, *regx):
 
 class Funciona:
 
-    @MunchCache(file="data/nominas.json", maxOld=(1/24))
+    #@MunchCache(file="data/nominas.json", maxOld=(1 / 24))
     def get_nominas(self):
         """
         Devuelve las información de las nominas
         Es necesario configurar un directorio de descargas en config.yml
         """
+
+        done = set()
         w = None
         r = []
+        nom_json = "data/nominas/{}.json"
+        for fl in sorted(glob(nom_json.format("*"))):
+            r.extend(Munch.fromDict(FileManager.get().load(fl)))
+            done.add(fl.split("/")[-1].split(".")[0])
         with AutDriver(browser='firefox', visible=False) as ff:
             ff.get("https://www.funciona.es/servinomina/action/Retribuciones.do")
             soup = ff.get_soup()
@@ -55,9 +62,11 @@ class Funciona:
             q = query_nom(href)
             if q.get("file") is None:
                 return []
-            for a in soup.select("a[href]"):
-                href = a.attrs["href"]
+            for ayr in soup.select("a[href]"):
+                href = ayr.attrs["href"]
                 if "/servinomina/action/ListadoNominas.do?anio=" not in href:
+                    continue
+                if str(get_query(href)['anio']) in done:
                     continue
                 ff.get(href)
                 ff.wait("//div[contains(@class,'mod_nominas_anteriores')]")
@@ -77,8 +86,9 @@ class Funciona:
             w = ff.to_web()
 
         r = sorted(r, key=lambda x: basename(x.file))
-        for index, nom in enumerate(r):
-            nom.index = index
+        for nom in r:
+            if nom.get('neto') is not None:
+                continue
             if not isfile(expanduser(nom.file)):
                 rq = w.s.get(nom.url)
                 if "text/html" in rq.headers["content-type"]:
@@ -91,8 +101,18 @@ class Funciona:
                 txt = FileManager.get().load(nom.file)
                 nom.neto = get_int_match(txt, r"TRANSFERENCIA DEL LIQUIDO A PERCIBIR:\s+([\d\.,]+)")
                 nom.bruto = get_int_match(txt, r"R\s*E\s*T\s*R\s*I\s*B\s*U\s*C\s*I\s*O\s*N\s*E\s*S\s*\.+\s*([\d\.,]+)",
-                                         r"^ +([\d\.,]+) *$")
+                                          r"^ +([\d\.,]+) *$")
+        yrs = sorted(set(i.year for i in r))
+        myr = yrs[-1]
+        if r[-1].mes < 3:
+            myr = myr - 1
+        for y in yrs:
+            njs = nom_json.format(y)
+            if y < myr and not isfile(njs):
+                FileManager.get().dump(njs, [n for n in r if n.year == y])
 
+        for index, nom in enumerate(r):
+            nom.index = index
         return r
 
 

@@ -7,12 +7,13 @@ from munch import Munch
 
 
 class Cache:
-    def __init__(self, file, *args, maxOld=30, **kvargs):
+    def __init__(self, file, *args, maxOld=30, json_default=None, **kvargs):
         self.file = file
         self.data = {}
         self.func = None
         self.maxOld = maxOld
         self.slf = None
+        self.json_default = json_default
         if maxOld is not None:
             self.maxOld = time.time() - (maxOld * 86400)
 
@@ -23,6 +24,8 @@ class Cache:
         return FileManager.get().load(file)
 
     def save(self, file, data, *args, **kvargs):
+        if self.json_default is not None:
+            return FileManager.get().dump(file, data, default=self.json_default)
         return FileManager.get().dump(file, data)
 
     def tooOld(self, fl):
