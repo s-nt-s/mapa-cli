@@ -103,10 +103,10 @@ class Printer:
             return
         man = cal.dias[cal.sal_ahora.index + 1]
         outhm = HM("14:30")
-        if man.teoricas.minutos < HM("07:30"):
+        if man.teorico < HM("07:30"):
             outhm = HM("14:00")
         if cal.sal_ahora.ahora.minutos > outhm.minutos:
-            man = man.teoricas - wf_sld
+            man = man.teorico - wf_sld
             print("Sal ahora y mañana haz", man)
             print(" 07:00 -", HM("07:00") + man)
             print("", outhm - man, "-", outhm)
