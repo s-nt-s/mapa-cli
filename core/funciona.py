@@ -37,7 +37,7 @@ def get_int_match(txt, *regx):
 
 class Funciona:
 
-    #@MunchCache(file="data/nominas.json", maxOld=(1 / 24))
+    @MunchCache(file="data/nominas/todas.json", maxOld=(1 / 24))
     def get_nominas(self):
         """
         Devuelve las información de las nominas
