@@ -39,8 +39,8 @@ class Printer:
 
         quedan = cal.jornadas - cal.fichado
         idx_trabajando = None
-        if cal.sal_ahora is not None and cal.sal_ahora.index is not None:
-            idx_trabajando = cal.sal_ahora.index
+        if cal.sal_ahora is not None and cal.index is not None:
+            idx_trabajando = cal.index
 
         print("Semana:", cal.teorico.div(cal.jornadas), "*", cal.jornadas, "=", cal.teorico)
         print("")
@@ -89,25 +89,28 @@ class Printer:
         else:
             print("Desfase:", wf_sld)
 
-        if idx_trabajando is None:
+        if cal.index is None or len(cal.dias) <= cal.index:
             return
 
-        print("")
-        if quedan == 0 and wf_sld.minutos > 0:
-            print("¡¡SAL AHORA!!")
-            return
-        if wf_sld.minutos <= 0:
-            print("Sal a las", cal.sal_ahora.ahora - wf_sld)
-            return
-        if len(cal.dias) <= cal.sal_ahora.index:
-            return
-        man = cal.dias[cal.sal_ahora.index + 1]
+        if idx_trabajando is not None:
+            print("")
+            if quedan == 0 and wf_sld.minutos > 0:
+                print("¡¡SAL AHORA!!")
+                return
+            if wf_sld.minutos <= 0:
+                print("Sal a las", cal.sal_ahora.ahora - wf_sld)
+                return
+        man = cal.dias[cal.index + 1]
         outhm = HM("14:30")
         if man.teorico < HM("07:30"):
             outhm = HM("14:00")
-        if cal.sal_ahora.ahora.minutos > outhm.minutos:
+        if (wf_sld.minutos > 0 and cal.sal_ahora is None) or (cal.sal_ahora.ahora.minutos > outhm.minutos):
+            print("")
             man = man.teorico - wf_sld
-            print("Sal ahora y mañana haz", man)
+            if cal.sal_ahora:
+                print("Sal ahora y mañana haz", man)
+            else:
+                print("Mañana haz", man)
             print(" 07:00 -", HM("07:00") + man)
             print("", outhm - man, "-", outhm)
 

@@ -107,12 +107,12 @@ class Trama:
             jornadas=0,
             fichado=0,
             sal_ahora=Munch(
-                index=None,
                 ahora=HM(time.strftime("%H:%M")),
                 total=None,
                 saldo=None,
             ),
             futuro=HM(0),
+            index=None,
             dias=self.get_dias(ini, fin)
         )
         for index, i in enumerate(r.dias):
@@ -120,17 +120,17 @@ class Trama:
             r.teorico = r.teorico + i.teorico
             r.saldo = r.saldo + i.saldo
             if i.fecha == today:
-                r.sal_ahora.index = index
+                r.index = index
             elif i.fecha > today:
                 r.futuro = i.saldo + r.futuro
             if i.teorico.minutos > 0:
                 r.jornadas = r.jornadas + 1
             if len(i.marcajes) > 0:
                 r.fichado = r.fichado + 1
-        if r.sal_ahora.index is None:
+        if r.index is None:
             r.sal_ahora = None
         else:
-            hoy = r.dias[r.sal_ahora.index]
+            hoy = r.dias[r.index]
             if len(hoy.marcajes) % 2 == 0:
                 r.sal_ahora = None
             else:
