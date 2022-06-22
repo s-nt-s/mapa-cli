@@ -49,7 +49,8 @@ class Funciona:
         r = {}
         nom_json = "data/nominas/{}.json"
         for fl in sorted(glob(nom_json.format("*"))):
-            r.extend(Munch.fromDict(FileManager.get().load(fl)))
+            for nom in Munch.fromDict(FileManager.get().load(fl)):
+                r[nom.file]=nom
             done.add(fl.split("/")[-1].split(".")[0])
         with AutDriver(browser='firefox', visible=False) as ff:
             ff.get("https://www.funciona.es/servinomina/action/Retribuciones.do")
