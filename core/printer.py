@@ -54,7 +54,7 @@ class Printer:
             str_hms = ["{} - {}".format(hms[i], (hms + ["--_--"])[i + 1]) for i in range(0, len(hms), 2)]
             str_hms = " + ".join(str_hms)
             if idx_trabajando == index:
-                print("%s = %s" % (str_hms, cal.sal_ahora.hoy_total), "y subiendo")
+                print("%s = %s" % (str_hms, cal.sal_ahora.hoy_total), "▲")
             else:
                 print("%s = %s" % (str_hms, dia.total))
         print("")
@@ -77,7 +77,7 @@ class Printer:
             if sgn > 0:
                 line[0] = "Queda:"
             if idx_trabajando is not None:
-                line.append("y subiendo" if sgn else "y bajando")
+                line.append("▲" if sgn else "▼")
             print(*line)
         if nln:
             print("")
@@ -85,7 +85,7 @@ class Printer:
         wf_sld = sld - cal.futuro
         sgn = wf_sld.minutos > 0
         if idx_trabajando is not None:
-            print("Desfase:", wf_sld, "y subiendo" if sgn else "y bajando")
+            print("Desfase:", wf_sld, "▲" if sgn else "▼")
         else:
             print("Desfase:", wf_sld)
 
