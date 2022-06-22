@@ -46,7 +46,7 @@ class Funciona:
 
         done = set()
         w = None
-        r = []
+        r = {}
         nom_json = "data/nominas/{}.json"
         for fl in sorted(glob(nom_json.format("*"))):
             r.extend(Munch.fromDict(FileManager.get().load(fl)))
@@ -82,10 +82,10 @@ class Funciona:
                         mes=q['mes'],
                         year=q['year']
                     )
-                    r.append(nom)
+                    r[nom.file] = nom
             w = ff.to_web()
 
-        r = sorted(r, key=lambda x: basename(x.file))
+        r = sorted(r.values(), key=lambda x: basename(x.file))
         for nom in r:
             if nom.get('neto') is not None:
                 continue
