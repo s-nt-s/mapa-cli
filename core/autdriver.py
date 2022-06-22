@@ -55,4 +55,7 @@ class AutDriver(Driver):
         dom = urlparse(url).netloc.lower()
         if dom in NEED_AUTENTICA:
             self.autentica_login()
+            if self._driver.current_url != url:
+                super().get(url, *args, **kwargs)
+
 

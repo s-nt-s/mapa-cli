@@ -6,12 +6,28 @@ from .gesper import Gesper
 from .mapa import Mapa
 from .filemanager import CNF
 from .hm import HM
-import time
-from .util import to_strint, DAYNAME, parse_dia, notnull
+from .util import to_strint, DAYNAME, parse_dia, notnull, tmap
+from io import StringIO
 
 re_rtrim = re.compile(r"^\s*\n")
 dt_now = datetime.now()
 re_sp = re.compile(r"\s+")
+
+prnt_func = print
+prnt_line = ""
+
+
+def print(*args, **kvargs):
+    # Previene imprimir dos lineas vacias seguidas
+    global prnt_line
+    io_line = StringIO()
+    prnt_func(*args, file=io_line, flush=True, **kvargs)
+    line = io_line.getvalue()
+    line = line.strip()
+    if tmap(len, (line, prnt_line)) == (0, 0):
+        return
+    prnt_line = line
+    prnt_func(*args, **kvargs)
 
 
 def print_dict(kv, prefix=""):
@@ -58,9 +74,7 @@ class Printer:
             else:
                 print("%s = %s" % (str_hms, dia.total))
         print("")
-        nln = False
         if cal.fichado > 1:
-            nln = True
             print("Media:", cal.total.div(cal.fichado), "*", cal.fichado, "=", cal.total)
             if idx_trabajando is not None:
                 print("Media:", cal.sal_ahora.total.div(cal.fichado + 1), "*", cal.fichado + 1, "=",
@@ -70,7 +84,6 @@ class Printer:
         if idx_trabajando is not None:
             sld, dqn = cal.sal_ahora.saldo, quedan - 1
         if (quedan - (int(idx_trabajando is not None))) > 0:
-            nln = True
             sgn = sld.minutos > 0
             us_sld = HM(abs(sld.minutos))
             line = ["Falta:", us_sld.div(dqn), "*", dqn, "=", us_sld]
@@ -79,9 +92,8 @@ class Printer:
             if idx_trabajando is not None:
                 line.append("▲" if sgn else "▼")
             print(*line)
-        if nln:
-            print("")
 
+        print("")
         wf_sld = sld - cal.futuro
         sgn = wf_sld.minutos > 0
         if idx_trabajando is not None:
