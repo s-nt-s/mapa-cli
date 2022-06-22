@@ -50,7 +50,7 @@ class Funciona:
         nom_json = "data/nominas/{}.json"
         for fl in sorted(glob(nom_json.format("*"))):
             for nom in Munch.fromDict(FileManager.get().load(fl)):
-                r[nom.file]=nom
+                r[basename(nom.file)]=nom
             done.add(fl.split("/")[-1].split(".")[0])
         with AutDriver(browser='firefox', visible=False) as ff:
             ff.get("https://www.funciona.es/servinomina/action/Retribuciones.do")
@@ -83,7 +83,7 @@ class Funciona:
                         mes=q['mes'],
                         year=q['year']
                     )
-                    r[nom.file] = nom
+                    r[basename(nom.file)] = nom
             w = ff.to_web()
 
         r = sorted(r.values(), key=lambda x: basename(x.file))
