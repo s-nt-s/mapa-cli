@@ -13,6 +13,7 @@ import time
 
 re_sp = re.compile(r"\s+")
 JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"
+RT_URL = "https://trama.administracionelectronica.gob.es/portal/"
 
 
 class Trama:
@@ -20,14 +21,14 @@ class Trama:
     @Cache(file="data/autentica/trama.calendario.pickle", maxOld=(1 / 48))
     def _get_cal_session(self):
         with AutDriver(browser='firefox') as ff:
-            ff.get("https://trama.administracionelectronica.gob.es/portal/")
+            ff.get(RT_URL)
             ff.click("//a[text()='Calendario']")
             return ff.to_web()
 
     @Cache(file="data/autentica/trama.incedencias.pickle", maxOld=(1 / 48))
     def _get_inc_session(self):
         with AutDriver(browser='firefox') as ff:
-            ff.get("https://trama.administracionelectronica.gob.es/portal/")
+            ff.get(RT_URL)
             ff.click("//div[@id='appMenu']//a[text()='Incidencias']")
             time.sleep(2)
             ff.click("//div[@id='mainWindow']//a[text()='Enviadas']")

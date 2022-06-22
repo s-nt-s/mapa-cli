@@ -365,11 +365,11 @@ class Driver:
                 pass
         return None
 
-    def val(self, n, val=None):
+    def val(self, n, val=None, **kwargs):
         if n is None or self._driver is None:
             return None
         if isinstance(n, str):
-            n = self.wait(n)
+            n = self.wait(n, **kwargs)
         if val is not None:
             n.clear()
             n.send_keys(val)
