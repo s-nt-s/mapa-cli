@@ -154,10 +154,10 @@ class Printer:
             agg_nomias[k] = agg_nomias.get(k, 0) + n[sueldo]
         if sueldo == 'bruto':
             for n in nominas:
-                print("{}-{:02d} __ {:>6}€".format(n.year, n.mes, to_strint(n[sueldo])))
+                print("{}-{:02d} __ {:>5}€".format(n.year, n.mes, to_strint(n[sueldo])))
         else:
             for ((y, mes), sld) in agg_nomias.items():
-                print("{}-{:02d} __ {:>6}€".format(y, mes, to_strint(sld)))
+                print("{}-{:02d} __ {:>5}€".format(y, mes, to_strint(sld)))
 
         n_ym = sorted(set((n.year, n.mes) for n in nominas), reverse=True)
         if len(n_ym) < 4:
