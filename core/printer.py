@@ -164,12 +164,12 @@ class Printer:
             return
 
         print_medias = [
-            (" año     ", 12),
-            (" semestre", 6)
+            ("año     ", 12),
+            ("semestre", 6)
         ]
         ln = len(n_ym) - 1
         if ln > 12 or (ln > 6 and ln < 12) or ln < 6:
-            print_medias.insert(0, (" %s meses" % ln, ln))
+            print_medias.insert(0, ("%s meses" % ln, ln))
             if ln < 10:
                 print_medias[0][0] = " " + print_medias[0][0]
 
