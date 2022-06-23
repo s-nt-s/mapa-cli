@@ -116,7 +116,7 @@ class Printer:
         outhm = HM("14:30")
         if man.teorico < HM("07:30"):
             outhm = HM("14:00")
-        if (wf_sld.minutos > 0 and cal.sal_ahora is None) or (cal.sal_ahora.ahora.minutos > outhm.minutos):
+        if (wf_sld.minutos > 0 and cal.sal_ahora is None) or (cal.sal_ahora is not None and cal.sal_ahora.ahora.minutos > outhm.minutos):
             print("")
             man = man.teorico - wf_sld
             if cal.sal_ahora:
