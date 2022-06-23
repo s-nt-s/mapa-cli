@@ -117,17 +117,17 @@ class Trama:
             dias=self.get_dias(ini, fin)
         )
         for index, i in enumerate(r.dias):
-            r.total = r.total + i.total
-            r.teorico = r.teorico + i.teorico
-            r.saldo = r.saldo + i.saldo
+            r.total += i.total
+            r.teorico += i.teorico
+            r.saldo += i.saldo
             if i.fecha == today:
                 r.index = index
             elif i.fecha > today:
-                r.futuro = r.futuro + i.saldo
+                r.futuro += i.saldo
             if i.teorico.minutos > 0:
-                r.jornadas = r.jornadas + 1
+                r.jornadas += 1
             if len(i.marcajes) > 0:
-                r.fichado = r.fichado + 1
+                r.fichado += 1
         if r.index is None:
             r.sal_ahora = None
         else:
@@ -142,7 +142,6 @@ class Trama:
                 r.sal_ahora.saldo = r.saldo + sld
                 # Hasta que salgamos no deberíamos contar este día
                 r.fichado = r.fichado - 1
-                #r.futuro = r.futuro + hoy.teorico
                 if hoy.total.minutos > 0:
                     # Si hay algo ya computado (por ejemplo, tenemos 3 fichajes)
                     # lo restamos del total porque aún no sabemos cuanto se va
