@@ -123,7 +123,7 @@ class Trama:
             if i.fecha == today:
                 r.index = index
             elif i.fecha > today:
-                r.futuro = i.saldo + r.futuro
+                r.futuro = r.futuro + i.saldo
             if i.teorico.minutos > 0:
                 r.jornadas = r.jornadas + 1
             if len(i.marcajes) > 0:
@@ -142,6 +142,7 @@ class Trama:
                 r.sal_ahora.saldo = r.saldo + sld
                 # Hasta que salgamos no deberíamos contar este día
                 r.fichado = r.fichado - 1
+                #r.futuro = r.futuro + hoy.teorico
                 if hoy.total.minutos > 0:
                     # Si hay algo ya computado (por ejemplo, tenemos 3 fichajes)
                     # lo restamos del total porque aún no sabemos cuanto se va
