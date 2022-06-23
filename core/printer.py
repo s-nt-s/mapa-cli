@@ -58,7 +58,10 @@ class Printer:
         if cal.sal_ahora is not None and cal.index is not None:
             idx_trabajando = cal.index
 
-        print("Semana:", cal.teorico.div(cal.jornadas), "*", cal.jornadas, "=", cal.teorico)
+        if cal.jornadas>0:
+            print("Semana:", cal.teorico.div(cal.jornadas), "*", cal.jornadas, "=", cal.teorico)
+        else:
+            print("Semana:", cal.teorico)
         print("")
         for index, dia in enumerate(cal.dias):
             hms = list(dia.marcajes)
