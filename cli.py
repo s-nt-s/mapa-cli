@@ -4,7 +4,7 @@ import re
 import sys
 from io import StringIO
 
-#from core.api import Api
+# from core.api import Api
 from core.printer import Printer
 
 parser = argparse.ArgumentParser(
@@ -33,7 +33,7 @@ group.add_argument('--novedades', action='store_true',
                    help="Muestra las novedades de intranet.mapa.es (con antigüedad máxima de 30 días)")
 group.add_argument('--ofertas', action='store_true',
                    help="Muestra ofertas para los empleados de MAPA")
-#group.add_argument('--servicios', action='store_true', help="Servicios prestados")
+# group.add_argument('--servicios', action='store_true', help="Servicios prestados")
 group.add_argument('--contactos', action='store_true', help="Contactos de interés")
 group.add_argument('--busca', nargs="+", type=str, help="Busca en el directorio de personal")
 
@@ -42,7 +42,8 @@ arg_options = re.findall(r"--([a-z]+)", parser.format_help())
 
 def main(arg, *args, **kargv):
     prt = Printer()
-
+    if arg.help:
+        parser.print_help()
     if arg.horas:
         prt.horas_semana(*args, **kargv)
     if arg.mes:
@@ -67,7 +68,7 @@ def main(arg, *args, **kargv):
         prt.novedades(*args, **kargv)
     if arg.ofertas:
         prt.ofertas(*args, **kargv)
-    #if arg.servicios:
+    # if arg.servicios:
     #    api.servicios(*args, **kargv)
     if arg.contactos:
         prt.contactos(*args, **kargv)
@@ -79,10 +80,10 @@ def str_main(text, *args, **kargv):
     if text not in arg_options:
         return
     if text in ("busca", "nomina"):
-        if len(args)==0:
+        if len(args) == 0:
             return
     try:
-        arg = parser.parse_args(("--"+text,) + args)
+        arg = parser.parse_args(("--" + text,) + args)
     except SystemExit:
         return
     old_stdout = sys.stdout
@@ -91,7 +92,8 @@ def str_main(text, *args, **kargv):
     main(arg, *args, **kargv)
     sys.stdout = old_stdout
     result_string = result.getvalue()
-    return result_string.rstrip()
+    result_string = result_string.rstrip()
+    return result_string
 
 
 if __name__ == "__main__":
@@ -102,11 +104,8 @@ if __name__ == "__main__":
     arg = None
     if len(sys.argv) > 1:
         prm = sys.argv[1]
-        if prm == "parametros":
-            print(" ".join(arg_options()))
-            sys.exit()
         if prm in arg_options:
-            arg = parser.parse_args(["--"+prm] + sys.argv[2:])
+            arg = parser.parse_args(["--" + prm] + sys.argv[2:])
 
     arg = arg or parser.parse_args()
     main(arg)
