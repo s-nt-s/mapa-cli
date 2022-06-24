@@ -254,29 +254,32 @@ class Trama:
         vac = sorted(rst, key=lambda v: (v.year, v.key))
         return vac
 
-    def get_incidencias(self, ini, fin):
+    def get_incidencias(self, ini, fin, estado=3):
         w = self._get_inc_session()
         w.get("https://trama.administracionelectronica.gob.es/incidencias/bandejaEnviadas.html")
         mx = w.soup.select("#maximoElementosPagina option")[-1]
         mx = mx.attrs["value"]
         action, data = w.prepare_submit("#formularioPrincipal")
         data["maximoElementosPagina"] = mx
+        if estado is not None:
+            data["idEstadoIncidencia"] = str(estado)
         w.get(action, **data)
         r = []
         to_date = lambda x: date(*map(int, reversed(x.split("/"))))
         to_hm = lambda x: HM(x) if x is not None else None
+        head = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
             tds = tmap(get_text, tr.findAll("td"))
-            id, tipo, solicitud, validador, autorizador, incidencias, estado, tarea = tds
+            tds = {k:v for k,v in zip(head, tds)}
             r.append(Munch(
-                id=int(id),
-                tipo=tipo,
-                solicitud=to_date(solicitud),
-                validador=validador,
-                autorizador=autorizador,
-                incidencias=incidencias,
-                estado=estado,
-                tarea=to_date(tarea),
+                id=int(tds['Proceso']),
+                tipo=tds['Tipo Solicitud'],
+                solicitud=to_date(tds['Fecha solicitud']),
+                validador=tds['Validador'],
+                autorizador=tds['Autorizador'],
+                incidencias=tds['Incidencias'],
+                estado=tds['Estado'],
+                tarea=to_date(tds['Fecha tarea']),
             ))
         for i in list(r):
             data['accion'] = 'REDIRIGIR_SOLICITUDES'
@@ -303,7 +306,7 @@ class Trama:
 
 if __name__ == "__main__":
     a = Trama()
-    r = a.get_semana()
+    r = a.get_incidencias(date.today() - timedelta(days=30), date.today())
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))
