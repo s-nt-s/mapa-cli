@@ -46,7 +46,7 @@ def main(arg, *args, **kargv):
     if arg.horas:
         prt.horas_semana(*args, **kargv)
     if arg.mes:
-        api.horas_mes(*args, **kargv)
+        prt.horas_mes(*args, **kargv)
     if arg.nominas:
         prt.nominas(*args, sueldo='neto', **kargv)
     if arg.bruto:

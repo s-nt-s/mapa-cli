@@ -129,7 +129,7 @@ class Printer:
             print("", outhm - man, "-", outhm)
 
 
-    def mes(self):
+    def horas_mes(self):
         t = Trama()
         hoy = date.today()
         mes = date.today()
@@ -421,4 +421,4 @@ class Printer:
 
 if __name__ == "__main__":
     p = Printer()
-    p.mes()
+    p.horas_mes()
