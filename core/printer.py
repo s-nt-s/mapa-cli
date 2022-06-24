@@ -103,7 +103,7 @@ class Printer:
         else:
             print("Desfase:", wf_sld)
 
-        if cal.index is None or len(cal.dias) <= cal.index:
+        if cal.index is None:
             return
 
         if idx_trabajando is not None:
@@ -114,7 +114,14 @@ class Printer:
             if wf_sld.minutos <= 0:
                 print("Sal a las", cal.sal_ahora.ahora - wf_sld)
                 return
+
+        if cal.futuro.minutos == 0:
+            return
+
         man = cal.dias[cal.index + 1]
+        if man.teorico.minutos == 0:
+            return
+        
         outhm = HM("14:30")
         if man.teorico < HM("07:30"):
             outhm = HM("14:00")
