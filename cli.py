@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(
 group = parser.add_mutually_exclusive_group()
 group.add_argument('-h', '--horas', action='store_true',
                    help="Muestra el control horario para la semana en curso")
-#group.add_argument('-m', '--mes', action='store_true', help="Muestra el control horario para el mes en curso")
+group.add_argument('-m', '--mes', action='store_true', help="Muestra el control horario para el mes en curso")
 group.add_argument('-v', '--vacaciones', action='store_true',
                    help="Muestra los días de vacaciones que te quedan")
 group.add_argument('-l', '--lapso', action='store_true',
@@ -45,8 +45,8 @@ def main(arg, *args, **kargv):
 
     if arg.horas:
         prt.horas_semana(*args, **kargv)
-    #if arg.mes:
-    #    api.horas_mes(*args, **kargv)
+    if arg.mes:
+        api.horas_mes(*args, **kargv)
     if arg.nominas:
         prt.nominas(*args, sueldo='neto', **kargv)
     if arg.bruto:

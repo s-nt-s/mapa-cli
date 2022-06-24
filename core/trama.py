@@ -94,6 +94,7 @@ class Trama:
         sv_dias = [d for d in dias if d.fecha < dt_top]
         if len(sv_dias):
             FileManager.get().dump(fln_dias, sv_dias, default=json_serial)
+        # dias = [d for d in dias if d.fecha >= ini]
         return dias
 
     def get_calendario(self, ini, fin):

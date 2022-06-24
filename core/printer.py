@@ -1,7 +1,7 @@
 import re
 from .trama import Trama
 from .funciona import Funciona
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from .gesper import Gesper
 from .mapa import Mapa
 from .filemanager import CNF
@@ -10,7 +10,6 @@ from .util import to_strint, DAYNAME, parse_dia, notnull, tmap
 from io import StringIO
 
 re_rtrim = re.compile(r"^\s*\n")
-dt_now = datetime.now()
 re_sp = re.compile(r"\s+")
 
 prnt_func = print
@@ -129,6 +128,26 @@ class Printer:
             print(" 07:00 -", HM("07:00") + man)
             print("", outhm - man, "-", outhm)
 
+
+    def mes(self):
+        t = Trama()
+        hoy = date.today()
+        mes = date.today()
+        mes = mes.replace(day=1)
+        dias = [d for d in t.get_dias(mes, hoy) if d.total.minutos>0]
+        if len(dias)==0:
+            print("No hay marcajes")
+            return
+        total = HM(0)
+        for dia in dias:
+            line = "%s %2d: %s - %s = %s" % (parse_dia(dia.fecha), dia.fecha.day, dia.marcajes[0], dia.marcajes[-1], dia.total)
+            if len(dia.marcajes)>3:
+                line += " (" + ", ".join(map(str, dia.marcajes[1:-1])) + ")" 
+            print(line)
+            total += dia.total
+        print("")
+        print("Media: %s * %s = %s" % (total.div(len(dias)), len(dias), total))
+
     def nominas(self, sueldo='neto'):
         f = Funciona()
         nominas = f.get_nominas()
@@ -210,6 +229,7 @@ class Printer:
 
     def festivos(self):
         g = Gesper()
+        dt_now = datetime.now()
         cYear = dt_now.year
         for f in g.get_festivos():
             if cYear != f.year:
@@ -246,6 +266,7 @@ class Printer:
             print(" quedan".rjust(s_ln + 8, '.'), "= %2d" % qdn)
 
     def menu(self):
+        dt_now = datetime.now()
         menus = [m for m in Mapa().get_menu() if m.fecha >= dt_now.date()]
         if len(menus) == 0:
             print("Menú no publicado")
@@ -298,6 +319,7 @@ class Printer:
         print(pst.sueldo.fuente)
 
     def novedades(self):
+        dt_now = datetime.now()
         desde = dt_now - timedelta(days=30)
         items = [n for n in Mapa().get_novedades() if n.fecha >= desde]
 
@@ -399,4 +421,4 @@ class Printer:
 
 if __name__ == "__main__":
     p = Printer()
-    p.horas_semana()
+    p.mes()
