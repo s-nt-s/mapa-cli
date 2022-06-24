@@ -9,7 +9,7 @@ from urllib.parse import urljoin, urlparse
 import bs4
 import requests
 import urllib3
-from bunch import Bunch
+from munh import Bunch
 from glob import glob
 import textwrap
 from requests.auth import HTTPBasicAuth

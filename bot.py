@@ -7,19 +7,20 @@ import sys
 
 import slixmpp
 import time
+from textwrap import dedent
 
 from cli import str_main
-from core.common import get_config, read_file, write_file
+from core.filemanager import CNF, FileManager
 from core.timeout import timeout
 from datetime import date, timedelta
 
 parser = argparse.ArgumentParser(
     description='Arranca un bot xmpp para interactuar con mapa-cli')
-parser.add_argument('--amistoso', action='store_true', help='''
-Autoaceptar peticiones de amistad.
-Usa este parámetro solo la primera vez, para que el bot accepte tu petición de amistad.
-Cuando el bot ya sea tu amigo, omite este parámetro para evitar que responda a otra gente.
-'''.strip())
+parser.add_argument('--amistoso', action='store_true', help=dedent('''
+    Autoaceptar peticiones de amistad.
+    Usa este parámetro solo la primera vez, para que el bot accepte tu petición de amistad.
+    Cuando el bot ya sea tu amigo, omite este parámetro para evitar que responda a otra gente.
+    '''.strip()))
 parser.add_argument(
     '--send', help="Manda por chat el resultado del comando pasado como argumento")
 
@@ -28,10 +29,8 @@ class ConnectionLost(Exception):
 
 class BaseBot(slixmpp.ClientXMPP):
     def __init__(self):
-        self.config = get_config()
-        super().__init__(self.config.xmpp.user, self.config.xmpp.pssw)
-        logging.basicConfig(level=self.config.get(
-            'LOG', logging.INFO), format='%(levelname)-8s %(message)s')
+        super().__init__(CNF.xmpp.user, CNF.xmpp.pssw)
+        logging.basicConfig(level=CNF.get('LOG', logging.INFO), format='%(levelname)-8s %(message)s')
         self.log = logging.getLogger()
 
     def run(self, loop=True):
@@ -67,7 +66,7 @@ class ApiBot(BaseBot):
         self.get_roster()
 
     def message(self, msg):
-        if msg['type'] in ('chat', 'normal') and msg['from'].bare == self.config.xmpp.me:
+        if msg['type'] in ('chat', 'normal') and msg['from'].bare == CNF.xmpp.me:
             text = msg['body'].strip().lower()
             rlp = self.command(text)
             if rlp:
@@ -80,7 +79,7 @@ class ApiBot(BaseBot):
             return None
         if text == "ping":
             return "pong"
-        return str_main(*text.split(), bot=self)
+        return str_main(*text.split())
 
 
 class SendBot(BaseBot):
@@ -92,7 +91,7 @@ class SendBot(BaseBot):
     def start(self, event):
         self.send_presence()
         self.get_roster()
-        self.send_message(mto=self.config.xmpp.me,
+        self.send_message(mto=CNF.xmpp.me,
                           mbody="```\n"+self.msg+"\n```",
                           mtype='chat')
         self.disconnect()
@@ -109,7 +108,7 @@ if __name__ == '__main__':
     if arg.send:
         msg = None
         f = "msg/%s.txt" % arg.send
-        old = read_file(f)
+        old = FileManager.get().load(f)
         if arg.send == "novedades":
             msg = str_main(arg.send, desde=5)
         elif arg.send == "nominas" and old:
@@ -125,7 +124,7 @@ if __name__ == '__main__':
             if old is None or old != msg:
                 bot = SendBot(msg)
                 bot.run()
-            write_file(f, msg)
+            FileManager.get().dump(f, msg)
         sys.exit()
     xmpp = ApiBot(amistoso=arg.amistoso)
     xmpp.run()

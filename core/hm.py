@@ -1,46 +1,63 @@
-from bunch import Bunch
+from munch import Munch
+from math import modf
+from datetime import date
+from .cache import Cache
+import re
 
 
 class HM:
 
     def __init__(self, hm):
         if isinstance(hm, str):
-            h, m = hm.split(":")
-            self.h = int(h.replace(".", ""))
-            self.m = int(m.replace(".", ""))
+            signo = True
+            if hm[0] in ('-', '+'):
+                signo = hm[0] == '+'
+                hm = hm[1:]
+            h, m, s = "0 0 0".split()
+            shm = hm.split(":")
+            if len(shm) == 2:
+                h, m = shm
+            elif len(shm) == 3:
+                h, m, s = shm
+            else:
+                raise ValueError(hm)
+            h = int(h.replace(".", ""))
+            m = int(m.replace(".", ""))
+            s = int(s.replace(".", ""))
+            m = (h * 60) + m
+            if s > 0:
+                m = m + (s / 60)
+            if signo is False:
+                m = -m
+            self.minutos = m
+        elif isinstance(hm, (int, float)):
+            self.minutos = hm
         else:
-            self.h = int(hm / 60)
-            self.m = hm - (self.h*60)
+            raise TypeError(hm)
 
     @classmethod
     def intervalo(cls, *args):
         args = sorted(args)
         intervalo = args[-1] - args[0]
-        for i in range(1, len(args)-1, 2):
-            intervalo = intervalo - (args[i+1] - args[i])
+        for i in range(1, len(args) - 1, 2):
+            intervalo = intervalo - (args[i + 1] - args[i])
         return intervalo
 
-    @classmethod
-    def jornadas(cls):
-        return (
-            HM("07:30"),
-            HM("06:30")
-        )
-
-    @property
-    def minutos(self):
-        return (self.h * 60) + self.m
-
     def __str__(self):
-        return "%02d:%02d" % (self.h, self.m)
+        sg, hm = modf(abs(self.minutos))
+        h = int(hm / 60)
+        m = hm - (h * 60)
+        s = round(sg * (100 / 60))
+        hm = "%02d:%02d" % (h, m)
+        if self.minutos < 0:
+            return "-" + hm
+        return hm
 
     def __sub__(self, ot):
-        minutos = abs(self.minutos - ot.minutos)
-        return HM(minutos)
+        return HM(self.minutos - ot.minutos)
 
     def __add__(self, ot):
-        minutos = self.minutos + ot.minutos
-        return HM(minutos)
+        return HM(self.minutos + ot.minutos)
 
     def __div__(self, ot):
         m1 = min(self.minutos, ot.minutos)
@@ -74,47 +91,8 @@ class HM:
         minutos = int(self.minutos / ot)
         return HM(minutos)
 
-    @property
-    def jornada(self):
-        minutos = self.minutos
-        for j in HM.jornadas():
-            j_m = j.minutos
-            if minutos % j_m == 0:
-                return int(minutos / j_m), j
-        raise Exception("%s no corresponde a ninguna jornada" % self)
 
-    @property
-    def safe_jornada(self):
-        try:
-            _, jornada = self.jornada
-            return jornada
-        except:
-            return None
-
-    @property
-    def spanish(self):
-        m = self.minutos
-        if m % 60 == 0:
-            return "%sh" % int(m/60)
-        if m > 59:
-            return str(self)
-        return "%sm" % m
-
-    def enJornadas(self, jornada, maximo=5):
-        if jornada is None:
-            return self
-        md = jornada.div(2)
-        if self < (jornada+md):
-            return self
-        dias = round(self.minutos / jornada.minutos)
-        dias = min(maximo, dias)
-        if dias < 2:
-            return self
-        per_day = self.div(dias)
-        return str(per_day)+" * "+str(dias)+" = "+str(self)
-
-
-class IH(Bunch):
+class IH(Munch):
     def __init__(self, *args, **karg):
         super().__init__(*args, **karg)
 
@@ -125,3 +103,18 @@ class IH(Bunch):
     @property
     def sin_vacaciones(self):
         return self.teoricas - self.festivos - self.fiestas_patronales
+
+
+class IHCache(Cache):
+    def read(self, *args, **kvargs):
+        d = super().read(*args, **kvargs)
+        if d is None:
+            return None
+        for k, v in list(d.items()):
+            if isinstance(v, str):
+                if re.match(r"[\-+]?\d+:\d+(:\d+)?", v):
+                    d[k] = HM(v)
+                elif re.match(r"\d+-\d+-\d+", v):
+                    d[k] = date(*map(int, v.split("-")))
+        d = IH(d)
+        return d

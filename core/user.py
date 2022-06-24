@@ -1,5 +1,6 @@
-from bunch import Bunch
+from munch import Munch
 import re
+from .util import notnull
 
 re_sp = re.compile(r"\s+")
 ORDINAL = ['primer', 'segund', 'tercer', 'cuart', 'quint', 'sext', 'septim', 'octav', 'noven', 'decim']
@@ -37,7 +38,7 @@ def join_str(*args, sep=" "):
     w=[i for i in args if i]
     return sep.join(w) if w else None
 
-class User(Bunch):
+class User(Munch):
     def __init__(self, *args, **karg):
         c = karg.get("centro")
         u = karg.get("unidad")
@@ -52,12 +53,14 @@ class User(Bunch):
                 return False
         return True
 
-    def print(self, _print):
-        _print(self.nombre, self.apellido1, self.apellido2, avoidEmpty=True)
-        _print(self.puesto, avoidEmpty=True)
-        _print(self.centro, self.unidad, sep=" > ", avoidEmpty=True)
-        _print(self.despacho, self.planta, self.ubicacion, sep=" - ", avoidEmpty=True)
-        _print(self.telefono, self.telefonoext, self.correo, sep=" - ", avoidEmpty=True)
+    def __str__(self):
+        lines = [notnull(self.nombre, self.apellido1, self.apellido2, sep=" ")]
+        if self.puesto:
+            lines.append(self.puesto)
+        lines.append(notnull(self.centro, self.unidad, sep=" > "))
+        lines.append(notnull(self.despacho, self.planta, self.ubicacion, sep=" - "))
+        lines.append(notnull(self.telefono, self.telefonoext, self.correo, sep=" - "))
+        return "\n".join(l for l in lines if l)
 
     @property
     def centro_unidad(self):

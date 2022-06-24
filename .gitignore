@@ -5,6 +5,9 @@ debug/*
 msg/*.txt
 nohup.out
 .idea
+env.sh
+data/*/*
+!data/retribuciones/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
