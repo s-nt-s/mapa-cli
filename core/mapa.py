@@ -89,10 +89,11 @@ class Mapa(Web):
             titu = tt.get_text().strip()
             titu = re.sub(r"\s*[\–\-]\s*", " - ", titu)
             titu = re.sub(r"^(MAPA - MITERD|MITERD - MAPA)", "MAPA-MITERD", titu)
+            titu = re.sub(r"^(MAPA - MITECO|MITECO - MAPA)", "MAPA-MITECO", titu)
             cod = titu.split(" - ", 1)
             if len(cod) > 1 and cod[0] in ("MITECO", "MITERD"):
                 continue
-            elif cod[0] in ("MAPA", "MAPA-MITERD"):
+            elif cod[0] in ("MAPA", "MAPA-MITERD", 'MAPA-MITECO'):
                 titu = cod[1]
             if titu == titu.upper():
                 titu = titu.capitalize()
@@ -136,45 +137,46 @@ class Mapa(Web):
             if item.node is None and item.url and item.tipo == "N":
                 self.get(item.url)
                 item.node = self.soup.select_one("div.novedad-descripcion")
-            if item.node:
-                flag = False
-                for n in item.node.select("span.novedad-lista-documentos"):
-                    flag = True
-                    n.extract()
-                urls = set()
-                for a in item.node.select("a"):
-                    txt = a.get_text().strip().lower()
-                    s_txt = txt.split()
-                    urls.add(a.attrs["href"])
-                    if "ver" in s_txt or "enlace" in txt or re.match(r"^(para )?más información.*", txt):
-                        a.string = a.attrs["href"]
-                        a.name = "span"
-                if len(urls) == 1:
-                    if flag:
-                        for n in item.node.select(".lista-documentos"):
-                            n.extract()
-                    for a in item.node.findAll(["span", "a"]):
-                        txt = a.get_text().strip()
-                        for r, ntxt in fix_url:
-                            txt = r.sub(ntxt, txt)
-                        if txt in urls:
-                            a.extract()
-                    item.url = urls.pop()
-                while True:
-                    last = item.node.select(":scope > *")
-                    if len(last) == 0:
-                        last = None
-                        break
-                    last = last[-1]
-                    if get_text(last) is None and len(last.select(":scope > *")) == 0:
-                        last.extract()
-                        continue
+            if item.node is None:
+                continue
+            flag = False
+            for n in item.node.select("span.novedad-lista-documentos"):
+                flag = True
+                n.extract()
+            urls = set()
+            for a in item.node.select("a"):
+                txt = a.get_text().strip().lower()
+                s_txt = txt.split()
+                urls.add(a.attrs["href"])
+                if "ver" in s_txt or "enlace" in txt or re.match(r"^(para )?más información.*", txt):
+                    a.string = a.attrs["href"]
+                    a.name = "span"
+            if len(urls) == 1:
+                if flag:
+                    for n in item.node.select(".lista-documentos"):
+                        n.extract()
+                for a in item.node.findAll(["span", "a"]):
+                    txt = a.get_text().strip()
+                    for r, ntxt in fix_url:
+                        txt = r.sub(ntxt, txt)
+                    if txt in urls:
+                        a.extract()
+                item.url = urls.pop()
+            while True:
+                last = item.node.select(":scope > *")
+                if len(last) == 0:
+                    last = None
                     break
-                if last is not None:
-                    txt = get_text(last)
-                    if txt is None or re.match(r"^(para |Puedes consultar )?más información.*", txt,
-                                               flags=re.IGNORECASE):
-                        last.extract()
+                last = last[-1]
+                if get_text(last) is None and len(last.select(":scope > *")) == 0:
+                    last.extract()
+                    continue
+                break
+            if last is not None:
+                txt = get_text(last)
+                if txt is None or re.match(r"^(para |Puedes consultar )?más información.*", txt,
+                                           flags=re.IGNORECASE):
+                    last.extract()
             if item.url:
                 a = item.node.find("a", attrs={"href": item.url})
                 if a and len(a.get_text().strip()) < 3:
@@ -184,6 +186,8 @@ class Mapa(Web):
             item.descripcion = re.sub(r" *\[", " [", item.descripcion)
             item.descripcion = re.sub(r" \* ", r"\n* ", item.descripcion)
             item.descripcion = re.sub(r"\n\s*\n+", r"\n", item.descripcion)
+            item.descripcion = re.sub(r"^[ \t]*\.[ \t]*$", r"", item.descripcion, flags=re.MULTILINE)
+            item.descripcion = item.descripcion.strip()
             # item.descripcion = re.sub(r"^ *", r"> ", item.descripcion, flags=re.MULTILINE)
 
         for item in items:
