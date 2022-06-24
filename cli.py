@@ -8,24 +8,24 @@ from io import StringIO
 from core.printer import Printer
 
 parser = argparse.ArgumentParser(
-    description='Comando para los servicios de intranet.mapa.es', add_help=False)
+    description='Comando para los servicios de intranet.mapa.es')
 group = parser.add_mutually_exclusive_group()
-group.add_argument('-h', '--horas', action='store_true',
+group.add_argument('--horas', action='store_true',
                    help="Muestra el control horario para la semana en curso")
-group.add_argument('-m', '--mes', action='store_true', help="Muestra el control horario para el mes en curso")
-group.add_argument('-v', '--vacaciones', action='store_true',
+group.add_argument('--mes', action='store_true', help="Muestra el control horario para el mes en curso")
+group.add_argument('--vacaciones', action='store_true',
                    help="Muestra los días de vacaciones que te quedan")
-group.add_argument('-l', '--lapso', action='store_true',
+group.add_argument('--lapso', action='store_true',
                    help="Muestra permisos registrados en lapso")
-group.add_argument('-f', '--festivos', action='store_true',
+group.add_argument('--festivos', action='store_true',
                    help="Muestra los festivos hasta enero del año que viene")
 group.add_argument('--menu', action='store_true',
                    help="Muestra el menú de la sede definida en config.yml")
-group.add_argument('-n', '--nominas', action='store_true',
+group.add_argument('--nominas', action='store_true',
                    help="Descarga las nóminas en el directorio definido en config.yml y muestra las cantidades netas")
-group.add_argument('-b', '--bruto', action='store_true',
+group.add_argument('--bruto', action='store_true',
                    help="Lo mismo que --nominas pero mostrando las cantidades en bruto")
-group.add_argument('-e', '--expediente', action='store_true',
+group.add_argument('--expediente', action='store_true',
                    help="Descarga el expediente personal en el directorio definido en config.yml")
 group.add_argument('--puesto', action='store_true',
                    help="Muestra información sobre el puesto ocupado")

@@ -121,7 +121,7 @@ class Printer:
         man = cal.dias[cal.index + 1]
         if man.teorico.minutos == 0:
             return
-        
+
         outhm = HM("14:30")
         if man.teorico < HM("07:30"):
             outhm = HM("14:00")
