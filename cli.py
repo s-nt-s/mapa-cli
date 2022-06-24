@@ -43,7 +43,7 @@ arg_options = re.findall(r"--([a-z]+)", parser.format_help())
 def main(arg, *args, **kargv):
     prt = Printer()
     if arg.help:
-        parser.print_help()
+        print(parser.format_help())
     if arg.horas:
         prt.horas_semana(*args, **kargv)
     if arg.mes:
