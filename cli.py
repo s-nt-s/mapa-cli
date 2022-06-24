@@ -42,8 +42,6 @@ arg_options = re.findall(r"--([a-z]+)", parser.format_help())
 
 def main(arg, *args, **kargv):
     prt = Printer()
-    if arg.help:
-        print(parser.format_help())
     if arg.horas:
         prt.horas_semana(*args, **kargv)
     if arg.mes:
@@ -82,14 +80,19 @@ def str_main(text, *args, **kargv):
     if text in ("busca", "nomina"):
         if len(args) == 0:
             return
-    try:
-        arg = parser.parse_args(("--" + text,) + args)
-    except SystemExit:
-        return
+    isHelp = text == "help"
+    if not isHelp:
+        try:
+            arg = parser.parse_args(("--" + text,) + args)
+        except SystemExit:
+            return
     old_stdout = sys.stdout
     result = StringIO()
     sys.stdout = result
-    main(arg, *args, **kargv)
+    if isHelp:
+        print(parser.format_help())
+    else:
+        main(arg, *args, **kargv)
     sys.stdout = old_stdout
     result_string = result.getvalue()
     result_string = result_string.rstrip()
