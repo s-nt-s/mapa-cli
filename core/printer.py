@@ -108,7 +108,7 @@ class Printer:
 
         if idx_trabajando is not None:
             print("")
-            if quedan == 0 and wf_sld.minutos > 0:
+            if quedan < 2 and wf_sld.minutos > 0:
                 print("¡¡SAL AHORA!!")
                 return
             if wf_sld.minutos <= 0:
