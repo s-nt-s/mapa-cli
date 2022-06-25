@@ -8,25 +8,27 @@ from .filemanager import CNF
 from .hm import HM
 from .util import to_strint, DAYNAME, parse_dia, notnull, tmap
 from io import StringIO
+from munch import Munch
 
 re_rtrim = re.compile(r"^\s*\n")
 re_sp = re.compile(r"\s+")
 
-prnt_func = print
-prnt_line = ""
+PRNT = Munch(
+    func=print,
+    line=""
+)
 
 
 def print(*args, **kvargs):
     # Previene imprimir dos lineas vacias seguidas
-    global prnt_line
     io_line = StringIO()
-    prnt_func(*args, file=io_line, flush=True, **kvargs)
+    PRNT.func(*args, file=io_line, flush=True, **kvargs)
     line = io_line.getvalue()
     line = line.strip()
-    if tmap(len, (line, prnt_line)) == (0, 0):
+    if tmap(len, (line, PRNT.line)) == (0, 0):
         return
-    prnt_line = line
-    prnt_func(*args, **kvargs)
+    PRNT.line = line
+    PRNT.func(*args, **kvargs)
 
 
 def print_dict(kv, prefix=""):
@@ -46,7 +48,7 @@ def print_dict(kv, prefix=""):
 
 class Printer:
     def __init__(self):
-        pass
+        PRNT.line = ""
 
     def horas_semana(self):
         t = Trama()
@@ -57,7 +59,7 @@ class Printer:
         if cal.sal_ahora is not None and cal.index is not None:
             idx_trabajando = cal.index
 
-        if cal.jornadas>0:
+        if cal.jornadas > 0:
             print("Semana:", cal.teorico.div(cal.jornadas), "*", cal.jornadas, "=", cal.teorico)
         else:
             print("Semana:", cal.teorico)
@@ -125,7 +127,8 @@ class Printer:
         outhm = HM("14:30")
         if man.teorico < HM("07:30"):
             outhm = HM("14:00")
-        if (wf_sld.minutos > 0 and cal.sal_ahora is None) or (cal.sal_ahora is not None and cal.sal_ahora.ahora.minutos > outhm.minutos):
+        if (wf_sld.minutos > 0 and cal.sal_ahora is None) or (
+                cal.sal_ahora is not None and cal.sal_ahora.ahora.minutos > outhm.minutos):
             print("")
             man = man.teorico - wf_sld
             if cal.sal_ahora:
@@ -135,21 +138,21 @@ class Printer:
             print(" 07:00 -", HM("07:00") + man)
             print("", outhm - man, "-", outhm)
 
-
     def horas_mes(self):
         t = Trama()
         hoy = date.today()
         mes = date.today()
         mes = mes.replace(day=1)
-        dias = [d for d in t.get_dias(mes, hoy) if d.total.minutos>0]
-        if len(dias)==0:
+        dias = [d for d in t.get_dias(mes, hoy) if d.total.minutos > 0]
+        if len(dias) == 0:
             print("No hay marcajes")
             return
         total = HM(0)
         for dia in dias:
-            line = "%s %2d: %s - %s = %s" % (parse_dia(dia.fecha), dia.fecha.day, dia.marcajes[0], dia.marcajes[-1], dia.total)
-            if len(dia.marcajes)>3:
-                line += " (" + ", ".join(map(str, dia.marcajes[1:-1])) + ")" 
+            line = "%s %2d: %s - %s = %s" % (
+            parse_dia(dia.fecha), dia.fecha.day, dia.marcajes[0], dia.marcajes[-1], dia.total)
+            if len(dia.marcajes) > 3:
+                line += " (" + ", ".join(map(str, dia.marcajes[1:-1])) + ")"
             print(line)
             total += dia.total
         print("")

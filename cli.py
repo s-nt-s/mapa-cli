@@ -77,22 +77,18 @@ def main(arg, *args, **kargv):
 def str_main(text, *args, **kargv):
     if text not in arg_options:
         return
-    if text in ("busca", "nomina"):
-        if len(args) == 0:
-            return
-    isHelp = text == "help"
-    if not isHelp:
-        try:
-            arg = parser.parse_args(("--" + text,) + args)
-        except SystemExit:
-            return
+    if text in ("busca", "nomina") and len(args) == 0:
+        return
+    if text == "help":
+        return parser.format_help()
+    try:
+        arg = parser.parse_args(("--" + text,) + args)
+    except SystemExit:
+        return
     old_stdout = sys.stdout
     result = StringIO()
     sys.stdout = result
-    if isHelp:
-        print(parser.format_help())
-    else:
-        main(arg, *args, **kargv)
+    main(arg, *args, **kargv)
     sys.stdout = old_stdout
     result_string = result.getvalue()
     result_string = result_string.rstrip()

@@ -5,6 +5,7 @@ from .util import notnull
 re_sp = re.compile(r"\s+")
 ORDINAL = ['primer', 'segund', 'tercer', 'cuart', 'quint', 'sext', 'septim', 'octav', 'noven', 'decim']
 
+
 def parse_user(k, v):
     if v is None:
         return None
@@ -18,10 +19,10 @@ def parse_user(k, v):
     if k == "correo":
         return v.lower()
     w = v.lower().split()
-    if len(w)==2 and w[1] == "planta":
-        w=w[0][:-1].replace("é", "e")
+    if len(w) == 2 and w[1] == "planta":
+        w = w[0][:-1].replace("é", "e")
         if w in ORDINAL:
-            return str(ORDINAL.index(w)+1)+"ª planta"
+            return str(ORDINAL.index(w) + 1) + "ª planta"
     if "(FEGA)" in v:
         return "FEGA"
     if "(ENESA)" in v:
@@ -34,16 +35,18 @@ def parse_user(k, v):
     v = v.replace("madrid", "Madrid")
     return v
 
+
 def join_str(*args, sep=" "):
-    w=[i for i in args if i]
+    w = [i for i in args if i]
     return sep.join(w) if w else None
+
 
 class User(Munch):
     def __init__(self, *args, **karg):
         c = karg.get("centro")
         u = karg.get("unidad")
         if c and u and u in c:
-            karg["unidad"]=None
+            karg["unidad"] = None
         karg = {k: parse_user(k, v) for k, v in karg.items()}
         super().__init__(*args, **karg)
 
@@ -94,9 +97,9 @@ class User(Munch):
             apellidos=self.apellidos,
             centro_unidad=join_str(self.centro, self.unidad, sep=" > "),
             dire=join_str(join_str(u.despacho, u.planta), u.ubicacion, sep=",")
-            **dict(self)
+                 ** dict(self)
         )
-        lines=[]
+        lines = []
         for l in vcard.strip().split("\n"):
             l = l.strip()
             l = l.replace("None;", ";")
