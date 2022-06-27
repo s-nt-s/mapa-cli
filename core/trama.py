@@ -7,6 +7,7 @@ from .hm import HM
 from .cache import Cache
 from .gesper import Gesper
 from .filemanager import FileManager
+from .gesper import FCH_FIN as gesper_FCH_FIN
 from os.path import isfile
 import re
 import time
@@ -14,6 +15,7 @@ import time
 re_sp = re.compile(r"\s+")
 JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"
 RT_URL = "https://trama.administracionelectronica.gob.es/portal/"
+FCH_INI = date(2022, 5, 29)
 
 
 class Trama:
@@ -158,7 +160,7 @@ class Trama:
         fin = ini + timedelta(days=6)
         return self.get_calendario(ini, fin)
 
-    def get_informe(self, ini=date(2022, 5, 29), fin=None):
+    def get_informe(self, ini=FCH_INI, fin=None):
         hoy = date.today()
         if ini is None:
             raise ValueError("ini is mandatory")
@@ -173,12 +175,24 @@ class Trama:
         r = Munch(
             total=HM(0),
             teorico=HM(0),
-            saldo=HM(0)
+            saldo=HM(0),
+            laborables=0,
         )
+        if ini <= gesper_FCH_FIN:
+            inf = Gesper().get_informe(ini, gesper_FCH_FIN)
+            r.total += inf.total
+            r.teorico += inf.teoricas
+            r.saldo += inf.saldo
+            r.laborables += inf.laborables
+            ini = gesper_FCH_FIN + timedelta(days=1)
+            if ini >= fin:
+                return r
         for i in self.get_dias(ini, fin):
-            r.total = r.total + i.total
-            r.teorico = r.teorico + i.teorico
-            r.saldo = r.saldo + i.saldo
+            r.total += i.total
+            r.teorico += i.teorico
+            r.saldo += i.saldo
+            r.laborables += int(i.teorico.minutos > 0)
+        #r.per_day = r.teorico.div(r.laborables)
         return r
 
     def get_vacaciones(self, year=None):
@@ -270,7 +284,7 @@ class Trama:
         head = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
             tds = tmap(get_text, tr.findAll("td"))
-            tds = {k:v for k,v in zip(head, tds)}
+            tds = {k: v for k, v in zip(head, tds)}
             r.append(Munch(
                 id=int(tds['Proceso']),
                 tipo=tds['Tipo Solicitud'],
@@ -306,7 +320,8 @@ class Trama:
 
 if __name__ == "__main__":
     a = Trama()
-    r = a.get_incidencias(date.today() - timedelta(days=30), date.today())
+    #r = a.get_informe(gesper_FCH_FIN+timedelta(days=1), date.today())
+    r = a.get_informe(date(2019, 2, 7), date.today())
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))

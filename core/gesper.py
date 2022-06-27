@@ -18,6 +18,7 @@ fix_url = (
     (re.compile(r"^(https?://[^/]+):443/"), r"\1/"),
     (re.compile(r"/default\.aspx"), ""),
 )
+FCH_FIN = date(2022, 5, 29)
 
 
 def _find_mes(*tds):
@@ -63,6 +64,7 @@ def tr_clave_valor(soup, id, *args, **keys):
 
 
 class Gesper(Web):
+
     def __init__(self, *args, **kargv):
         super().__init__(*args, **kargv)
         for url in ("https://intranet.mapa.es/", "https://intranet.mapa.es/app/gesper/",
@@ -414,7 +416,7 @@ class Gesper(Web):
                 r[k] = r[k] + i[k]
         return r
 
-    def get_informe(self, ini=None, fin=date(2022, 5, 29)):#fin=date(2022, 6, 5)):
+    def get_informe(self, ini=None, fin=FCH_FIN):#fin=date(2022, 6, 5)):
         hoy = date.today()
         if ini is None:
             ini = self.fecha_inicio
@@ -428,5 +430,5 @@ class Gesper(Web):
 
 if __name__ == "__main__":
     f = Gesper()
-    r = f.get_vacaciones()
+    r = f.get_informe()
     print(json.dumps(r, indent=2, default=json_serial))
