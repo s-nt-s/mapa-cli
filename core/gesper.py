@@ -341,7 +341,7 @@ class Gesper(Web):
     def fecha_inicio(self):
         return self.get_puesto()['inicio']
 
-    @GesperIHCache(file="data/gesper/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial)
+    @GesperIHCache(file="data/gesper/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=None)
     def _get_informe(self, ini, fin):
         _fin = date(fin.year, fin.month, fin.day)
         rst = []

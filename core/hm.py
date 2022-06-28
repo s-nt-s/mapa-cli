@@ -118,3 +118,17 @@ class GesperIHCache(Cache):
                     d[k] = date(*map(int, v.split("-")))
         d = GesperIH(d)
         return d
+
+
+class HMCache(Cache):
+    def read(self, *args, **kvargs):
+        d = super().read(*args, **kvargs)
+        if d is None:
+            return None
+        for k, v in list(d.items()):
+            if isinstance(v, str):
+                if re.match(r"[\-+]?\d+:\d+(:\d+)?", v):
+                    d[k] = HM(v)
+                elif re.match(r"\d+-\d+-\d+", v):
+                    d[k] = date(*map(int, v.split("-")))
+        return Munch.fromDict(d)

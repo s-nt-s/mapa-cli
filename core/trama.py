@@ -3,7 +3,7 @@ from munch import Munch
 
 from .autdriver import AutDriver
 from .util import json_serial, tmap, get_text, get_times
-from .hm import HM
+from .hm import HM, HMCache
 from .cache import Cache
 from .gesper import Gesper
 from .filemanager import FileManager
@@ -160,22 +160,8 @@ class Trama:
         fin = ini + timedelta(days=6)
         return self.get_calendario(ini, fin)
 
-    def get_informe(self, ini=None, fin=None):
-        # Por defecto da el informe desde el inicio
-        # hasta el último día del último mes completo
-        hoy = date.today()
-        if ini is None:
-            ini = Gesper().fecha_inicio
-        if fin is None or fin >= hoy:
-            fin = date.today()
-            if (fin + timedelta(days=1)).day != 1:
-                fin = fin.replace(day=1) - timedelta(days=1)
-        if ini >= hoy:
-            return None
-        if fin >= hoy:
-            fin = hoy - timedelta(days=1)
-        if ini > fin:
-            return None
+    @HMCache(file="data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=(1/24))
+    def _get_informe(self, ini, fin):
         r = Munch(
             ini=ini,
             fin=fin,
@@ -202,6 +188,24 @@ class Trama:
             r.laborables += int(i.teorico.minutos > 0)
             #r.vacaciones += inf.vacaciones
         return r
+
+    def get_informe(self, ini=None, fin=None):
+        # Por defecto da el informe desde el inicio
+        # hasta el último día del último mes completo
+        hoy = date.today()
+        if ini is None:
+            ini = Gesper().fecha_inicio
+        if fin is None or fin >= hoy:
+            fin = date.today()
+            if (fin + timedelta(days=1)).day != 1:
+                fin = fin.replace(day=1) - timedelta(days=1)
+        if ini >= hoy:
+            return None
+        if fin >= hoy:
+            fin = hoy - timedelta(days=1)
+        if ini > fin:
+            return None
+        return self._get_informe(ini, fin)
 
     def get_vacaciones(self, year=None):
         GESPER_BREAK = 2022
