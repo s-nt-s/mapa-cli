@@ -9,6 +9,7 @@ from .hm import HM
 from .util import to_strint, DAYNAME, parse_dia, notnull, tmap
 from io import StringIO
 from munch import Munch
+from dateutil.relativedelta import relativedelta
 
 re_rtrim = re.compile(r"^\s*\n")
 re_sp = re.compile(r"\s+")
@@ -195,6 +196,13 @@ class Printer:
         if len(n_ym) < 4:
             return
 
+        lst_dt = nominas[-1]
+        lst_dt = date(lst_dt.year, lst_dt.mes, 1)
+        lst_dt = lst_dt + timedelta(days=32)
+        lst_dt = lst_dt.replace(day=1)
+        lst_dt = lst_dt - timedelta(days=1)
+
+        show_he = lst_dt <= date.today()
         print_medias = [
             (" año     ", 12),
             (" semestre", 6)
@@ -211,24 +219,19 @@ class Printer:
         for l, c in print_medias:
             if len(n_ym) <= c:
                 continue
-            sldhr = None
             cant = 0
             for y, m in n_ym[:c]:
                 for nom in nominas:
                     if nom.year == y and nom.mes == m:
                         cant = cant + nom[sueldo]
-            # ini = meses[c-1]
-            # fin = meses[0]
-            # ini = date(ini[0], ini[1], 1)
-            # fin = date(fin[0], fin[1], monthrange(*fin)[1])
-            # per_hour = self.informe_de_horas(ini, fin)
-            # if per_hour:
-            #    per_hour = cant / (per_hour.computables.minutos / 60)
-            # if c == 12 and sueldo == 'bruto':
-            #    sldhr = Munch(sueldo=cant, hora=per_hour)
-            # per_hour = to_strint(per_hour)
+            if show_he:
+                inf = Trama().get_informe(lst_dt - relativedelta(months=c), lst_dt)
+                per_hour = cant / ((inf.teorico-inf.vacaciones).minutos/60)
+                if c == 12 and sueldo == 'bruto':
+                    sldhr = Munch(sueldo=cant, hora=per_hour)
+                per_hour = "({}€/h)".format(to_strint(per_hour))
             cant = to_strint(cant / c)
-            print("{}: {:>5}€".format(l, cant))
+            print("{}: {:>5}€".format(l, cant), per_hour)
         if sldhr and sueldo == 'bruto':
             print("")
             print("Sueldo anual: " + to_strint(sldhr.sueldo))

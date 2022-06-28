@@ -160,12 +160,16 @@ class Trama:
         fin = ini + timedelta(days=6)
         return self.get_calendario(ini, fin)
 
-    def get_informe(self, ini=FCH_INI, fin=None):
+    def get_informe(self, ini=None, fin=None):
+        # Por defecto da el informe desde el inicio
+        # hasta el último día del último mes completo
         hoy = date.today()
         if ini is None:
-            raise ValueError("ini is mandatory")
+            ini = Gesper().fecha_inicio
         if fin is None or fin >= hoy:
-            fin = hoy - timedelta(days=1)
+            fin = date.today()
+            if (fin + timedelta(days=1)).day != 1:
+                fin = fin.replace(day=1) - timedelta(days=1)
         if ini >= hoy:
             return None
         if fin >= hoy:
@@ -173,17 +177,21 @@ class Trama:
         if ini > fin:
             return None
         r = Munch(
+            ini=ini,
+            fin=fin,
             total=HM(0),
             teorico=HM(0),
             saldo=HM(0),
             laborables=0,
+            vacaciones=HM(0)
         )
         if ini <= gesper_FCH_FIN:
             inf = Gesper().get_informe(ini, gesper_FCH_FIN)
             r.total += inf.total
-            r.teorico += inf.teoricas
+            r.teorico += (inf.teoricas - inf.festivos - inf.fiestas_patronales)
             r.saldo += inf.saldo
             r.laborables += inf.laborables
+            r.vacaciones += inf.vacaciones
             ini = gesper_FCH_FIN + timedelta(days=1)
             if ini >= fin:
                 return r
@@ -192,7 +200,7 @@ class Trama:
             r.teorico += i.teorico
             r.saldo += i.saldo
             r.laborables += int(i.teorico.minutos > 0)
-        #r.per_day = r.teorico.div(r.laborables)
+            #r.vacaciones += inf.vacaciones
         return r
 
     def get_vacaciones(self, year=None):
@@ -321,7 +329,7 @@ class Trama:
 if __name__ == "__main__":
     a = Trama()
     #r = a.get_informe(gesper_FCH_FIN+timedelta(days=1), date.today())
-    r = a.get_informe(date(2019, 2, 7), date.today())
+    r = a.get_informe()
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))

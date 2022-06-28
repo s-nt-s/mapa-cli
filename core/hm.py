@@ -92,7 +92,7 @@ class HM:
         return HM(minutos)
 
 
-class IH(Munch):
+class GesperIH(Munch):
     def __init__(self, *args, **karg):
         super().__init__(*args, **karg)
 
@@ -105,7 +105,7 @@ class IH(Munch):
         return self.teoricas - self.festivos - self.fiestas_patronales
 
 
-class IHCache(Cache):
+class GesperIHCache(Cache):
     def read(self, *args, **kvargs):
         d = super().read(*args, **kvargs)
         if d is None:
@@ -116,5 +116,5 @@ class IHCache(Cache):
                     d[k] = HM(v)
                 elif re.match(r"\d+-\d+-\d+", v):
                     d[k] = date(*map(int, v.split("-")))
-        d = IH(d)
+        d = GesperIH(d)
         return d

@@ -17,7 +17,7 @@ from requests.auth import HTTPBasicAuth
 from .common import (DAYNAME, _str, dict_style, get_config, html_to_md,
                      js_print, parse_dia, parse_mes, print_response, js_print, read_pdf, to_num)
 from .retribuciones import retribucion_to_json
-from .hm import HM, IH
+from .hm import HM, GesperIH
 from .user import User
 from .web import FF
 from .funciona import add_from_nomina_pdf, dwn_funciona_nominas
@@ -1636,7 +1636,7 @@ class Api:
         porcentaje = to_num(m.groups()[-1])
         trabajadas, incidencias, total, teoricas, saldo = (
             HM(i) for i in m.groups()[:-1])
-        return IH(
+        return GesperIH(
             laborables=laborables,
             jornadas=jornadas,
             trabajadas=trabajadas,
