@@ -224,6 +224,7 @@ class Printer:
                 for nom in nominas:
                     if nom.year == y and nom.mes == m:
                         cant = cant + nom[sueldo]
+            per_hour = ""
             if show_he:
                 inf = Trama().get_informe(lst_dt - relativedelta(months=c), lst_dt)
                 per_hour = cant / ((inf.teorico-inf.vacaciones).minutos/60)
