@@ -4,26 +4,33 @@ from os import stat
 import time
 from .filemanager import FileManager
 from munch import Munch
+import logging
 
+logger = logging.getLogger(__name__)
 
 class Cache:
     def __init__(self, file, *args, maxOld=30, json_default=None, **kvargs):
         self.file = file
         self.data = {}
         self.func = None
-        self.maxOld = maxOld
+        self._maxOld = maxOld
         self.slf = None
         self.json_default = json_default
-        if maxOld is not None:
-            self.maxOld = time.time() - (maxOld * 86400)
+
+    @property
+    def maxOld(self):
+        if self._maxOld is not None:
+            return time.time() - (self._maxOld * 86400)
 
     def get_file_name(self, *args, **kvargs):
         return self.file.format(*args, **kvargs)
 
     def read(self, file, *args, **kvargs):
+        logger.debug("LOAD "+file)
         return FileManager.get().load(file)
 
     def save(self, file, data, *args, **kvargs):
+        logger.debug("SAVE "+file)
         if self.json_default is not None:
             return FileManager.get().dump(file, data, default=self.json_default)
         return FileManager.get().dump(file, data)

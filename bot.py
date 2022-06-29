@@ -24,19 +24,20 @@ parser.add_argument('--amistoso', action='store_true', help=dedent('''
 parser.add_argument(
     '--send', help="Manda por chat el resultado del comando pasado como argumento")
 
+logging.basicConfig(level=CNF.xmpp.get('LOG', logging.INFO), format='%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+
 class ConnectionLost(Exception):
     pass
 
 class BaseBot(slixmpp.ClientXMPP):
     def __init__(self):
         super().__init__(CNF.xmpp.user, CNF.xmpp.pssw)
-        logging.basicConfig(level=CNF.get('LOG', logging.INFO), format='%(levelname)-8s %(message)s')
-        self.log = logging.getLogger()
 
     def run(self, loop=True):
         while True:
             self.connect()
-            self.log.info("Bot started.")
+            logger.info("Bot started.")
             self.process()
             if not loop:
                 return
@@ -70,9 +71,9 @@ class ApiBot(BaseBot):
             text = msg['body'].strip().lower()
             rlp = self.command(text)
             if rlp:
-                self.log.debug(text)
+                logger.debug(text)
                 msg.reply("```\n"+rlp+"\n```").send()
-                self.log.debug(rlp)
+                logger.debug(rlp)
 
     def command(self, text):
         if not text:

@@ -11,17 +11,20 @@ from .gesper import FCH_FIN as gesper_FCH_FIN
 from os.path import isfile
 import re
 import time
+import logging
 
 re_sp = re.compile(r"\s+")
 JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"
 RT_URL = "https://trama.administracionelectronica.gob.es/portal/"
 FCH_INI = date(2022, 5, 29)
 
+logger = logging.getLogger(__name__)
 
 class Trama:
 
     @Cache(file="data/autentica/trama.calendario.pickle", maxOld=(1 / 48))
     def _get_cal_session(self):
+        logging.debug("_get_cal_session()")
         with AutDriver(browser='firefox') as ff:
             ff.get(RT_URL)
             ff.click("//a[text()='Calendario']")
@@ -29,6 +32,7 @@ class Trama:
 
     @Cache(file="data/autentica/trama.incedencias.pickle", maxOld=(1 / 48))
     def _get_inc_session(self):
+        logging.debug("_get_inc_session()")
         with AutDriver(browser='firefox') as ff:
             ff.get(RT_URL)
             ff.click("//div[@id='appMenu']//a[text()='Incidencias']")
@@ -37,6 +41,7 @@ class Trama:
             return ff.to_web()
 
     def _get_dias(self, ini, fin):
+        logging.debug("_get_dias(%s, %s)", ini, fin)
         dias = []
         w = self._get_cal_session()
         for a, z in get_times(ini, fin, timedelta(days=59)):
@@ -70,6 +75,7 @@ class Trama:
         return dias
 
     def get_dias(self, ini, fin):
+        logging.debug("get_dias(%s, %s)", ini, fin)
         dias = []
         fln_dias = JS_DIAS.format(ini)
         if isfile(fln_dias):
@@ -103,6 +109,7 @@ class Trama:
         """
         Devuelve el control horario entre dos fechas
         """
+        logging.debug("get_calendario(%s, %s)", ini, fin)
         today = date.today()
         r = Munch(
             total=HM(0),
@@ -154,6 +161,7 @@ class Trama:
         return r
 
     def get_semana(self):
+        logging.debug("get_semana()")
         ini = date.today()
         if ini.weekday() > 0:
             ini = ini - timedelta(days=ini.weekday())
