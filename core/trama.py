@@ -24,7 +24,7 @@ class Trama:
 
     @Cache(file="data/autentica/trama.calendario.pickle", maxOld=(1 / 48))
     def _get_cal_session(self):
-        logging.debug("_get_cal_session()")
+        logger.debug("_get_cal_session()")
         with AutDriver(browser='firefox') as ff:
             ff.get(RT_URL)
             ff.click("//a[text()='Calendario']")
@@ -32,7 +32,7 @@ class Trama:
 
     @Cache(file="data/autentica/trama.incedencias.pickle", maxOld=(1 / 48))
     def _get_inc_session(self):
-        logging.debug("_get_inc_session()")
+        logger.debug("_get_inc_session()")
         with AutDriver(browser='firefox') as ff:
             ff.get(RT_URL)
             ff.click("//div[@id='appMenu']//a[text()='Incidencias']")
@@ -41,7 +41,7 @@ class Trama:
             return ff.to_web()
 
     def _get_dias(self, ini, fin):
-        logging.debug("_get_dias(%s, %s)", ini, fin)
+        logger.debug("_get_dias(%s, %s)", ini, fin)
         dias = []
         w = self._get_cal_session()
         for a, z in get_times(ini, fin, timedelta(days=59)):
@@ -75,7 +75,7 @@ class Trama:
         return dias
 
     def get_dias(self, ini, fin):
-        logging.debug("get_dias(%s, %s)", ini, fin)
+        logger.debug("get_dias(%s, %s)", ini, fin)
         dias = []
         fln_dias = JS_DIAS.format(ini)
         if isfile(fln_dias):
@@ -109,7 +109,7 @@ class Trama:
         """
         Devuelve el control horario entre dos fechas
         """
-        logging.debug("get_calendario(%s, %s)", ini, fin)
+        logger.debug("get_calendario(%s, %s)", ini, fin)
         today = date.today()
         r = Munch(
             total=HM(0),
@@ -161,7 +161,7 @@ class Trama:
         return r
 
     def get_semana(self):
-        logging.debug("get_semana()")
+        logger.debug("get_semana()")
         ini = date.today()
         if ini.weekday() > 0:
             ini = ini - timedelta(days=ini.weekday())
@@ -170,6 +170,7 @@ class Trama:
 
     @HMCache(file="data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=(1/24))
     def _get_informe(self, ini, fin):
+        logger.debug("Trama._get_informe(%s, %s)", ini, fin)
         r = Munch(
             ini=ini,
             fin=fin,

@@ -9,6 +9,7 @@ from .hm import HM, GesperIH, GesperIHCache
 import json
 from .retribuciones import Retribuciones
 from functools import lru_cache
+import logging
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
@@ -20,6 +21,7 @@ fix_url = (
 )
 FCH_FIN = date(2022, 5, 29)
 
+logger = logging.getLogger(__name__)
 
 def _find_mes(*tds):
     for td in tds:
@@ -343,6 +345,7 @@ class Gesper(Web):
 
     @GesperIHCache(file="data/gesper/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=None)
     def _get_informe(self, ini, fin):
+        logger.debug("Gesper._get_informe(%s, %s)", ini, fin)
         _fin = date(fin.year, fin.month, fin.day)
         rst = []
         while ini <= _fin:
@@ -353,7 +356,7 @@ class Gesper(Web):
             s_fin = fin.strftime("%Y-%m-%d")
             name = s_ini + "_" + s_fin + ".pdf"
             absn = join(CNF.informe_horas, name)
-            if not isfile(absn):
+            if not isfile(expanduser(absn)):
                 r = self.s.get(
                     "https://intranet.mapa.es/app/GESPER/ControlHorario/VerInforme.ashx?action=report&inicio=" + s_ini + "&fin=" + s_fin)
                 FileManager.get().dump(absn, r.content)
@@ -383,31 +386,30 @@ class Gesper(Web):
                 r"^\s*(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d,\.]+)\s*$",
                 page, re.MULTILINE)
 
-            if m is None:
-                continue
-            # Fix: Error en el informe 2021 y 2022
-            if ini <= date(2022, 5, 17) and fin >= date(2022, 5, 20):
-                fiestas_patronales = 4
-            if ini <= date(2021, 5, 10) and fin >= date(2021, 5, 14):
-                fiestas_patronales = 5
-            porcentaje = to_num(m.groups()[-1])
-            trabajadas, incidencias, total, teoricas, saldo = (HM(i) for i in m.groups()[:-1])
-            rst.append(GesperIH(
-                laborables=laborables,
-                jornadas=jornadas,
-                trabajadas=trabajadas,
-                incidencias=incidencias,
-                total=total,
-                teoricas=teoricas,
-                saldo=saldo,
-                porcentaje=porcentaje,
-                festivos=festivos,
-                vacaciones=vacaciones,
-                fiestas_patronales=HM("02:30").mul(fiestas_patronales),
-                pdf=absn,
-                ini=ini,
-                fin=fin
-            ))
+            if m is not None:
+                # Fix: Error en el informe 2021 y 2022
+                if ini <= date(2022, 5, 17) and fin >= date(2022, 5, 20):
+                    fiestas_patronales = 4
+                if ini <= date(2021, 5, 10) and fin >= date(2021, 5, 14):
+                    fiestas_patronales = 5
+                porcentaje = to_num(m.groups()[-1])
+                trabajadas, incidencias, total, teoricas, saldo = (HM(i) for i in m.groups()[:-1])
+                rst.append(GesperIH(
+                    laborables=laborables,
+                    jornadas=jornadas,
+                    trabajadas=trabajadas,
+                    incidencias=incidencias,
+                    total=total,
+                    teoricas=teoricas,
+                    saldo=saldo,
+                    porcentaje=porcentaje,
+                    festivos=festivos,
+                    vacaciones=vacaciones,
+                    fiestas_patronales=HM("02:30").mul(fiestas_patronales),
+                    pdf=absn,
+                    ini=ini,
+                    fin=fin
+                ))
             ini = ini.replace(year=ini.year + 1, month=1, day=1)
         if len(rst) == 0:
             return None
