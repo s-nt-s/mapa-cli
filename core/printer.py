@@ -151,7 +151,7 @@ class Printer:
         total = HM(0)
         for dia in dias:
             line = "%s %2d: %s - %s = %s" % (
-            parse_dia(dia.fecha), dia.fecha.day, dia.marcajes[0], dia.marcajes[-1], dia.total)
+                parse_dia(dia.fecha), dia.fecha.day, dia.marcajes[0], dia.marcajes[-1], dia.total)
             if len(dia.marcajes) > 3:
                 line += " (" + ", ".join(map(str, dia.marcajes[1:-1])) + ")"
             print(line)
@@ -227,7 +227,7 @@ class Printer:
             per_hour = ""
             if show_he:
                 inf = Trama().get_informe(lst_dt - relativedelta(months=c), lst_dt)
-                per_hour = cant / ((inf.teorico-inf.vacaciones).minutos/60)
+                per_hour = cant / ((inf.teorico - inf.vacaciones).minutos / 60)
                 if c == 12 and sueldo == 'bruto':
                     sldhr = Munch(sueldo=cant, hora=per_hour)
                 per_hour = "({}€/h)".format(to_strint(per_hour))
@@ -264,7 +264,7 @@ class Printer:
             print(line)
 
     def vacaciones(self):
-        vs = Gesper().get_vacaciones()
+        vs = Trama().get_vacaciones()
         years = sorted(set(v.year for v in vs))
         for y in years:
             if len(years) > 1:
@@ -303,6 +303,28 @@ class Printer:
             if i["_dias"] > 1:
                 print("(+%s)" % i["_dias"], end=" ")
             txt = re_sp.sub(" ", i["txt"]).strip()
+            print(txt)
+        for i in Trama().get_lapso():
+            if year is None or year != i.fecha.year:
+                year = i.fecha.year
+                print("===", year, "===")
+            print("%s: %s" % (parse_dia(i.fecha), i.fecha.strftime('%d/%m')), end=" ")
+            if i.get('dias') not in (None, 1):
+                print("(+%s)" % i.dias, end=" ")
+            txt = [
+                i.get('tipo'),
+                i.get('observaciones'),
+                i.get('mensaje'),
+                i.get('permiso')
+            ]
+            if txt[0] == 'Eliminar fichaje':
+                txt[0] = str(i.inicio)+" "+txt[0]
+            if txt[0] == 'Olvido de fichaje (sólo hora que no fichó)':
+                txt[0] = str(i.inicio) + " Olvido de fichaje"
+            txt = " - ".join(t for t in txt if t is not None and t.strip() not in ("", "Solicitud"))
+            txt = re_sp.sub(" ", txt).strip()
+            if i.get("estado") not in (None, "", "Admitida Cerrada"):
+                txt = (txt + " ({})".format(i.estado)).strip()
             print(txt)
 
     def puesto(self):

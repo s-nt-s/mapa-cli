@@ -3,13 +3,14 @@ from .filemanager import CNF, FileManager
 import re
 from munch import Munch
 from .web import Web
-from .util import json_serial, parse_mes, parse_dia, get_text, tmap, to_num, get_times
+from .util import json_serial, parse_mes, parse_dia, get_text, tmap, to_num, json_hook
 from os.path import isdir, join, isfile, expanduser
 from .hm import HM, GesperIH, GesperIHCache
 import json
 from .retribuciones import Retribuciones
 from functools import lru_cache
 import logging
+from .cache import Cache
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
@@ -205,6 +206,7 @@ class Gesper(Web):
             ))
         return vac
 
+    @Cache("data/gesper/lapso.json", maxOld=None, json_default=json_serial, json_hook=json_hook)
     def get_lapso(self):
         self.get("https://intranet.mapa.es/app/GESPER/Permisos/Lapso.aspx")
         var_permisos = 'var _permisos = '

@@ -9,13 +9,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Cache:
-    def __init__(self, file, *args, maxOld=30, json_default=None, **kvargs):
+    def __init__(self, file, *args, maxOld=30, json_default=None, json_hook=None, **kvargs):
         self.file = file
         self.data = {}
         self.func = None
         self._maxOld = maxOld
         self.slf = None
         self.json_default = json_default
+        self.json_hook = json_hook
 
     @property
     def maxOld(self):
@@ -27,6 +28,8 @@ class Cache:
 
     def read(self, file, *args, **kvargs):
         logger.debug("LOAD "+file)
+        if self.json_hook is not None:
+            return FileManager.get().load(file, object_hook=self.json_hook)
         return FileManager.get().load(file)
 
     def save(self, file, data, *args, **kvargs):

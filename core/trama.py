@@ -20,6 +20,7 @@ FCH_INI = date(2022, 5, 29)
 
 logger = logging.getLogger(__name__)
 
+
 class Trama:
 
     @Cache(file="data/autentica/trama.calendario.pickle", maxOld=(1 / 48))
@@ -36,6 +37,16 @@ class Trama:
         with AutDriver(browser='firefox') as ff:
             ff.get(RT_URL)
             ff.click("//div[@id='appMenu']//a[text()='Incidencias']")
+            time.sleep(2)
+            ff.click("//div[@id='mainWindow']//a[text()='Enviadas']")
+            return ff.to_web()
+
+    @Cache(file="data/autentica/trama.vacaciones.pickle", maxOld=(1 / 48))
+    def _get_vac_session(self):
+        logger.debug("_get_vac_session()")
+        with AutDriver(browser='firefox') as ff:
+            ff.get(RT_URL)
+            ff.click("//div[@id='appMenu']//a[text()='Permisos']")
             time.sleep(2)
             ff.click("//div[@id='mainWindow']//a[text()='Enviadas']")
             return ff.to_web()
@@ -168,7 +179,7 @@ class Trama:
         fin = ini + timedelta(days=6)
         return self.get_calendario(ini, fin)
 
-    @HMCache(file="data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=(1/24))
+    @HMCache(file="data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=(1 / 24))
     def _get_informe(self, ini, fin):
         logger.debug("Trama._get_informe(%s, %s)", ini, fin)
         r = Munch(
@@ -195,7 +206,7 @@ class Trama:
             r.teorico += i.teorico
             r.saldo += i.saldo
             r.laborables += int(i.teorico.minutos > 0)
-            #r.vacaciones += inf.vacaciones
+            # r.vacaciones += inf.vacaciones
         return r
 
     def get_informe(self, ini=None, fin=None):
@@ -289,7 +300,7 @@ class Trama:
         vac = sorted(rst, key=lambda v: (v.year, v.key))
         return vac
 
-    def get_incidencias(self, ini, fin, estado=3):
+    def get_incidencias(self, estado=3):
         w = self._get_inc_session()
         w.get("https://trama.administracionelectronica.gob.es/incidencias/bandejaEnviadas.html")
         mx = w.soup.select("#maximoElementosPagina option")[-1]
@@ -306,7 +317,7 @@ class Trama:
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
             tds = tmap(get_text, tr.findAll("td"))
             tds = {k: v for k, v in zip(head, tds)}
-            r.append(Munch(
+            i = Munch(
                 id=int(tds['Proceso']),
                 tipo=tds['Tipo Solicitud'],
                 solicitud=to_date(tds['Fecha solicitud']),
@@ -315,8 +326,8 @@ class Trama:
                 incidencias=tds['Incidencias'],
                 estado=tds['Estado'],
                 tarea=to_date(tds['Fecha tarea']),
-            ))
-        for i in list(r):
+            )
+            r.append(i)
             data['accion'] = 'REDIRIGIR_SOLICITUDES'
             data['idProceso'] = str(i.id)
             w.get(action, **data)
@@ -336,13 +347,65 @@ class Trama:
                     observaciones=observaciones,
                     mensaje=mensaje
                 ))
+        w = self._get_vac_session()
+        w.get("https://trama.administracionelectronica.gob.es/Permisos/bandejaEnviadas.html")
+        mx = w.soup.select("#maximoElementosPagina option")[-1]
+        mx = mx.attrs["value"]
+        action, data = w.prepare_submit("#formularioPrincipal")
+        data["maximoElementosPagina"] = mx
+        if estado is not None:
+            data["idEstadoIncidencia"] = str(estado)
+        w.get(action, **data)
+        head = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
+        for tr in w.soup.select("#listaTablaMaestra tbody tr"):
+            tds = tmap(get_text, tr.findAll("td"))
+            tds = {k: v for k, v in zip(head, tds)}
+            fechas = tds['Fechas Solicitadas/Anuladas']
+            fechas = tmap(to_date, re.findall(r'\d\d/\d\d/\d\d\d\d', fechas))
+            i = Munch(
+                id=int(tds['Proceso']),
+                tipo=tds['Tipo Solicitud'],
+                solicitud=to_date(tds['Fecha solicitud']),
+                validador=tds['Validador'],
+                autorizador=tds['Autorizador'],
+                permiso=tds['Tipo Permiso'],
+                estado=tds['Estado'],
+                tarea=to_date(tds['Fecha tarea']),
+                fecha=fechas[0],
+                fin=fechas[-1],
+            )
+            r.append(i)
+            data['accion'] = 'REDIRIGIR_SOLICITUDES'
+            data['idProceso'] = str(i.id)
+            w.get(action, **data)
+            tb = w.soup.find("span", text="Días")
+            if tb is None:
+                continue
+            dias = get_text(tb.find_parent("div").find("p"))
+            if dias is None:
+                continue
+            if dias.isdigit():
+                dias = int(dias)
+            i.dias = dias
         return r
+
+    def get_lapso(self, estado=3):
+        lps = []
+        for x in self.get_incidencias(estado=estado):
+            if x.get('incidencias'):
+                for i in x.incidencias:
+                    lps.append(i)
+                continue
+            if x.get('fecha'):
+                lps.append(x)
+        lps = sorted(lps, key=lambda x: x.fecha)
+        return lps
 
 
 if __name__ == "__main__":
     a = Trama()
-    #r = a.get_informe(gesper_FCH_FIN+timedelta(days=1), date.today())
-    r = a.get_informe()
+    # r = a.get_informe(gesper_FCH_FIN+timedelta(days=1), date.today())
+    r = a.get_incidencias()
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))
