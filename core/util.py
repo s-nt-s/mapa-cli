@@ -134,10 +134,14 @@ def json_serial(obj):
 def json_hook(d):
     for (k, v) in d.items():
         if isinstance(v, str):
-            if re.match(r"[\-+]?\d+:\d+(:\d+)?", v):
+            if re.match(r"^[\-+]?\d+:\d+(:\d+)?$", v):
                 d[k] = HM(v)
-            elif re.match(r"\d+-\d+-\d+", v):
+            elif re.match(r"^\d+-\d+-\d+$", v):
                 d[k] = date(*map(int, v.split("-")))
+            elif re.match(r"^\d+-\d+-\d+ \d+:\d+$", v):
+                d[k] = datetime.strptime(v, "%Y-%m-%d %H:%M")
+            elif re.match(r"^\d+-\d+-\d+ \d+:\d+\d+$", v):
+                d[k] = datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
     return d
 
 
