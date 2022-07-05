@@ -7,13 +7,11 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common.exceptions import (ElementNotInteractableException,
-                                        NoSuchElementException,
                                         TimeoutException,
                                         WebDriverException,
                                         StaleElementReferenceException,
                                         ElementNotVisibleException)
 from selenium.webdriver.chrome.options import Options as CMoptions
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.proxy import Proxy, ProxyType
@@ -57,8 +55,8 @@ def retry(times, exceptions, sleep=0, skip_in_error=False):
     in ``exceptions`` are thrown
     :param times: The number of times to repeat the wrapped function/method
     :type times: Int
-    :param Exceptions: Lists of exceptions that trigger a retry attempt
-    :type Exceptions: Tuple of Exceptions
+    :param exceptions: Lists of exceptions that trigger a retry attempt
+    :type exceptions: Tuple of Exceptions
     """
 
     def decorator(func):
@@ -203,7 +201,7 @@ if is_s5h:
 class Driver:
     def __init__(self, visible=None, wait=60, useragent=None, browser=None):
         self._driver = None
-        self.visible = visible or (os.environ.get("DRIVER_VISIBLE")=="1")
+        self.visible = visible or (os.environ.get("DRIVER_VISIBLE") == "1")
         self._wait = wait
         self.useragent = useragent
         self.browser = browser
