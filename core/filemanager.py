@@ -1,7 +1,7 @@
 import json
 import logging
 from os import W_OK, access, makedirs
-from os.path import dirname, realpath
+from os.path import dirname, realpath, exists
 from pathlib import Path, PurePosixPath
 from tempfile import gettempdir
 from munch import Munch
@@ -140,6 +140,9 @@ class FileManager:
             "sql": "txt"
         }.get(ext, ext)
 
+    def exist(self, file, *args, **kvargs):
+        return self.resolve_path(file).exists()
+
     def load(self, file, *args, **kvargs):
         """
         Lee un fichero en funcion de su extension
@@ -228,6 +231,7 @@ class FileManager:
     def dump_pickle(self, file, obj, *args, **kvargs):
         with open(file, "wb") as f:
             pickle.dump(obj, f)
+
 
 CNF = Munch.fromDict(FileManager.get().load("config.yml"))
 

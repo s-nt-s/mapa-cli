@@ -1,5 +1,4 @@
 import functools
-from os.path import isfile
 from os import stat
 import time
 from .filemanager import FileManager
@@ -7,6 +6,7 @@ from munch import Munch
 import logging
 
 logger = logging.getLogger(__name__)
+FM = FileManager.get()
 
 class Cache:
     def __init__(self, file, *args, maxOld=30, json_default=None, json_hook=None, **kvargs):
@@ -29,17 +29,17 @@ class Cache:
     def read(self, file, *args, **kvargs):
         logger.debug("LOAD "+file)
         if self.json_hook is not None:
-            return FileManager.get().load(file, object_hook=self.json_hook)
-        return FileManager.get().load(file)
+            return FM.load(file, object_hook=self.json_hook)
+        return FM.load(file)
 
     def save(self, file, data, *args, **kvargs):
         logger.debug("SAVE "+file)
         if self.json_default is not None:
-            return FileManager.get().dump(file, data, default=self.json_default)
-        return FileManager.get().dump(file, data)
+            return FM.dump(file, data, default=self.json_default)
+        return FM.dump(file, data)
 
     def tooOld(self, fl):
-        if not isfile(fl):
+        if not FM.exist(fl):
             return True
         if self.maxOld is None:
             return False
