@@ -17,7 +17,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.firefox.options import Options as FFoptions
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select, WebDriverWait
 
 re_sp = re.compile(r"\s+")
 re_emb = re.compile(r"^image/[^;]+;base64,.*", re.IGNORECASE)
@@ -199,7 +199,7 @@ if is_s5h:
 
 
 class Driver:
-    def __init__(self, visible=None, wait=60, useragent=None, browser=None):
+    def __init__(self, visible=None, wait=5, useragent=None, browser=None):
         self._driver = None
         self.visible = visible or (os.environ.get("DRIVER_VISIBLE") == "1")
         self._wait = wait
@@ -369,8 +369,11 @@ class Driver:
         if isinstance(n, str):
             n = self.wait(n, **kwargs)
         if val is not None:
-            n.clear()
-            n.send_keys(val)
+            if n.tag_name == "select":
+                Select(n).select_by_visible_text(val)
+            else:
+                n.clear()
+                n.send_keys(val)
         return n.text
 
     def click(self, n, **kvarg):

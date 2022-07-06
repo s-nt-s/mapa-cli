@@ -323,7 +323,7 @@ class Printer:
                 txt[0] = str(i.inicio) + " Olvido de fichaje"
             txt = " - ".join(t for t in txt if t is not None and t.strip() not in ("", "Solicitud"))
             txt = re_sp.sub(" ", txt).strip()
-            if i.get("estado") not in (None, "", "Admitida Cerrada"):
+            if i.get("estado") not in (None, "", "Admitida Cerrada", "Admitido Cerrado"):
                 txt = (txt + " ({})".format(i.estado)).strip()
             print(txt)
 

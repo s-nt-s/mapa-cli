@@ -3,6 +3,10 @@ import argparse
 import re
 import sys
 from io import StringIO
+from os.path import abspath, dirname
+from os import chdir
+
+chdir(dirname(abspath(__file__)))
 
 # from core.api import Api
 from core.printer import Printer

@@ -39,6 +39,10 @@ class Trama:
             ff.click("//div[@id='appMenu']//a[text()='Incidencias']")
             time.sleep(2)
             ff.click("//div[@id='mainWindow']//a[text()='Enviadas']")
+            ff.val("idEstadoIncidencia", "Cualquier estado")
+            ff.click("btnBuscar")
+            #ff.wait("maximoElementosPagina")
+            #ff.val("maximoElementosPagina", "100")
             return ff.to_web()
 
     @Cache(file="data/autentica/trama.vacaciones.pickle", maxOld=(1 / 48))
@@ -49,6 +53,10 @@ class Trama:
             ff.click("//div[@id='appMenu']//a[text()='Permisos']")
             time.sleep(2)
             ff.click("//div[@id='mainWindow']//a[text()='Enviadas']")
+            ff.val("idEstadoIncidencia", "Cualquier estado")
+            ff.click("btnBuscar")
+            #ff.wait("maximoElementosPagina")
+            #ff.val("maximoElementosPagina", "100")
             return ff.to_web()
 
     def _get_dias(self, ini, fin):
@@ -359,6 +367,8 @@ class Trama:
         head = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
             tds = tmap(get_text, tr.findAll("td"))
+            if len(tds) != len(head):
+                continue
             tds = {k: v for k, v in zip(head, tds)}
             fechas = tds['Fechas Solicitadas/Anuladas']
             fechas = tmap(to_date, re.findall(r'\d\d/\d\d/\d\d\d\d', fechas))
