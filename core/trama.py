@@ -2,9 +2,9 @@ from datetime import datetime, date, timedelta
 from munch import Munch
 
 from .autdriver import AutDriver
-from .util import json_serial, tmap, get_text, get_times
+from .util import json_serial, tmap, get_text, get_times, json_hook
 from .hm import HM, HMCache
-from .cache import Cache
+from .cache import Cache, MunchCache
 from .gesper import Gesper
 from .filemanager import FileManager
 from .gesper import FCH_FIN as gesper_FCH_FIN
@@ -319,6 +319,7 @@ class Trama:
         vac = sorted(rst, key=lambda v: (v.year, v.key))
         return vac
 
+    @MunchCache("data/trama/incidencias_{}.json", maxOld=0, json_default=json_serial, json_hook=json_hook)
     def get_incidencias(self, estado=3):
         w = self._get_inc_session()
         w.get("https://trama.administracionelectronica.gob.es/incidencias/bandejaEnviadas.html")
