@@ -400,7 +400,7 @@ class Trama:
             data['accion'] = 'REDIRIGIR_SOLICITUDES'
             data['idProceso'] = str(i.id)
             w.get(action, **data)
-            dias = get_from_label(w.soup, "Dias")
+            dias = get_from_label(w.soup, "Días")
             year = get_from_label(w.soup, "Ejercicio")
             if dias is not None:
                 i.dias = dias
