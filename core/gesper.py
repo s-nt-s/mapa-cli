@@ -217,6 +217,8 @@ class Gesper(Web):
             js = re.split(r";\s*//", js)[0]
             js = json.loads(js)
             for i, j in enumerate(js):
+                if j.get("_anio"):
+                    j["_anio"] = int(j["_anio"])
                 j["txt"] = j["_literalLicencia"].capitalize()
                 j["date"] = datetime.strptime(
                     j["_fechaInicio"], '%d/%m/%Y').date()
