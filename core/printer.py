@@ -303,6 +303,8 @@ class Printer:
             if i["_dias"] > 1:
                 print("(+%s)" % i["_dias"], end=" ")
             txt = re_sp.sub(" ", i["txt"]).strip()
+            if i.get("_anio") not in (None, year):
+                txt = txt + " ({})".format(i["_anio"])
             print(txt)
         for i in Trama().get_lapso():
             if year is None or year != i.fecha.year:
@@ -317,6 +319,8 @@ class Printer:
                 i.get('mensaje'),
                 i.get('permiso')
             ]
+            if i.get("year") not in (None, year):
+                txt.append("({})".format(i.year))
             if txt[0] == 'Eliminar fichaje':
                 txt[0] = str(i.inicio)+" "+txt[0]
             if txt[0] == 'Olvido de fichaje (sólo hora que no fichó)':

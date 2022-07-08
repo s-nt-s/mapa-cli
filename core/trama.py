@@ -21,6 +21,17 @@ FCH_INI = date(2022, 5, 29)
 logger = logging.getLogger(__name__)
 
 
+def get_from_label(sp, lb):
+    tb = sp.find("span", text=lb)
+    if tb is None:
+        return
+    val = get_text(tb.find_parent("div").find("p"))
+    if val is None:
+        return
+    if val.isdigit():
+        val = int(val)
+    return val
+
 class Trama:
 
     @Cache(file="data/autentica/trama.calendario.pickle", maxOld=(1 / 48))
@@ -388,15 +399,12 @@ class Trama:
             data['accion'] = 'REDIRIGIR_SOLICITUDES'
             data['idProceso'] = str(i.id)
             w.get(action, **data)
-            tb = w.soup.find("span", text="Días")
-            if tb is None:
-                continue
-            dias = get_text(tb.find_parent("div").find("p"))
-            if dias is None:
-                continue
-            if dias.isdigit():
-                dias = int(dias)
-            i.dias = dias
+            dias = get_from_label(w.soup, "Dias")
+            year = get_from_label(w.soup, "Ejercicio")
+            if dias is not None:
+                i.dias = dias
+            if year is not None:
+                i.year = year
         return r
 
     def get_lapso(self, estado=3):
