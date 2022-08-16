@@ -150,10 +150,14 @@ class Printer:
             return
         total = HM(0)
         for dia in dias:
-            line = "%s %2d: %s - %s = %s" % (
-                parse_dia(dia.fecha), dia.fecha.day, dia.marcajes[0], dia.marcajes[-1], dia.total)
+            if len(dia.marcajes) == 0:
+                line = "%s %2d: __:__ - __:__ = %s" % (parse_dia(dia.fecha), dia.fecha.day, dia.total)
+            else:
+                line = "%s %2d: %s - %s = %s" % (parse_dia(dia.fecha), dia.fecha.day, dia.marcajes[0], dia.marcajes[-1], dia.total)
             if len(dia.marcajes) > 3:
                 line += " (" + ", ".join(map(str, dia.marcajes[1:-1])) + ")"
+            if dia.obs:
+                line += " (" + dia.obs + ")"
             print(line)
             total += dia.total
         print("")

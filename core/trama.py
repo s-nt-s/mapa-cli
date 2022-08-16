@@ -86,11 +86,17 @@ class Trama:
                 if cls not in ("even", "odd"):
                     continue
                 tds = tmap(get_text, tr.findAll("td"))
+                prs = None
                 fec, mar, obs, ttt, tto, sld = tds
+                if "Permisos:" in mar:
+                    prs = mar.split("Permisos:", 1)[-1].strip()
                 fec = fec[:-1].split("(", 1)[-1]
                 fec = tmap(int, reversed(fec.split("/")))
                 fec = date(*fec)
                 mar = tmap(HM, re.findall(r"\d+:\d+:\d+", mar))
+                if prs:
+                    obs = ((obs or "") + " "+prs).strip()
+
                 # if sld == "00:00:00" or len(mar) == 0:
                 #    continue
                 i = Munch(
