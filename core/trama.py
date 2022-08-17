@@ -3,7 +3,7 @@ from munch import Munch
 
 from .autdriver import AutDriver
 from .util import json_serial, tmap, get_text, get_times, json_hook
-from .hm import HM, HMCache
+from .hm import HM, HMCache, HMmunch
 from .cache import Cache, MunchCache
 from .gesper import Gesper
 from .filemanager import FileManager
@@ -116,11 +116,9 @@ class Trama:
         fln_dias = JS_DIAS.format(ini)
         if isfile(fln_dias):
             for d in FileManager.get().load(fln_dias):
-                for k, v in list(d.items()):
-                    if isinstance(v, str) and ":" in v:
-                        d[k] = HM(v)
-                d = Munch.fromDict(d)
-                if d.ini >= ini and d.fin <= fin:
+                d = HMmunch.fromDict(d)
+                d._parse()
+                if ini <= d.fecha <= fin:
                     dias.append(d)
         if len(dias) == 0:
             dias = self._get_dias(ini, fin)

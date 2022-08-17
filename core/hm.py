@@ -119,16 +119,33 @@ class GesperIHCache(Cache):
         d = GesperIH(d)
         return d
 
+def mk_parse(v):
+    if isinstance(v, dict):
+        for k, x in list(v.items()):
+            if isinstance(x, (str, list)):
+                v[k] = mk_parse(x)
+        return v
+    if isinstance(v, list):
+        return [mk_parse(i) for i in v]
+    if re.match(r"[\-+]?\d+:\d+(:\d+)?", v):
+        return HM(v)
+    if re.match(r"\d+-\d+-\d+", v):
+        return date(*map(int, v.split("-")))
+    return v
+
+class HMmunch(Munch):
+    def _parse(self):
+        mk_parse(self)
+
+    def __init__(self, *args, **kvargs):
+        super().__init__(*args, **kvargs)
+        self._parse()
+
 
 class HMCache(Cache):
     def read(self, *args, **kvargs):
         d = super().read(*args, **kvargs)
         if d is None:
             return None
-        for k, v in list(d.items()):
-            if isinstance(v, str):
-                if re.match(r"[\-+]?\d+:\d+(:\d+)?", v):
-                    d[k] = HM(v)
-                elif re.match(r"\d+-\d+-\d+", v):
-                    d[k] = date(*map(int, v.split("-")))
+        d = mk_parse(d)
         return Munch.fromDict(d)
