@@ -56,7 +56,10 @@ class Mapa(Web):
             precios = [p for p, _ in re.findall(r"(\d+([.,]\d+))\s*€", str(menu))]
             flag = False
             for li in menu.findAll("li"):
-                txt = get_text(li).lower()
+                txt = get_text(li)
+                if txt is None:
+                    continue
+                txt = txt.lower()
                 if txt.startswith("menú "):
                     (li.find("span") or li).append(" (%s€)" % precios.pop(0))
                     flag = False
