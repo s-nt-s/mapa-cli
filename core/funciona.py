@@ -76,6 +76,7 @@ class Funciona:
                     q = query_nom(href)
                     if q.get("file") is None:
                         continue
+                    href = href.replace(" ", "+")
                     nom = Munch(
                         file=join(CNF.nominas, q["file"]),
                         url=href,
