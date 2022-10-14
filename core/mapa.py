@@ -276,7 +276,7 @@ class Mapa(Web):
         user = CNF.mapa.user.split("@")[0]
         url = "https://servicio.mapama.gob.es/cucm-uds/user/"
         url = url + user + "/speedDials"
-        self.get(url, auth=HTTPBasicAuth(user, CNF.mapa.pssw))
+        self.get(url, auth=HTTPBasicAuth(user, CNF.mapa.pssw), parser="xml")
 
         for s in self.soup.select("speedDial"):
             n = get_text(s.find("number"))
