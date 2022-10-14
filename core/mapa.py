@@ -1,7 +1,7 @@
 from datetime import datetime, date, timedelta
 from .filemanager import CNF
 import re
-from .util import html_to_md
+from .util import html_to_md, mk_re
 from munch import Munch
 from .web import Web
 from .util import json_serial, tmap, parse_mes, parse_dia, get_text
@@ -16,6 +16,15 @@ fix_url = (
     (re.compile(r"/default\.aspx"), ""),
 )
 
+re_txt = {
+    mk_re(k):v for k, v in {
+        "Instituto Nacional de Administraciones Públicas": "INAP",
+        "Administración General del Estado": "AGE",
+        "Ministerio de Agricultura, Pesca y Alimentación": "MAPA",
+        "Organización de las Naciones Unidas": "ONU",
+        "Administraciones Públicas": "AAPP"
+    }.items()
+}
 
 def _find_mes(*tds):
     for td in tds:
@@ -140,6 +149,11 @@ class Mapa(Web):
             if item.node is None and item.url and item.tipo == "N":
                 self.get(item.url)
                 item.node = self.soup.select_one("div.novedad-descripcion")
+            for r_txt, txt in re_txt.items():
+                if item.titulo:
+                    item.titulo = r_txt.sub(txt, item.titulo)
+
+        for item in items:
             if item.node is None:
                 continue
             flag = False
@@ -184,6 +198,17 @@ class Mapa(Web):
                 a = item.node.find("a", attrs={"href": item.url})
                 if a and len(a.get_text().strip()) < 3:
                     a.unwrap()
+            for n in item.node.findAll(["p", "div"]):
+                if len(n.get_text().strip()) > 0:
+                    continue
+                chls = [i for i in n.select(":scope *") if i.name not in ("br", )]
+                if len(chls) == 0:
+                    n.extract()
+
+            for n in item.node.findAll(text=r_txt):
+                n.replace_with(r_txt.sub(txt, n.string))
+
+            item.html = str(item.node)
             item.descripcion = html_to_md(item.node, links=True, unwrap=('span', 'strong', "b"))
             item.descripcion = re.sub(r"[ \t]+", " ", item.descripcion)
             item.descripcion = re.sub(r" *\[", " [", item.descripcion)

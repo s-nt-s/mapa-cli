@@ -8,6 +8,7 @@ nohup.out
 env.sh
 data/*/*
 !data/retribuciones/*
+_site/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

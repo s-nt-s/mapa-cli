@@ -217,3 +217,9 @@ def notnull(*args, sep=None):
     if sep:
         return sep.join(arr)
     return tuple(arr)
+
+def mk_re(s, flags=re.IGNORECASE):
+    words = s.strip().split()
+    re_wd = [re.escape(w) for w in words]
+    re_s = r"\s+".join(re_wd)
+    return re.compile(re_s, flags=flags)
