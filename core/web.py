@@ -25,6 +25,8 @@ is_s5h = os.environ.get('http_proxy', "").startswith("socks5h://")
 if is_s5h:
     proxy_ip, proxy_port = os.environ['http_proxy'].split("//", 1)[-1].split(":")
     proxy_port = int(proxy_port)
+    if not os.environ.get('https_proxy'):
+        os.environ['https_proxy'] = os.environ['http_proxy']
 
 default_headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:54.0) Gecko/20100101 Firefox/54.0',
