@@ -143,6 +143,11 @@ class FileManager:
     def exist(self, file, *args, **kvargs):
         return self.resolve_path(file).exists()
 
+    def remove(self, file):
+        file = self.resolve_path(file)
+        if file.exists():
+            file.unlink()
+
     def load(self, file, *args, **kvargs):
         """
         Lee un fichero en funcion de su extension
