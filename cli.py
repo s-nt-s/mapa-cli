@@ -3,8 +3,9 @@ import argparse
 import re
 import sys
 from io import StringIO
-from os.path import abspath, dirname
-from os import chdir
+from os.path import abspath, dirname, isfile
+from os import chdir, remove
+from core.filemanager import FileManager
 
 chdir(dirname(abspath(__file__)))
 
@@ -77,8 +78,10 @@ def main(arg, *args, **kargv):
     if arg.busca:
         prt.busca(*arg.busca, **kargv)
 
-
 def str_main(text, *args, **kargv):
+    if text in ("nominas!", "bruto!"):
+        FileManager.get().remove("data/nominas/todas.json")
+        text = text[:-1]
     if text not in arg_options:
         return
     if text in ("busca", "nomina") and len(args) == 0:
@@ -107,6 +110,9 @@ if __name__ == "__main__":
     arg = None
     if len(sys.argv) > 1:
         prm = sys.argv[1]
+        if prm in ("nominas!", "bruto!"):
+            FileManager.get().remove("data/nominas/todas.json")
+            prm = prm[:-1]
         if prm in arg_options:
             arg = parser.parse_args(["--" + prm] + sys.argv[2:])
 
