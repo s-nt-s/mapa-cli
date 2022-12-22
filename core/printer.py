@@ -167,9 +167,11 @@ class Printer:
 
     def nominas(self, sueldo='neto'):
         f = Funciona()
-        nominas = f.get_nominas()
+        nominas = [n for n in f.get_nominas() if n.get(sueldo) is not None]
         n_ym = sorted(set((n.year, n.mes) for n in nominas))
         for index, n in enumerate(CNF.get("_nominas", [])):
+            if n.get(sueldo) is None:
+                continue
             if (n.year, n.mes) not in n_ym:
                 n.index = index
                 nominas.append(n)
