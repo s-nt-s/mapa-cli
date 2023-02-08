@@ -78,10 +78,18 @@ def main(arg, *args, **kargv):
     if arg.busca:
         prt.busca(*arg.busca, **kargv)
 
-def str_main(text, *args, **kargv):
-    if text in ("nominas!", "bruto!"):
+def parse_cmd(cmd, **kargv):
+    if cmd in ("nominas!", "bruto!"):
         FileManager.get().remove("data/nominas/todas.json")
-        text = text[:-1]
+        cmd = cmd[:-1]
+    if cmd in ("menu!", ):
+        kargv['show_all'] = True
+        cmd = cmd[:-1]
+    return cmd, kargv
+
+
+def str_main(text, *args, **kargv):
+    text, kargv = parse_cmd(text, **kargv)
     if text not in arg_options:
         return
     if text in ("busca", "nomina") and len(args) == 0:
@@ -108,13 +116,12 @@ if __name__ == "__main__":
         sys.exit()
 
     arg = None
+    kargv = {}
     if len(sys.argv) > 1:
         prm = sys.argv[1]
-        if prm in ("nominas!", "bruto!"):
-            FileManager.get().remove("data/nominas/todas.json")
-            prm = prm[:-1]
+        prm, kargv = parse_cmd(prm)
         if prm in arg_options:
             arg = parser.parse_args(["--" + prm] + sys.argv[2:])
 
     arg = arg or parser.parse_args()
-    main(arg)
+    main(arg, **kargv)

@@ -287,18 +287,29 @@ class Printer:
                       " %2d - %2d = %2d" % (v.total, v.usados, q))
             print(" quedan".rjust(s_ln + 8, '.'), "= %2d" % qdn)
 
-    def menu(self):
-        dt_now = datetime.now()
-        menus = [m for m in Mapa().get_menu() if m.fecha >= dt_now.date()]
+    def menu(self, show_all=False):
+        menus = [m for m in Mapa().get_menu()]
         if len(menus) == 0:
             print("Menú no publicado")
             return
-        for i, m in enumerate(menus):
-            if i > 0:
+        if show_all:
+            for i, m in enumerate(menus):
+                if i > 0:
+                    print("")
+                print("#", DAYNAME[m.fecha.weekday()], m.fecha.strftime("%Y-%m-%d"))
                 print("")
-            print("#", DAYNAME[m.fecha.weekday()], m.fecha.strftime("%Y-%m-%d"))
-            print("")
-            print(m.menu)
+                print(m.menu)
+            return
+
+        dt_next = datetime.now()
+        if dt_next.hour>15:
+            dt_next = dt_next + timedelta(days=1)
+        dt_next = dt_next.date()
+        mn_next = next((m for m in menus if m.fecha==dt_next), None)
+        if mn_next is None:
+            print("Menú no publicado")
+            return
+        print(mn_next.menu)
 
     def lapso(self):
         year = None
