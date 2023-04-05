@@ -11,7 +11,15 @@ from .cache import MunchCache
 from glob import glob
 
 re_sp = re.compile(r"\s+")
+import requests
 
+# Evitar error (Caused by SSLError(SSLError(1, '[SSL: DH_KEY_TOO_SMALL] dh key too small (_ssl.c:997)')))
+# en www.funciona.es
+requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
+try:
+    requests.packages.urllib3.contrib.pyopenssl.DEFAULT_SSL_CIPHER_LIST += 'HIGH:!DH:!aNULL'
+except AttributeError:
+    pass
 
 def query_nom(href):
     q = get_query(href)
