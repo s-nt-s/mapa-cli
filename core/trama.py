@@ -216,11 +216,12 @@ class Trama:
         )
         if ini <= gesper_FCH_FIN:
             inf = Gesper().get_informe(ini, gesper_FCH_FIN)
-            r.total += inf.total
-            r.teorico += (inf.teoricas - inf.festivos - inf.fiestas_patronales)
-            r.saldo += inf.saldo
-            r.laborables += inf.laborables
-            r.vacaciones += inf.vacaciones
+            if inf:
+                r.total += inf.total
+                r.teorico += (inf.teoricas - inf.festivos - inf.fiestas_patronales)
+                r.saldo += inf.saldo
+                r.laborables += inf.laborables
+                r.vacaciones += inf.vacaciones
             ini = gesper_FCH_FIN + timedelta(days=1)
             if ini >= fin:
                 return r
@@ -427,8 +428,8 @@ class Trama:
 
 if __name__ == "__main__":
     a = Trama()
-    # r = a.get_informe(gesper_FCH_FIN+timedelta(days=1), date.today())
-    r = a.get_incidencias()
+    r = a.get_informe(gesper_FCH_FIN+timedelta(days=1), date.today())
+    #r = a.get_incidencias()
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))

@@ -361,8 +361,8 @@ class Gesper(Web):
             name = s_ini + "_" + s_fin + ".pdf"
             absn = join(CNF.informe_horas, name)
             if not isfile(expanduser(absn)):
-                r = self.s.get(
-                    "https://intranet.mapa.es/app/GESPER/ControlHorario/VerInforme.ashx?action=report&inicio=" + s_ini + "&fin=" + s_fin)
+                i_url = "https://intranet.mapa.es/app/GESPER/ControlHorario/VerInforme.ashx?action=report&inicio=" + s_ini + "&fin=" + s_fin
+                r = self.s.get(i_url)
                 FileManager.get().dump(absn, r.content)
             jornadas = 0
             laborables = 0
@@ -385,19 +385,23 @@ class Gesper(Web):
                         vacaciones = vacaciones + h
                     elif "fp" in t:
                         fiestas_patronales = fiestas_patronales + 1
+            page = re.sub("Página\s*\d+\s*de\s*\d+", "", page)
 
             m = re.search(
-                r"^\s*(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d:\.]+)\s+(-?[\d,\.]+)\s*$",
+                r"^\s*(-?[\d:\.,]+)\s+(-?[\d:\.,]+)\s+(-?[\d:\.,]+)\s+(-?[\d:\.,]+)\s+(-?[\d:\.,]+)\s+(-?[\d,\.,]+)\s*$",
                 page, re.MULTILINE)
 
-            if m is not None:
+            if m is not None and len(m.groups())==6:
                 # Fix: Error en el informe 2021 y 2022
                 if ini <= date(2022, 5, 17) and fin >= date(2022, 5, 20):
                     fiestas_patronales = 4
                 if ini <= date(2021, 5, 10) and fin >= date(2021, 5, 14):
                     fiestas_patronales = 5
-                porcentaje = to_num(m.groups()[-1])
-                trabajadas, incidencias, total, teoricas, saldo = (HM(i) for i in m.groups()[:-1])
+                try:
+                    porcentaje = to_num(m.groups()[-1])
+                    trabajadas, incidencias, total, teoricas, saldo = (HM(i) for i in m.groups()[:-1])
+                except ValueError:
+                    break
                 rst.append(GesperIH(
                     laborables=laborables,
                     jornadas=jornadas,
