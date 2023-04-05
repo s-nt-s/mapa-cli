@@ -109,9 +109,14 @@ class Funciona:
                 FileManager.get().dump(nom.file, rq.content)
             if isfile(expanduser(nom.file)):
                 txt = FileManager.get().load(nom.file)
+                txt = txt.split("IMPORTES EN NOMINA", 1)[-1]
                 nom.neto = get_int_match(txt, r"TRANSFERENCIA DEL LIQUIDO A PERCIBIR:\s+([\d\.,]+)")
                 nom.bruto = get_int_match(txt, r"R\s*E\s*T\s*R\s*I\s*B\s*U\s*C\s*I\s*O\s*N\s*E\s*S\s*\.+\s*([\d\.,]+)",
                                           r"^ +([\d\.,]+) *$")
+                if nom.bruto < nom.neto:
+                    aux = [b for b in map(to_num, re.findall(r"\b\d[\d\.\,]+\b", txt)) if nom.neto < b < (nom.neto*1.5)]
+                    if aux:
+                        nom.bruto=aux[0]
         yrs = sorted(set(i.year for i in r))
         myr = yrs[-1]
         if r[-1].mes < 3:
