@@ -108,7 +108,7 @@ class Funciona:
                     nom.error = error
                 FileManager.get().dump(nom.file, rq.content)
             if isfile(expanduser(nom.file)):
-                txt = FileManager.get().load(nom.file)
+                txt = FileManager.get().load(nom.file, physical=True)
                 txt = txt.split("IMPORTES EN NOMINA", 1)[-1]
                 nom.neto = get_int_match(txt, r"TRANSFERENCIA DEL LIQUIDO A PERCIBIR:\s+([\d\.,]+)")
                 nom.bruto = get_int_match(txt, r"R\s*E\s*T\s*R\s*I\s*B\s*U\s*C\s*I\s*O\s*N\s*E\s*S\s*\.+\s*([\d\.,]+)",

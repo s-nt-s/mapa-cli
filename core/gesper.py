@@ -369,7 +369,7 @@ class Gesper(Web):
             vacaciones = HM("00:00")
             festivos = HM("00:00")
             fiestas_patronales = 0
-            for page in FileManager.get().load(absn, as_list=True):
+            for page in FileManager.get().load(absn, as_list=True, physical=True):
                 n_fechas = len(re.findall(r"\b\d\d/\d\d/\d\d\d\d\b", page))
                 jornadas = jornadas + n_fechas - 3
                 laborables = laborables + n_fechas - 3
