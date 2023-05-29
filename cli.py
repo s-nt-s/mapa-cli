@@ -80,7 +80,7 @@ def main(arg, *args, **kargv):
 
 def parse_cmd(cmd, **kargv):
     if cmd in ("nominas!", "bruto!"):
-        FileManager.get().remove("data/nominas/todas.json")
+        #FileManager.get().remove("data/nominas/todas.json")
         cmd = cmd[:-1]
     if cmd in ("menu!", ):
         kargv['show_all'] = True

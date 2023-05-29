@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 FM = FileManager.get()
 
 class Cache:
-    def __init__(self, file, *args, maxOld=30, json_default=None, json_hook=None, **kvargs):
+    def __init__(self, file, *args, maxOld=30, json_default=None, json_hook=None, keep_if_none=False, **kvargs):
         self.file = file
         self.data = {}
         self.func = None
@@ -17,6 +17,7 @@ class Cache:
         self.slf = None
         self.json_default = json_default
         self.json_hook = json_hook
+        self.keep_if_none = keep_if_none
 
     @property
     def maxOld(self):
@@ -55,6 +56,8 @@ class Cache:
             if data is not None:
                 return data
         data = self.func(slf, *args, **kvargs)
+        if self.keep_if_none and data is None and fl is not None:
+            return self.read(fl, *args, **kvargs)
         if fl is not None:
             self.save(fl, data, *args, **kvargs)
         return data

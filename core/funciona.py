@@ -65,12 +65,12 @@ class Funciona:
             soup = ff.get_soup()
             a = soup.select_one(".mod_ultimas_nominas a[href]")
             if not a:
-                return []
+                return None
             # https://www.funciona.es/servinomina/action/DetalleNomina.do?habil=ARF&clasnm=02&tipo=NOMINA%20ORDINARIA%20DEL%20MES&mesano=01/02/2020&dirnedaes=194&cdcierre=29004&cddup=0&type=1&cdcalculo=28965&mes=Febrero&anio=2020
             href = a.attrs["href"]
             q = query_nom(href)
             if q.get("file") is None:
-                return []
+                return None
             for ayr in soup.select("a[href]"):
                 href = ayr.attrs["href"]
                 if "/servinomina/action/ListadoNominas.do?anio=" not in href:
