@@ -292,13 +292,23 @@ class Printer:
         if len(menus) == 0:
             print("Menú no publicado")
             return
+        
+        def print_menu(m):
+            print("Primeros:")
+            for p in m.primeros:
+                print("+", p)
+            print("\nSegundos:")
+            for p in m.segundos:
+                print("+", p)
+
         if show_all:
             for i, m in enumerate(menus):
                 if i > 0:
                     print("")
-                print("#", DAYNAME[m.fecha.weekday()], m.fecha.strftime("%Y-%m-%d"))
+                print("#", DAYNAME[m.fecha.weekday()], m.fecha.strftime("%Y-%m-%d"), "({:.02f}€)".format(m.precio))
                 print("")
-                print(m.menu)
+                #print(m.carta)
+                print_menu(m)
             return
 
         dt_next = datetime.now()
@@ -309,7 +319,8 @@ class Printer:
         if mn_next is None:
             print("Menú no publicado")
             return
-        print(mn_next.menu)
+        #print(mn_next.carta)
+        print_menu(mn_next)
 
     def lapso(self):
         year = None

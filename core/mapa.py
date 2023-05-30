@@ -4,7 +4,7 @@ import re
 from .util import html_to_md, mk_re
 from munch import Munch
 from .web import Web
-from .util import json_serial, tmap, parse_mes, parse_dia, get_text
+from .util import json_serial, tmap, parse_mes, nextone, get_text
 from requests.auth import HTTPBasicAuth
 from .user import User
 
@@ -58,16 +58,39 @@ class Mapa(Web):
             fecha = div.select_one("span.fecha-menu")
             fecha = get_text(fecha)
             if fecha:
-                fecha = reversed(tuple(int(i) for i in fecha.split()[-1].split("/")))
+                fecha = fecha.split()[-1].split("/")
+                fecha = reversed(tuple(map(int, fecha)))
                 fecha = date(*fecha)
-            elif len(menus)>0 and menus[-1].fecha is not None:
+            elif len(menus) > 0 and menus[-1].fecha is not None:
                 fecha = menus[-1].fecha + timedelta(days=1)
             # if dt < date.today():
             #    continue
-            menu = div.select_one("div.menu")
-            precios = [p for p, _ in re.findall(r"(\d+([.,]\d+))\s*€", str(menu))]
-            flag = False
-            for li in menu.findAll("li"):
+            mhtml = div.select_one("div.menu")
+            precios = [p for p, _ in re.findall(r"(\d+([.,]\d+))\s*€", str(mhtml))]
+            menu = Munch(
+                fecha=fecha,
+                precio=max(map(float, precios)),
+                primeros=set(),
+                segundos=set()
+            )
+            field = None
+            for li in mhtml.select("li"):
+                txt = nextone(map(get_text, li.contents))
+                if txt is None:
+                    continue
+                if txt in ("Primeros platos", "Primer plato"):
+                    field = "primeros"
+                    continue
+                if txt in ("Segundos platos", "Segundo plato"):
+                    field = "segundos"
+                    continue
+                if txt in ("Pan, bebida y postre", ):
+                    field = None
+                    continue
+                if field is not None:
+                    menu[field].add(txt)
+
+            for li in mhtml.findAll("li"):
                 txt = get_text(li)
                 if txt is None:
                     continue
@@ -79,19 +102,21 @@ class Mapa(Web):
                     flag = True
                 if flag:
                     li.extract()
-            for li in menu.findAll("li"):
+            for li in mhtml.findAll("li"):
                 lis = li.findAll("li")
                 if len(lis) == 1:
                     li.replaceWith(lis[0])
-            menu = html_to_md(menu, unwrap=('p', 'span'))
-            menu = re.sub(r"^[ \t]*\* (Menú .+?)$", r"\n\1\n", menu, flags=re.MULTILINE)
-            menu = re.sub(r"^[ \t]+\*\s*", r"* ", menu, flags=re.MULTILINE)
-            menu = re.sub(r"^[ \t]+\+\s*", r"  + ", menu, flags=re.MULTILINE)
-            menu = re.sub(r"\n\s*\n\s*\n+", r"\n\n", menu)
-            menus.append(Munch(
-                fecha=fecha,
-                menu=menu.strip()
-            ))
+
+            mmrk = html_to_md(mhtml, unwrap=('p', 'span'))
+            mmrk = re.sub(r"^[ \t]*\* (Menú .+?)$", r"\n\1\n", mmrk, flags=re.MULTILINE)
+            mmrk = re.sub(r"^[ \t]+\*\s*", r"* ", mmrk, flags=re.MULTILINE)
+            mmrk = re.sub(r"^[ \t]+\+\s*", r"  + ", mmrk, flags=re.MULTILINE)
+            mmrk = re.sub(r"\n\s*\n\s*\n+", r"\n\n", mmrk)
+
+            menu.carta = mmrk.strip()
+            for field in ("primeros", "segundos"):
+                menu[field] = tuple(sorted(menu[field]))
+            menus.append(menu)
         return menus
 
     def get_novedades(self):
