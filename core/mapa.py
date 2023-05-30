@@ -57,8 +57,11 @@ class Mapa(Web):
             div = div.find_parent("div")
             fecha = div.select_one("span.fecha-menu")
             fecha = get_text(fecha)
-            dt = reversed(tuple(int(i) for i in fecha.split("/")))
-            dt = date(*dt)
+            if fecha:
+                fecha = reversed(tuple(int(i) for i in fecha.split()[-1].split("/")))
+                fecha = date(*fecha)
+            elif len(menus)>0 and menus[-1].fecha is not None:
+                fecha = menus[-1].fecha + timedelta(days=1)
             # if dt < date.today():
             #    continue
             menu = div.select_one("div.menu")
@@ -86,7 +89,7 @@ class Mapa(Web):
             menu = re.sub(r"^[ \t]+\+\s*", r"  + ", menu, flags=re.MULTILINE)
             menu = re.sub(r"\n\s*\n\s*\n+", r"\n\n", menu)
             menus.append(Munch(
-                fecha=dt,
+                fecha=fecha,
                 menu=menu.strip()
             ))
         return menus
