@@ -388,9 +388,9 @@ class Printer:
             print(line % i)
         print(pst.sueldo.fuente)
 
-    def novedades(self):
+    def novedades(self, desde=30):
         dt_now = datetime.now()
-        desde = dt_now - timedelta(days=30)
+        desde = dt_now - timedelta(days=desde)
         items = [n for n in Mapa().get_novedades() if n.fecha >= desde]
 
         if not items:
