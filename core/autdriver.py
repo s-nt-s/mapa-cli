@@ -18,12 +18,15 @@ IN_LOGIN = (
     'https://trama.administracionelectronica.gob.es/portal/loginUrlAutentica.html'
 )
 
-
-class AutenticaWeakPassword(Exception):
+class AutenticaException(Exception):
     pass
 
 
-class AutenticaDown(Exception):
+class AutenticaWeakPassword(AutenticaException):
+    pass
+
+
+class AutenticaDown(AutenticaException):
     pass
 
 

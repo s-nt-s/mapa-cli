@@ -12,6 +12,7 @@ from textwrap import dedent
 from cli import str_main
 from core.filemanager import CNF, FileManager
 from core.timeout import timeout
+from core.autdriver import AutenticaException
 from datetime import date, timedelta
 
 parser = argparse.ArgumentParser(
@@ -80,7 +81,10 @@ class ApiBot(BaseBot):
             return None
         if text == "ping":
             return "pong"
-        return str_main(*text.split())
+        try:
+            return str_main(*text.split())
+        except AutenticaException as e:
+            return str(e)
 
 
 class SendBot(BaseBot):
