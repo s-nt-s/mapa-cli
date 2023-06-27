@@ -1,4 +1,5 @@
 from .web import Driver
+from bs4 import Tag
 from .filemanager import CNF
 from urllib.parse import urlparse
 from selenium.common.exceptions import TimeoutException
@@ -14,20 +15,49 @@ NEED_INSIST = (
 )
 IN_LOGIN = (
     'https://trama.administracionelectronica.gob.es/portal/loginTrama.html',
+    'https://trama.administracionelectronica.gob.es/portal/loginUrlAutentica.html'
 )
+
 
 class AutenticaWeakPassword(Exception):
     pass
 
-def mk_re(text):
+
+class AutenticaDown(Exception):
+    pass
+
+
+def mk_re(text: str):
     re_text = []
     for word in text.strip().split():
         re_text.append(re.escape(word))
     return r"\s+".join(re_text)
 
+
 re_autentica_error = re.compile(
     r"\s*("+mk_re("Sólo es posible acceder a esta aplicación con una contraseña fuerte")+r")\s*\.?\s*",
     re.IGNORECASE)
+
+re_autentica_down = re.compile(
+    r".*("+mk_re("Autentica no responde, puede que este caída")+r").*",
+    re.IGNORECASE | re.DOTALL)
+
+
+def is_error_box(n, reg_exp):
+    if not isinstance(n, Tag):
+        return False
+    if n.name != "div":
+        return False
+    if not n.attrs.get("class"):
+        return False
+    if "error-box" not in n.attrs['class']:
+        return False
+    text = n.get_text().strip()
+    if len(text) == 0:
+        return False
+    if reg_exp.match(text):
+        return True
+    return False
 
 
 class AutDriver(Driver):
@@ -53,6 +83,7 @@ class AutDriver(Driver):
         if self.in_autentica:
             return
         time.sleep(2)
+        self.__raise_if_find(AutenticaDown, lambda d: is_error_box(d, re_autentica_down))
         if self.get_soup().select_one("#username") is None:
             self.click("//a")
         try:
@@ -67,10 +98,14 @@ class AutDriver(Driver):
         except TimeoutException:
             pass
         time.sleep(5)
-        error = self.get_soup().find("p", text=re_autentica_error)
-        if error:
-            raise AutenticaWeakPassword(error.get_text().strip())
+        self.__raise_if_find(AutenticaWeakPassword, "p", text=re_autentica_error)
         self.in_autentica = True
+
+    def __raise_if_find(self, exp, *args, **kwargs):
+        error = self.get_soup().find(*args, **kwargs)
+        if error:
+            msg = re.sub(r"\s+", " ", error.get_text()).strip()
+            raise exp(msg)
 
     def get(self, url, *args, **kwargs):
         super().get(url, *args, **kwargs)
