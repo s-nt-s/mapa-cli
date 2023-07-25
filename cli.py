@@ -3,6 +3,7 @@ import argparse
 import re
 import sys
 from io import StringIO
+from typing import Tuple
 from os.path import abspath, dirname, isfile
 from os import chdir, remove
 from core.filemanager import FileManager
@@ -42,7 +43,7 @@ group.add_argument('--ofertas', action='store_true',
 group.add_argument('--contactos', action='store_true', help="Contactos de interés")
 group.add_argument('--busca', nargs="+", type=str, help="Busca en el directorio de personal")
 
-ARG_OPTIONS = re.findall(r"--([a-z]+)", parser.format_help())
+ARG_OPTIONS: Tuple[str] = tuple(re.findall(r"--([a-z]+)", parser.format_help()))
 
 
 def main(arg, *args, **kwargs):
