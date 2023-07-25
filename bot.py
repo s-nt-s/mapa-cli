@@ -108,6 +108,7 @@ class SendBot(BaseBot):
             except TimeoutError:
                 pass
 
+
 if __name__ == '__main__':
     arg = parser.parse_args()
     if arg.send:

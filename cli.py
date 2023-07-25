@@ -42,55 +42,60 @@ group.add_argument('--ofertas', action='store_true',
 group.add_argument('--contactos', action='store_true', help="Contactos de interés")
 group.add_argument('--busca', nargs="+", type=str, help="Busca en el directorio de personal")
 
-arg_options = re.findall(r"--([a-z]+)", parser.format_help())
+ARG_OPTIONS = re.findall(r"--([a-z]+)", parser.format_help())
 
 
-def main(arg, *args, **kargv):
+def main(arg, *args, **kwargs):
     prt = Printer()
     if arg.horas:
-        prt.horas_semana(*args, **kargv)
+        prt.horas_semana(*args, **kwargs)
     if arg.mes:
-        prt.horas_mes(*args, **kargv)
+        prt.horas_mes(*args, **kwargs)
     if arg.nominas:
-        prt.nominas(*args, sueldo='neto', **kargv)
+        prt.nominas(*args, sueldo='neto', **kwargs)
     if arg.bruto:
-        prt.nominas(*args, sueldo='bruto', **kargv)
+        prt.nominas(*args, sueldo='bruto', **kwargs)
     if arg.festivos:
-        prt.festivos(*args, **kargv)
+        prt.festivos(*args, **kwargs)
     if arg.expediente:
-        prt.expediente(*args, **kargv)
+        prt.expediente(*args, **kwargs)
     if arg.vacaciones:
-        prt.vacaciones(*args, **kargv)
+        prt.vacaciones(*args, **kwargs)
     if arg.menu:
-        prt.menu(*args, **kargv)
+        prt.menu(*args, **kwargs)
     if arg.lapso:
-        prt.lapso(*args, **kargv)
+        prt.lapso(*args, **kwargs)
     if arg.puesto:
-        prt.puesto(*args, **kargv)
+        prt.puesto(*args, **kwargs)
     if arg.novedades:
-        prt.novedades(*args, **kargv)
+        prt.novedades(*args, **kwargs)
     if arg.ofertas:
-        prt.ofertas(*args, **kargv)
+        prt.ofertas(*args, **kwargs)
     # if arg.servicios:
-    #    api.servicios(*args, **kargv)
+    #    api.servicios(*args, **kwargs)
     if arg.contactos:
-        prt.contactos(*args, **kargv)
+        prt.contactos(*args, **kwargs)
     if arg.busca:
-        prt.busca(*arg.busca, **kargv)
+        prt.busca(*arg.busca, **kwargs)
 
-def parse_cmd(cmd, **kargv):
+
+def parse_cmd(cmd, **kwargs):
     if cmd in ("nominas!", "bruto!"):
-        #FileManager.get().remove("data/nominas/todas.json")
+        # FileManager.get().remove("data/nominas/todas.json")
         cmd = cmd[:-1]
     if cmd in ("menu!", ):
-        kargv['show_all'] = True
+        kwargs['show_all'] = True
         cmd = cmd[:-1]
-    return cmd, kargv
+    if cmd not in ARG_OPTIONS:
+        opts = set(a for a in ARG_OPTIONS if a.startswith(cmd) and a != 'help')
+        if len(opts) == 1:
+            cmd = opts.pop()
+    return cmd, kwargs
 
 
-def str_main(text, *args, **kargv):
-    text, kargv = parse_cmd(text, **kargv)
-    if text not in arg_options:
+def str_main(text, *args, **kwargs):
+    text, kwargs = parse_cmd(text, **kwargs)
+    if text not in ARG_OPTIONS:
         return
     if text in ("busca", "nomina") and len(args) == 0:
         return
@@ -103,7 +108,7 @@ def str_main(text, *args, **kargv):
     old_stdout = sys.stdout
     result = StringIO()
     sys.stdout = result
-    main(arg, *args, **kargv)
+    main(arg, *args, **kwargs)
     sys.stdout = old_stdout
     result_string = result.getvalue()
     result_string = result_string.rstrip()
@@ -116,12 +121,12 @@ if __name__ == "__main__":
         sys.exit()
 
     arg = None
-    kargv = {}
+    kwargs = {}
     if len(sys.argv) > 1:
         prm = sys.argv[1]
-        prm, kargv = parse_cmd(prm)
-        if prm in arg_options:
+        prm, kwargs = parse_cmd(prm)
+        if prm in ARG_OPTIONS:
             arg = parser.parse_args(["--" + prm] + sys.argv[2:])
 
     arg = arg or parser.parse_args()
-    main(arg, **kargv)
+    main(arg, **kwargs)
