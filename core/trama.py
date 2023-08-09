@@ -93,7 +93,7 @@ class Trama:
                 fec = fec[:-1].split("(", 1)[-1]
                 fec = tmap(int, reversed(fec.split("/")))
                 fec = date(*fec)
-                mar = tmap(HM, re.findall(r"\d+:\d+:\d+", mar))
+                mar = tmap(HM, sorted(re.findall(r"\d+:\d+:\d+", mar)))
                 if prs:
                     obs = ((obs or "") + " "+prs).strip()
 
