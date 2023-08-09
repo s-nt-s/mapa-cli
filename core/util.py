@@ -1,5 +1,6 @@
 import re
 from markdownify import markdownify
+from typing import NamedTuple
 from datetime import date, datetime
 from .hm import HM
 
@@ -129,6 +130,8 @@ def json_serial(obj):
         return obj.strftime("%Y-%m-%d %H:%M")
     if isinstance(obj, HM):
         return str(obj)
+    if isinstance(obj, NamedTuple):
+        return obj._asdict()
 
 
 def json_hook(d):
