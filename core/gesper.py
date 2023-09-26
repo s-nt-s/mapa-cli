@@ -66,6 +66,29 @@ def tr_clave_valor(soup, id, *args, **keys):
         yield clave, valor
 
 
+def parse_festivo(nombre):
+    nombre = nombre.capitalize()
+    if nombre == "Lunes siguiente a todos los santos":
+        return "Todos los santos"
+    if nombre == "Lunes siguiente al dia de la comunidad de madrid":
+        return "Día de la Comunidad de Madrid"
+    if nombre in ("Lunes siguiente al dia de la constitución española", "Fiesta nacional constitucion"):
+        return "Día de la Constitución"
+    if nombre in ("Nuestra señora de la almudena", 'Fiesta almudena'):
+        return "La Almudena"
+    if nombre == "Fiesta nacional de españa":
+        return "Fiesta nacional"
+    if nombre == "Fiesta del trabajo":
+        return "Día del trabajo"
+    if nombre == "Natividad del señor":
+        return "Navidad"
+    if nombre in ('Fiesta nacional inmaculada', ):
+        return "La Inmaculada"
+    if nombre.startswith("Fiesta nacional "):
+        nombre = nombre[16:].capitalize()
+    return nombre
+
+
 class Gesper(Web):
 
     def __init__(self, *args, **kargv):
@@ -79,9 +102,7 @@ class Gesper(Web):
         r = []
         today = datetime.today()
         self.get("https://intranet.mapa.es/app/GESPER/CalendarioLaboral.aspx")
-        while True:
-            if max_iter == 0:
-                break
+        while max_iter != 0:
             max_iter = max_iter - 1
             table = self.soup.select("#CalFestivos")[0]
             nxt = table.findAll("a")[-1]
@@ -103,22 +124,8 @@ class Gesper(Web):
                     dia = int(dia)
                     dt = datetime(year, mes, dia)
                     if dt >= today and dt.weekday() not in (5, 6):
-                        nombre = nombre.capitalize()
+                        nombre = parse_festivo(nombre)
                         semana = parse_dia(dt)
-                        if nombre == "Lunes siguiente a todos los santos":
-                            nombre = "'Todos los santos'"
-                        elif nombre == "Lunes siguiente al dia de la comunidad de madrid":
-                            nombre = "Día de la Comunidad de Madrid"
-                        elif nombre == "Lunes siguiente al dia de la constitución española":
-                            nombre = "'Día de la Constitucion'"
-                        elif nombre == "Nuestra señora de la almudena":
-                            nombre = "La Almudena"
-                        elif nombre == "Fiesta nacional de españa":
-                            nombre = "Fiesta nacional"
-                        elif nombre == "Fiesta del trabajo":
-                            nombre = "Día del trabajo"
-                        elif nombre == "Natividad del señor":
-                            nombre = "Navidad"
                         r.append(Munch(
                             date=dt,
                             year=dt.year,
