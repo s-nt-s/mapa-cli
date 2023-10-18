@@ -4,9 +4,11 @@ import re
 import sys
 from io import StringIO
 from typing import Tuple
-from os.path import abspath, dirname, isfile
-from os import chdir, remove
+from os.path import abspath, dirname
+from os import chdir
 from core.filemanager import FileManager
+from unidecode import unidecode
+
 
 chdir(dirname(abspath(__file__)))
 
@@ -46,6 +48,14 @@ group.add_argument('--busca', nargs="+", type=str, help="Busca en el directorio 
 ARG_OPTIONS: Tuple[str] = tuple(re.findall(r"--([a-z]+)", parser.format_help()))
 
 
+def myunidecode(s: str):
+    fake_ene = "~$%&@"
+    s = s.replace("ñ", fake_ene)
+    s = unidecode(s)
+    s = s.replace(fake_ene, "ñ")
+    return s
+
+
 def main(arg, *args, **kwargs):
     prt = Printer()
     if arg.horas:
@@ -80,11 +90,12 @@ def main(arg, *args, **kwargs):
         prt.busca(*arg.busca, **kwargs)
 
 
-def parse_cmd(cmd, **kwargs):
+def parse_cmd(cmd: str, **kwargs):
+    cmd = myunidecode(cmd)
     if cmd in ("nominas!", "bruto!"):
         # FileManager.get().remove("data/nominas/todas.json")
         cmd = cmd[:-1]
-    if cmd in ("menu!", ):
+    if cmd in ("menu!", 'menus'):
         kwargs['show_all'] = True
         cmd = cmd[:-1]
     if cmd not in ARG_OPTIONS:
