@@ -24,6 +24,7 @@ FCH_FIN = date(2022, 5, 29)
 
 logger = logging.getLogger(__name__)
 
+
 def _find_mes(*tds):
     for td in tds:
         spl = td.get_text().strip().lower().split()

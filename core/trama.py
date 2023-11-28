@@ -32,6 +32,7 @@ def get_from_label(sp, lb):
         val = int(val)
     return val
 
+
 class Trama:
 
     @Cache(file="data/autentica/trama.calendario.pickle", maxOld=(1 / 48))
@@ -52,8 +53,8 @@ class Trama:
             ff.click("//div[@id='mainWindow']//a[text()='Enviadas']")
             ff.val("idEstadoIncidencia", "Cualquier estado")
             ff.click("btnBuscar")
-            #ff.wait("maximoElementosPagina")
-            #ff.val("maximoElementosPagina", "100")
+            # ff.wait("maximoElementosPagina")
+            # ff.val("maximoElementosPagina", "100")
             return ff.to_web()
 
     @Cache(file="data/autentica/trama.vacaciones.pickle", maxOld=(1 / 48))
@@ -66,8 +67,8 @@ class Trama:
             ff.click("//div[@id='mainWindow']//a[text()='Enviadas']")
             ff.val("idEstadoIncidencia", "Cualquier estado")
             ff.click("btnBuscar")
-            #ff.wait("maximoElementosPagina")
-            #ff.val("maximoElementosPagina", "100")
+            # ff.wait("maximoElementosPagina")
+            # ff.val("maximoElementosPagina", "100")
             return ff.to_web()
 
     def _get_dias(self, ini, fin):
@@ -429,7 +430,7 @@ class Trama:
 if __name__ == "__main__":
     a = Trama()
     r = a.get_informe(gesper_FCH_FIN+timedelta(days=1), date.today())
-    #r = a.get_incidencias()
+    # r = a.get_incidencias()
     import json
 
     print(json.dumps(r, indent=2, default=json_serial))

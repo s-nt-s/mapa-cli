@@ -28,8 +28,10 @@ parser.add_argument(
 logging.basicConfig(level=CNF.xmpp.get('LOG', logging.INFO), format='%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 
+
 class ConnectionLost(Exception):
     pass
+
 
 class BaseBot(slixmpp.ClientXMPP):
     def __init__(self):
@@ -47,6 +49,7 @@ class BaseBot(slixmpp.ClientXMPP):
     def connection_lost(self, *args, **kargv):
         super().connection_lost(*args, **kargv)
         self.disconnect()
+
 
 class ApiBot(BaseBot):
 

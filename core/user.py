@@ -96,8 +96,8 @@ class User(Munch):
         '''.format(
             apellidos=self.apellidos,
             centro_unidad=join_str(self.centro, self.unidad, sep=" > "),
-            dire=join_str(join_str(u.despacho, u.planta), u.ubicacion, sep=",")
-                 ** dict(self)
+            dire=join_str(join_str(self.despacho, self.planta), self.ubicacion, sep=","),
+            **dict(self)
         )
         lines = []
         for l in vcard.strip().split("\n"):

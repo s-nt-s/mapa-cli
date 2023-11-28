@@ -1,8 +1,8 @@
 import json
 import logging
 from os import W_OK, access, makedirs
-from os.path import dirname, realpath, exists
-from pathlib import Path, PurePosixPath
+from os.path import dirname, realpath
+from pathlib import Path
 from tempfile import gettempdir
 from munch import Munch
 import pdftotext

@@ -13,7 +13,8 @@ from typing import NamedTuple, Dict, List
 
 re_sp = re.compile(r"\s+")
 
-# Evitar error (Caused by SSLError(SSLError(1, '[SSL: DH_KEY_TOO_SMALL] dh key too small (_ssl.c:997)')))
+# Evitar error
+# (Caused by SSLError(SSLError(1, '[SSL: DH_KEY_TOO_SMALL] dh key too small (_ssl.c:997)')))
 # en www.funciona.es
 requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
 try:

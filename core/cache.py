@@ -8,6 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 FM = FileManager.get()
 
+
 class Cache:
     def __init__(self, file, *args, maxOld=30, json_default=None, json_hook=None, keep_if_none=False, **kvargs):
         self.file = file
@@ -66,6 +67,7 @@ class Cache:
         functools.update_wrapper(self, func)
         self.func = func
         return lambda *args, **kvargs: self.callCache(*args, **kvargs)
+
 
 class MunchCache(Cache):
     def read(self, *args, **kvargs):

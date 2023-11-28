@@ -6,9 +6,7 @@ from io import StringIO
 from typing import Tuple
 from os.path import abspath, dirname
 from os import chdir
-from core.filemanager import FileManager
 from unidecode import unidecode
-
 
 chdir(dirname(abspath(__file__)))
 

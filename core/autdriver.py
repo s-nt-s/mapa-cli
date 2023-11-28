@@ -18,6 +18,7 @@ IN_LOGIN = (
     'https://trama.administracionelectronica.gob.es/portal/loginUrlAutentica.html'
 )
 
+
 class AutenticaException(Exception):
     pass
 
@@ -118,5 +119,3 @@ class AutDriver(Driver):
                 self.autentica_login()
         if self.current_url in NEED_INSIST:
             super().get(url, *args, **kwargs)
-
-

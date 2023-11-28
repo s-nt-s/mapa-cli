@@ -55,10 +55,12 @@ def toTag(html, *args):
     tag = bs4.BeautifulSoup(html, 'html.parser')
     return tag
 
+
 def slug(s):
     s = "-".join(s.strip().lower().split())
     s = unidecode(s)
     return s
+
 
 class Jnj2():
 

@@ -119,6 +119,7 @@ class GesperIHCache(Cache):
         d = GesperIH(d)
         return d
 
+
 def mk_parse(v):
     if isinstance(v, dict):
         for k, x in list(v.items()):
@@ -132,6 +133,7 @@ def mk_parse(v):
     if re.match(r"\d+-\d+-\d+", v):
         return date(*map(int, v.split("-")))
     return v
+
 
 class HMmunch(Munch):
     def _parse(self):

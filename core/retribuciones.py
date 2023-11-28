@@ -16,15 +16,17 @@ urllib3.disable_warnings()
 
 re_cellnb = re.compile(r'\s([\d\.,]+)\s')
 
+
 class RtCache(Cache):
     def read(self, file, *args, **kvargs):
         d = super().read(file, *args, **kvargs)
         if d is None:
             return d
         if d["niveles"]:
-            d["niveles"]={int(k):v for k,v in d["niveles"].items()}
+            d["niveles"]={int(k): v for k, v in d["niveles"].items()}
         d = Munch.fromDict(d)
         return d
+
 
 def parseTb(table):
     if table is None:

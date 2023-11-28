@@ -17,7 +17,7 @@ fix_url = (
 )
 
 re_txt = {
-    mk_re(k):v for k, v in {
+    mk_re(k): v for k, v in {
         "Instituto Nacional de Administraciones Públicas": "INAP",
         "Administración General del Estado": "AGE",
         "Ministerio de Agricultura, Pesca y Alimentación": "MAPA",
@@ -25,6 +25,7 @@ re_txt = {
         "Administraciones Públicas": "AAPP"
     }.items()
 }
+
 
 def _find_mes(*tds):
     for td in tds:
@@ -42,6 +43,7 @@ def dict_style(n):
              for s in n.attrs["style"].lower().split(";") if s]
     style = {k: v for k, v in style}
     return style
+
 
 class Mapa(Web):
     def get_menu(self):
