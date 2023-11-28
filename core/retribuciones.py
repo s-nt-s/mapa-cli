@@ -63,12 +63,13 @@ class Retribuciones:
             "https://www.sepg.pap.hacienda.gob.es/sitios/sepg/es-ES/CostesPersonal/EstadisticasInformes/Paginas/RetribucionesPersonalFuncionario.aspx")
         for a in w.soup.select("a[href]"):
             txt = a.get_text().strip()
-            if txt.startswith("Retribuciones del personal funcionario."):
+            if txt.startswith("Retribuciones del personal funcionario"):
                 yr = [int(i) for i in txt.split() if i.isdigit()]
                 if yr and yr[0] > 2000:
                     url = a.attrs["href"]
                     yr = int(yr[0])
-                    retribucion[yr] = url
+                    if yr not in retribucion:
+                        retribucion[yr] = url
         return retribucion
 
     def get(self):
