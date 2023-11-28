@@ -269,9 +269,12 @@ class Printer:
         for n in nominas:
             k = (n.year, n.mes)
             agg_nomias[k] = agg_nomias.get(k, set()).union({n.irpf})
+        last = None
         for ((y, mes), irpf) in agg_nomias.items():
             for i in sorted(irpf):
-                print("{}-{:02d} __ {: >5.2f}".format(y, mes, i))
+                if i != last:
+                    print("{}-{:02d} __ {: >5.2f}".format(y, mes, i))
+                    last = i
 
     def festivos(self):
         g = Gesper()
