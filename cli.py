@@ -33,6 +33,8 @@ group.add_argument('--nominas', action='store_true',
                    help="Descarga las nóminas en el directorio definido en config.yml y muestra las cantidades netas")
 group.add_argument('--bruto', action='store_true',
                    help="Lo mismo que --nominas pero mostrando las cantidades en bruto")
+group.add_argument('--irpf', action='store_true',
+                   help="Muestra la evolución del irpf")
 group.add_argument('--expediente', action='store_true',
                    help="Descarga el expediente personal en el directorio definido en config.yml")
 group.add_argument('--puesto', action='store_true',
@@ -66,6 +68,8 @@ def main(arg, *args, **kwargs):
         prt.nominas(*args, sueldo='neto', **kwargs)
     if arg.bruto:
         prt.nominas(*args, sueldo='bruto', **kwargs)
+    if arg.irpf:
+        prt.irpf(*args, **kwargs)
     if arg.festivos:
         prt.festivos(*args, **kwargs)
     if arg.expediente:

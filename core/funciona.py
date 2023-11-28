@@ -1,17 +1,17 @@
 import re
 
-from munch import Munch
 from os.path import isfile, join, expanduser, basename
 
-from .web import Driver, get_query, buildSoup
+from .web import get_query, Web
 from .autdriver import AutDriver
 from .filemanager import CNF, FileManager
 from .util import get_text, to_num
-from .cache import MunchCache
+from .cache import Cache
 from glob import glob
+import requests
+from typing import NamedTuple, Dict, List
 
 re_sp = re.compile(r"\s+")
-import requests
 
 # Evitar error (Caused by SSLError(SSLError(1, '[SSL: DH_KEY_TOO_SMALL] dh key too small (_ssl.c:997)')))
 # en www.funciona.es
@@ -20,6 +20,42 @@ try:
     requests.packages.urllib3.contrib.pyopenssl.DEFAULT_SSL_CIPHER_LIST += 'HIGH:!DH:!aNULL'
 except AttributeError:
     pass
+
+
+class NominaCache(Cache):
+    def read(self, *args, **kwargs):
+        d = super().read(*args, **kwargs)
+        if isinstance(d, list):
+            d = [Nomina.build(**n) for n in d]
+        return tuple(d)
+
+    def save(self, file, data, *args, **kvargs):
+        if isinstance(data, (list, tuple)):
+            data = [d._asdict() for d in data]
+        return super().save(file, data, *args, **kvargs)
+
+
+class Nomina(NamedTuple):
+    mes: int
+    year: int
+    file: str = None
+    url: str = None
+    error: bool = False
+    bruto: float = None
+    neto: float = None
+    irpf: float = None
+
+    def merge(self, **kwarg):
+        return Nomina(**{**self._asdict(), **kwarg})
+
+    def get(self, field):
+        return self._asdict().get(field)
+
+    @classmethod
+    def build(cls, **kwargs):
+        kwargs = {k: v for k, v in kwargs.items() if k in cls._fields}
+        return cls(**kwargs)
+
 
 def query_nom(href):
     q = get_query(href)
@@ -31,46 +67,109 @@ def query_nom(href):
         q["year"] = year
         try:
             q["file"] = "{year}.{mes:02d}-{cdcierre}-{cdcalculo}.pdf".format(**q)
-        except KeyError as e:
+        except KeyError:
             pass
     return q
 
 
 def get_int_match(txt, *regx):
     for r in regx:
-        c = re.search(r, txt, flags=re.MULTILINE | re.IGNORECASE)
+        if isinstance(r, re.Pattern):
+            c = r.search(txt)
+        else:
+            c = re.search(r, txt, flags=re.MULTILINE | re.IGNORECASE)
         if c:
             return to_num(c.group(1))
 
 
-class Funciona:
+class FuncionException(Exception):
+    pass
 
-    @MunchCache(file="data/nominas/todas.json", maxOld=(1 / 24))
+
+class Funciona:
+    NOM_JSON = "data/nominas/{}.json"
+
+    @NominaCache(file="data/nominas/todas.json", maxOld=(1 / 24))
     def get_nominas(self):
         """
         Devuelve las información de las nominas
         Es necesario configurar un directorio de descargas en config.yml
         """
 
+        w: Web
+        r: List[Nomina]
+        w, r = self.__get_nominas()
+
+        def _complete(nom: Nomina):
+            if nom.neto:
+                return nom
+            if not isfile(expanduser(nom.file)):
+                rq = w.s.get(nom.url)
+                if "text/html" in rq.headers["content-type"]:
+                    error = get_text(w.soup.select_one("div.box-bbr"))
+                    if error is None:
+                        error = "No es un pdf"
+                    return nom.merge(error=error)
+                FileManager.get().dump(nom.file, rq.content)
+            if not isfile(expanduser(nom.file)):
+                return nom
+            txt = FileManager.get().load(nom.file, physical=True)
+            txt = txt.split("IMPORTES EN NOMINA", 1)[-1]
+            nom = nom.merge(
+                neto=get_int_match(
+                    txt,
+                    r"TRANSFERENCIA DEL LIQUIDO A PERCIBIR:\s+(\d[\d\.,]+)"
+                ),
+                bruto=get_int_match(
+                    txt,
+                    r"R\s*E\s*T\s*R\s*I\s*B\s*U\s*C\s*I\s*O\s*N\s*E\s*S\s*\.+\s*(\d[\d\.,]+)",
+                    r"^ +([\d\.,]+) *$"
+                ),
+                irpf=get_int_match(
+                    txt,
+                    r"BASE\s+SUJETA\s+A\s+RETENCION\s+DEL\s+IRPF.*?(\d[\d\.,]+)\s*$",
+                    r"(\d[\d\.,]+)\n\s*4\.\s+BASE\s+SUJETA\s+A\s+RETENCION\s+DEL\s+IRPF",
+                    r"I\.R\.P\.F\..*?([\d\.,]+)\s*$"
+                )
+            )
+            m = re.compile(
+                r"DATOS\s+DEL\s+I\.R\.P\.F\..*?RETENCION\n.*?(\d[\d\.]+)\n",
+                flags=re.DOTALL
+            ).search(txt)
+            if m:
+                nom = nom.merge(irpf=float(m.group(1)))
+            if nom.bruto < nom.neto:
+                aux = map(to_num, re.findall(r"\b\d[\d\.\,]+\b", txt))
+                aux = [b for b in aux if nom.neto < b < (nom.neto*1.5)]
+                if aux:
+                    nom = nom.merge(bruto=aux[0])
+            return nom
+
+        r = list(map(_complete, r))
+
+        yrs = sorted(set(i.year for i in r))
+        myr = yrs[-1]
+        if r[-1].mes < 3:
+            myr = myr - 1
+        for y in yrs:
+            njs = Funciona.NOM_JSON.format(y)
+            if y < myr and not isfile(njs):
+                FileManager.get().dump(njs, [n._asdict() for n in r if n.year == y])
+
+        return tuple(r)
+
+    def __get_nominas(self):
         done = set()
-        w = None
-        r = {}
-        nom_json = "data/nominas/{}.json"
-        for fl in sorted(glob(nom_json.format("*"))):
-            for nom in (Munch.fromDict(FileManager.get().load(fl)) or []):
-                r[basename(nom.file)]=nom
+        w: Web = None
+        r: Dict[str, Nomina] = {}
+        for fl in sorted(glob(Funciona.NOM_JSON.format("*"))):
+            for nom in FileManager.get().load(fl):
+                r[basename(nom['file'])] = Nomina.build(**nom)
             done.add(fl.split("/")[-1].split(".")[0])
         with AutDriver(browser='firefox', visible=False) as ff:
             ff.get("https://www.funciona.es/servinomina/action/Retribuciones.do")
             soup = ff.get_soup()
-            a = soup.select_one(".mod_ultimas_nominas a[href]")
-            if not a:
-                return None
             # https://www.funciona.es/servinomina/action/DetalleNomina.do?habil=ARF&clasnm=02&tipo=NOMINA%20ORDINARIA%20DEL%20MES&mesano=01/02/2020&dirnedaes=194&cdcierre=29004&cddup=0&type=1&cdcalculo=28965&mes=Febrero&anio=2020
-            href = a.attrs["href"]
-            q = query_nom(href)
-            if q.get("file") is None:
-                return None
             for ayr in soup.select("a[href]"):
                 href = ayr.attrs["href"]
                 if "/servinomina/action/ListadoNominas.do?anio=" not in href:
@@ -85,7 +184,7 @@ class Funciona:
                     if q.get("file") is None:
                         continue
                     href = href.replace(" ", "+")
-                    nom = Munch(
+                    nom = Nomina(
                         file=join(CNF.nominas, q["file"]),
                         url=href,
                         error=False,
@@ -95,40 +194,9 @@ class Funciona:
                     r[basename(nom.file)] = nom
             w = ff.to_web()
 
-        r = sorted(r.values(), key=lambda x: basename(x.file))
-        for nom in r:
-            if nom.get('neto') is not None:
-                continue
-            if not isfile(expanduser(nom.file)):
-                rq = w.s.get(nom.url)
-                if "text/html" in rq.headers["content-type"]:
-                    error = get_text(w.soup.select_one("div.box-bbr"))
-                    if error is None:
-                        error = "No es un pdf"
-                    nom.error = error
-                FileManager.get().dump(nom.file, rq.content)
-            if isfile(expanduser(nom.file)):
-                txt = FileManager.get().load(nom.file, physical=True)
-                txt = txt.split("IMPORTES EN NOMINA", 1)[-1]
-                nom.neto = get_int_match(txt, r"TRANSFERENCIA DEL LIQUIDO A PERCIBIR:\s+([\d\.,]+)")
-                nom.bruto = get_int_match(txt, r"R\s*E\s*T\s*R\s*I\s*B\s*U\s*C\s*I\s*O\s*N\s*E\s*S\s*\.+\s*([\d\.,]+)",
-                                          r"^ +([\d\.,]+) *$")
-                if nom.bruto < nom.neto:
-                    aux = [b for b in map(to_num, re.findall(r"\b\d[\d\.\,]+\b", txt)) if nom.neto < b < (nom.neto*1.5)]
-                    if aux:
-                        nom.bruto=aux[0]
-        yrs = sorted(set(i.year for i in r))
-        myr = yrs[-1]
-        if r[-1].mes < 3:
-            myr = myr - 1
-        for y in yrs:
-            njs = nom_json.format(y)
-            if y < myr and not isfile(njs):
-                FileManager.get().dump(njs, [n for n in r if n.year == y])
+        noms = sorted(r.values(), key=lambda x: basename(x.file))
 
-        for index, nom in enumerate(r):
-            nom.index = index
-        return r
+        return w, noms
 
 
 if __name__ == "__main__":

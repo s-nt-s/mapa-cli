@@ -1,6 +1,6 @@
 import re
 from .trama import Trama
-from .funciona import Funciona
+from .funciona import Funciona, Nomina
 from datetime import date, datetime, timedelta
 from .gesper import Gesper
 from .mapa import Mapa
@@ -10,6 +10,7 @@ from .util import to_strint, DAYNAME, parse_dia, notnull, tmap
 from io import StringIO
 from munch import Munch
 from dateutil.relativedelta import relativedelta
+from typing import List
 
 re_rtrim = re.compile(r"^\s*\n")
 re_sp = re.compile(r"\s+")
@@ -167,15 +168,15 @@ class Printer:
 
     def nominas(self, sueldo='neto'):
         f = Funciona()
-        nominas = [n for n in (f.get_nominas() or []) if n.get(sueldo) is not None]
+        nominas: List[Nomina] = (f.get_nominas() or [])
+        nominas = [n for n in nominas if n.get(sueldo) is not None]
         n_ym = sorted(set((n.year, n.mes) for n in nominas))
-        for index, n in enumerate(CNF.get("_nominas", [])):
+        for n in CNF.get("_nominas", []):
             if n.get(sueldo) is None:
                 continue
             if (n.year, n.mes) not in n_ym:
-                n.index = index
-                nominas.append(n)
-        nominas = sorted(nominas, key=lambda n: (n.year, n.mes, -n.index))
+                nominas.append(Nomina.build(**n))
+        nominas = sorted(nominas, key=lambda n: (n.year, n.mes, -nominas.index(n)))
         years = sorted(set(n.year for n in nominas))
         for y in years:
             meses = set()
@@ -183,19 +184,23 @@ class Printer:
             for n in nominas:
                 if n.year != y:
                     continue
-                euros = euros + n[sueldo]
+                euros = euros + n.get(sueldo)
                 meses.add(n.mes)
             meses = len(meses)
-            print("{year}: {meses:>2} x {euros:>5}€ = {total:>6}€".format(year=y, euros=to_strint(euros / meses),
-                                                                          meses=meses, total=to_strint(euros)))
+            print("{year}: {meses:>2} x {euros:>5}€ = {total:>6}€".format(
+                year=y,
+                euros=to_strint(euros / meses),
+                meses=meses,
+                total=to_strint(euros))
+            )
         print("")
         agg_nomias = {}
         for n in nominas:
             k = (n.year, n.mes)
-            agg_nomias[k] = agg_nomias.get(k, 0) + n[sueldo]
+            agg_nomias[k] = agg_nomias.get(k, 0) + n.get(sueldo)
         if sueldo == 'bruto':
             for n in nominas:
-                print("{}-{:02d} __ {:>5}€".format(n.year, n.mes, to_strint(n[sueldo])))
+                print("{}-{:02d} __ {:>5}€".format(n.year, n.mes, to_strint(n.get(sueldo))))
         else:
             for ((y, mes), sld) in agg_nomias.items():
                 print("{}-{:02d} __ {:>5}€".format(y, mes, to_strint(sld)))
@@ -231,7 +236,7 @@ class Printer:
             for y, m in n_ym[:c]:
                 for nom in nominas:
                     if nom.year == y and nom.mes == m:
-                        cant = cant + nom[sueldo]
+                        cant = cant + nom.get(sueldo)
             per_hour = ""
             if show_he:
                 inf = Trama().get_informe(lst_dt - relativedelta(months=c), lst_dt)
@@ -248,6 +253,25 @@ class Printer:
                 cotizar = 6.35
                 print("Si trabajaras 8h/día con 22 días de vacaciones y cotizando {}%:".format(cotizar))
                 print("Sueldo anual: " + to_strint((260 - 22) * 8 * sldhr.hora * (100 + cotizar) / 100))
+
+    def irpf(self):
+        f = Funciona()
+        nominas: List[Nomina] = (f.get_nominas() or [])
+        nominas = [n for n in nominas if n.get('irpf') is not None]
+        n_ym = sorted(set((n.year, n.mes) for n in nominas))
+        for n in CNF.get("_nominas", []):
+            if n.get('irpf') is None:
+                continue
+            if (n.year, n.mes) not in n_ym:
+                nominas.append(Nomina.build(**n))
+        nominas = sorted(nominas, key=lambda n: (n.year, n.mes, -nominas.index(n)))
+        agg_nomias = {}
+        for n in nominas:
+            k = (n.year, n.mes)
+            agg_nomias[k] = agg_nomias.get(k, set()).union({n.irpf})
+        for ((y, mes), irpf) in agg_nomias.items():
+            for i in sorted(irpf):
+                print("{}-{:02d} __ {: >5.2f}".format(y, mes, i))
 
     def festivos(self):
         g = Gesper()
