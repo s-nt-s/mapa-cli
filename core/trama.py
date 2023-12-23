@@ -289,10 +289,22 @@ class Trama:
                     usados=pe[0],
                     year=yr
                 ))
+                vgast, vtotal, vigast, vitotal = vc
+                if yr > GESPER_BREAK:
+                    vgastadas = int(vgast)
+                    vtotal = vtotal - vitotal
+                    vgast = min(vtotal, vgastadas - vigast)
+                    vigast = vgastadas - vgast
+                    _add(Munch(
+                        key="sueltos",
+                        total=vitotal,
+                        usados=vigast,
+                        year=yr
+                    ))
                 _add(Munch(
                     key="vacaciones",
-                    total=vc[1],
-                    usados=vc[0],
+                    total=vtotal,
+                    usados=vgast,
                     year=yr
                 ))
             if yrs and (year in range(min(yrs), max(yrs) + 1)):

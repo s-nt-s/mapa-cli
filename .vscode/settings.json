@@ -1,0 +1,18 @@
+{
+    "cSpell.language": "en,es-ES",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8",
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": false,
+    },
+    "autopep8.args": [
+        "--aggressive",
+        "--aggressive",
+        "--line-length",
+        "300"
+    ],
+    "pylint.args": [
+        "--max-line-length",
+        "300"
+    ],
+}
