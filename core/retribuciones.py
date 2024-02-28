@@ -20,10 +20,10 @@ re_cellnb = re.compile(r'\s([\d\.,]+)\s')
 class RtCache(Cache):
     def read(self, file, *args, **kvargs):
         d = super().read(file, *args, **kvargs)
-        if d is None:
-            return d
+        if d is None or len(d) == 0:
+            return None
         if d["niveles"]:
-            d["niveles"]={int(k): v for k, v in d["niveles"].items()}
+            d["niveles"] = {int(k): v for k, v in d["niveles"].items()}
         d = Munch.fromDict(d)
         return d
 
