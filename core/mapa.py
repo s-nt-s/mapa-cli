@@ -68,7 +68,7 @@ class Mapa(Web):
             # if dt < date.today():
             #    continue
             mhtml = div.select_one("div.menu")
-            precios = [p for p, _ in re.findall(r"(\d+([.,]\d+))\s*€", str(mhtml))]
+            precios = [p.replace(",", ".") for p, _ in re.findall(r"(\d+([.,]\d+))\s*€", str(mhtml))]
             menu = Munch(
                 fecha=fecha,
                 precio=max(map(float, precios)),
