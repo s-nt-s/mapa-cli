@@ -6,11 +6,11 @@ from .gesper import Gesper
 from .mapa import Mapa
 from .filemanager import CNF
 from .hm import HM
-from .util import to_strint, DAYNAME, parse_dia, notnull, tmap
+from .util import to_strint, DAYNAME, MONTHNAME, parse_dia, notnull, tmap
 from io import StringIO
 from munch import Munch
 from dateutil.relativedelta import relativedelta
-from typing import List
+from typing import List, Set
 
 re_rtrim = re.compile(r"^\s*\n")
 re_sp = re.compile(r"\s+")
@@ -448,6 +448,21 @@ class Printer:
             print("")
             for o in i.ofertas:
                 print("*", o.titulo)
+
+    def cuadrante(self):
+        cuadrante = Trama().get_cuadrante()
+        dates: Set[date] = set()
+        for v in cuadrante.values():
+            for d in v:
+                if d.weekday() not in (5, 6):
+                    dates.add(d)
+        dates = sorted(dates)
+        for i, d in enumerate(dates):
+            if (i==0 or (dates[i-1].year, dates[i-1].month)!=(d.year, d.month)):
+                print("====", f"{d:%Y-%m}", MONTHNAME[d.month-1], "====")
+            print(parse_dia(d)+ " " + d.strftime("%d"), end=" ")
+            names = sorted(set([" ".join(k.split()[:-1]) for k,v in cuadrante.items() if d in v]))
+            print(*names, sep=", ")
 
     def contactos(self):
         kv = Mapa().get_contactos()

@@ -4,15 +4,16 @@ from typing import NamedTuple
 from datetime import date, datetime
 from .hm import HM
 
-DAYNAME = ['Lunes', 'Martes', 'Miércoles',
-           'Jueves', 'Viernes', 'Sábado', 'Domingo']
-heads = ["h1", "h2", "h3", "h4", "h5", "h6"]
-block = heads + ["p", "div", "table", "article", "figure"]
-inline = ["span", "strong", "b", "del", "i", "em"]
-tag_concat = ['u', 'ul', 'ol', 'i', 'em', 'strong', 'b']
-tag_round = ['u', 'i', 'em', 'span', 'strong', 'a', 'b']
-tag_trim = ['li', 'th', 'td', 'div', 'caption', 'h[1-6]']
-tag_right = ['p']
+DAYNAME = ('Lunes', 'Martes', 'Miércoles',
+           'Jueves', 'Viernes', 'Sábado', 'Domingo')
+MONTHNAME = ('Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre')
+heads = ("h1", "h2", "h3", "h4", "h5", "h6")
+block = heads + ("p", "div", "table", "article", "figure")
+inline = ("span", "strong", "b", "del", "i", "em")
+tag_concat = ('u', 'ul', 'ol', 'i', 'em', 'strong', 'b')
+tag_round = ('u', 'i', 'em', 'span', 'strong', 'a', 'b')
+tag_trim = ('li', 'th', 'td', 'div', 'caption', 'h(1-6)')
+tag_right = ('p',)
 
 re_url = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
 re_mail = re.compile(r"^([a-záéíóú0-9_\-\.]+)@([a-záéíóú0-9_\-\.]+)\.([a-záéíóú]{2,5})$", re.IGNORECASE)
@@ -25,6 +26,16 @@ def get_times(ini, fin, delta):
         yield ini, min(fin, end)
         ini = ini + delta
 
+def get_months(ini: date, count: int):
+    cur = ini.replace(day=1)
+    for _ in range(count):
+        m = cur.month + 1
+        y = cur.year + int(m / 12)
+        m = m % 12
+        if m == 0:
+            m = 12
+        cur = cur.replace(year=y, month=m)
+        yield cur
 
 def get_text(node, default=None):
     if node is None:

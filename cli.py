@@ -41,6 +41,8 @@ group.add_argument('--novedades', action='store_true',
                    help="Muestra las novedades de intranet.mapa.es (con antigüedad máxima de 30 días)")
 group.add_argument('--ofertas', action='store_true',
                    help="Muestra ofertas para los empleados de MAPA")
+group.add_argument('--cuadrante', action='store_true',
+                   help="Muestra el cuadrante de personal")
 # group.add_argument('--servicios', action='store_true', help="Servicios prestados")
 group.add_argument('--contactos', action='store_true', help="Contactos de interés")
 group.add_argument('--busca', nargs="+", type=str, help="Busca en el directorio de personal")
@@ -84,6 +86,8 @@ def main(arg, *args, **kwargs):
         prt.novedades(*args, **kwargs)
     if arg.ofertas:
         prt.ofertas(*args, **kwargs)
+    if arg.cuadrante:
+        prt.cuadrante(*args, **kwargs)
     # if arg.servicios:
     #    api.servicios(*args, **kwargs)
     if arg.contactos:

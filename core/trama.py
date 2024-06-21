@@ -2,7 +2,8 @@ from datetime import datetime, date, timedelta
 from munch import Munch
 
 from .autdriver import AutDriver
-from .util import json_serial, tmap, get_text, get_times, json_hook
+from .web import Web
+from .util import json_serial, tmap, get_text, get_times, json_hook, get_months
 from .hm import HM, HMCache, HMmunch
 from .cache import Cache, MunchCache
 from .gesper import Gesper
@@ -12,6 +13,7 @@ from os.path import isfile
 import re
 import time
 import logging
+from typing import Dict, List, Tuple, Union
 
 re_sp = re.compile(r"\s+")
 JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"
@@ -43,6 +45,15 @@ class Trama:
             ff.click("//a[text()='Calendario']")
             return ff.to_web()
 
+    @Cache(file="data/autentica/trama.cuadrante.pickle", maxOld=(1 / 48))
+    def _get_cua_session(self):
+        logger.debug("_get_cua_session()")
+        with AutDriver(browser='firefox') as ff:
+            ff.get(RT_URL)
+            ff.click("//a[text()='Calendario']")
+            ff.click("//a[@id='idCuadranteEmpleados']")
+            return ff.to_web()
+        
     @Cache(file="data/autentica/trama.incedencias.pickle", maxOld=(1 / 48))
     def _get_inc_session(self):
         logger.debug("_get_inc_session()")
@@ -100,6 +111,11 @@ class Trama:
 
                 # if sld == "00:00:00" or len(mar) == 0:
                 #    continue
+                #if len(mar) == 5 and str(fec) == "2024-05-14":
+                #    ttt = "06:07:00"
+                #    sld = "01:07:00"
+                #    mar = (mar[0], mar[-1])
+
                 i = Munch(
                     fecha=fec,
                     marcajes=mar,
@@ -438,10 +454,46 @@ class Trama:
         lps = sorted(lps, key=lambda x: x.fecha)
         return lps
 
+    def get_cuadrante(self, ini=None, months=6):
+        def __check_cls(cls: Union[str, None, List[str]]):
+            if cls is None:
+                return False
+            if isinstance(cls, str) and cls in ("FESTIVOANUAL", ""):
+                return False
+            if isinstance(cls, list) and ("FESTIVOANUAL" in cls or tuple(cls) == tuple()):
+                return False
+            return True
+
+        if ini is None:
+            ini = date.today()
+        cuadrante: Dict[str, List[date]] = {}
+        w: Web = self._get_cua_session()
+        w.get("https://trama.administracionelectronica.gob.es/calendario/cuadranteEmpleados.html")
+        action, data = w.prepare_submit("#formularioPrincipal", _mostrarVacacionesSolicitadas="on")
+        for cur in get_months(ini, months):
+            data["anio"] = str(cur.year)
+            data["mes"] = str(cur.month-1)
+            w.get(action, **data)
+            for tr in w.soup.select("#cuadranteEmpleadosVisibilidadCuadrante tr"):
+                tds = tr.findAll("td")
+                if len(tds) < 28:
+                    continue
+                name =  get_text(tds[0]).title()
+                if name not in cuadrante:
+                    cuadrante[name] = []
+                for td in tds[1:]:
+                    cls = td.attrs.get("class")
+                    day = get_text(td)
+                    if day is None or not day.isdigit() or not __check_cls(cls):
+                        continue
+                    cuadrante[name].append(cur.replace(day=int(day)))
+        
+        r = {k: tuple(v) for k,v in cuadrante.items() if v}
+        return r
 
 if __name__ == "__main__":
     a = Trama()
-    r = a.get_informe(gesper_FCH_FIN+timedelta(days=1), date.today())
+    r = a.get_cuadrante()
     # r = a.get_incidencias()
     import json
 
