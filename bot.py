@@ -39,8 +39,7 @@ class BaseBot(slixmpp.ClientXMPP):
 
     def run(self, loop=True):
         while True:
-            self.connect(('443.suchat.org', 443), force_starttls=False, disable_starttls=True, use_ssl=True)
-            #self.connect()
+            self.connect()
             logger.info("Bot started.")
             self.process()
             if not loop:
