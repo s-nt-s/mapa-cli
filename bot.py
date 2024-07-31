@@ -39,7 +39,10 @@ class BaseBot(slixmpp.ClientXMPP):
 
     def run(self, loop=True):
         while True:
-            self.connect()
+            if CNF.xmpp.get('address'):
+                self.connect(address=tuple(CNF.xmpp.address))
+            else:
+                self.connect()
             logger.info("Bot started.")
             self.process()
             if not loop:
