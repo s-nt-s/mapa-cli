@@ -1,7 +1,7 @@
 from datetime import datetime, date, timedelta
 from .filemanager import CNF
 import re
-from .util import html_to_md, mk_re
+from .util import html_to_md, mk_re, strptime
 from munch import Munch
 from .web import Web
 from .util import json_serial, tmap, parse_mes, nextone, get_text
@@ -157,7 +157,8 @@ class Mapa(Web):
             dt = li.select_one("span.fechacontenido")
             dt.extract()
             dt = get_text(dt)
-            dt = datetime.strptime(dt, "%d/%m/%Y %H:%M:%S")
+            dt = re.sub(r"^\D+|\D+$", "", dt)
+            dt = strptime(dt, "%d/%m/%Y %H:%M:%S", "%m/%d/%Y %H:%M:%S")
             for div in li.select("div"):
                 if len(div.select("div")) == 0:
                     div.name = "p"

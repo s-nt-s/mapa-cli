@@ -245,3 +245,14 @@ def nextone(iterator):
         if i is not None:
             return i
     return None
+
+
+def strptime(dt: str, *args: str):
+    if len(args) == 0:
+        raise ValueError("strptime() takes 2 positional or more arguments but 1 was given")
+    for i, a in enumerate(args):
+        try:
+            return datetime.strptime(dt, a)
+        except ValueError:
+            if i == len(args) - 1:
+                raise
