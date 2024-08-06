@@ -27,15 +27,13 @@ def get_times(ini, fin, delta):
         ini = ini + delta
 
 def get_months(ini: date, count: int):
-    cur = ini.replace(day=1)
-    for _ in range(count):
-        m = cur.month + 1
-        y = cur.year + int(m / 12)
+    for i in range(count+1):
+        m = ini.month + i
+        y = ini.year + int(m / 12)
         m = m % 12
         if m == 0:
             m = 12
-        cur = cur.replace(year=y, month=m)
-        yield cur
+        yield ini.replace(year=y, month=m)
 
 def get_text(node, default=None):
     if node is None:
