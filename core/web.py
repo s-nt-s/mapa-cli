@@ -122,20 +122,20 @@ class Web:
         self.refer = refer
         self.verify = verify
 
-    def _get(self, url, allow_redirects=True, auth=None, **kvargs):
-        if kvargs:
-            return self.s.post(url, data=kvargs, allow_redirects=allow_redirects, verify=self.verify, auth=auth)
+    def _get(self, url, allow_redirects=True, auth=None, **kwargs):
+        if kwargs:
+            return self.s.post(url, data=kwargs, allow_redirects=allow_redirects, verify=self.verify, auth=auth)
         return self.s.get(url, allow_redirects=allow_redirects, verify=self.verify, auth=auth)
 
-    def get(self, url, auth=None, parser="lxml", **kvargs):
+    def get(self, url, auth=None, parser="lxml", **kwargs):
         if self.refer:
             self.s.headers.update({'referer': self.refer})
-        self.response = self._get(url, auth=auth, **kvargs)
+        self.response = self._get(url, auth=auth, **kwargs)
         self.refer = self.response.url
         self.soup = buildSoup(url, self.response.content, parser=parser)
         return self.soup
 
-    def prepare_submit(self, slc, silent_in_fail=False, **kvargs):
+    def prepare_submit(self, slc, silent_in_fail=False, **kwargs):
         data = {}
         self.form = self.soup.select_one(slc)
         if silent_in_fail and self.form is None:
@@ -148,16 +148,16 @@ class Web:
             slc = i.select_one("option[selected]")
             slc = slc.attrs.get("value") if slc else None
             data[name] = slc
-        data = {**data, **kvargs}
+        data = {**data, **kwargs}
         action = self.form.attrs.get("action")
         action = action.rstrip() if action else None
         if action is None:
             action = self.response.url
         return action, data
 
-    def submit(self, slc, silent_in_fail=False, **kvargs):
+    def submit(self, slc, silent_in_fail=False, **kwargs):
         action, data = self.prepare_submit(
-            slc, silent_in_fail=silent_in_fail, **kvargs)
+            slc, silent_in_fail=silent_in_fail, **kwargs)
         if silent_in_fail and not action:
             return None
         return self.get(action, **data)
@@ -176,14 +176,14 @@ class Web:
             return None
         return self.response.url
 
-    def json(self, url, **kvargs):
-        r = self._get(url, **kvargs)
+    def json(self, url, **kwargs):
+        r = self._get(url, **kwargs)
         return r.json()
 
-    def resolve(self, url, **kvargs):
+    def resolve(self, url, **kwargs):
         if self.refer:
             self.s.headers.update({'referer': self.refer})
-        r = self._get(url, allow_redirects=False, **kvargs)
+        r = self._get(url, allow_redirects=False, **kwargs)
         if r.status_code in (302, 301):
             return r.headers['location']
 
@@ -319,13 +319,13 @@ class Driver:
         return buildSoup(self._driver.current_url, self._driver.page_source)
 
     @property
-    def current_url(self):
+    def current_url(self) -> str:
         if self._driver is None:
             return None
         return self._driver.current_url
 
     @property
-    def source(self):
+    def source(self) -> str:
         if self._driver is None:
             return None
         return self._driver.page_source

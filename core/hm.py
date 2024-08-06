@@ -3,11 +3,12 @@ from math import modf
 from datetime import date
 from .cache import Cache
 import re
+from typing import Union, Dict
 
 
 class HM:
 
-    def __init__(self, hm):
+    def __init__(self, hm: Union[str, int, float]):
         if isinstance(hm, str):
             signo = True
             if hm[0] in ('-', '+'):
@@ -53,41 +54,41 @@ class HM:
             return "-" + hm
         return hm
 
-    def __sub__(self, ot):
+    def __sub__(self, ot: "HM"):
         return HM(self.minutos - ot.minutos)
 
-    def __add__(self, ot):
+    def __add__(self, ot: "HM"):
         return HM(self.minutos + ot.minutos)
 
-    def __div__(self, ot):
+    def __div__(self, ot: "HM"):
         m1 = min(self.minutos, ot.minutos)
         m2 = max(self.minutos, ot.minutos)
         minutos = int(m2 / m1)
         return HM(minutos)
 
-    def __lt__(self, ot):
+    def __lt__(self, ot: "HM"):
         return self.minutos < ot.minutos
 
-    def __le__(self, ot):
+    def __le__(self, ot: "HM"):
         return self.minutos <= ot.minutos
 
-    def __eq__(self, ot):
+    def __eq__(self, ot: "HM"):
         return self.minutos == ot.minutos
 
-    def __ne__(self, ot):
+    def __ne__(self, ot: "HM"):
         return self.minutos != ot.minutos
 
-    def __gt__(self, ot):
+    def __gt__(self, ot: "HM"):
         return self.minutos > ot.minutos
 
-    def __ge__(self, ot):
+    def __ge__(self, ot: "HM"):
         return self.minutos >= ot.minutos
 
-    def mul(self, ot):
+    def mul(self, ot: "HM"):
         minutos = self.minutos * ot
         return HM(minutos)
 
-    def div(self, ot):
+    def div(self, ot: "HM"):
         minutos = int(self.minutos / ot)
         return HM(minutos)
 
@@ -106,9 +107,9 @@ class GesperIH(Munch):
 
 
 class GesperIHCache(Cache):
-    def read(self, *args, **kvargs):
-        d = super().read(*args, **kvargs)
-        if d is None:
+    def read(self, *args, **kwargs):
+        d = super().read(*args, **kwargs)
+        if not isinstance(d, dict):
             return None
         for k, v in list(d.items()):
             if isinstance(v, str):
@@ -120,7 +121,7 @@ class GesperIHCache(Cache):
         return d
 
 
-def mk_parse(v):
+def mk_parse(v: Union[str, list, dict]):
     if isinstance(v, dict):
         for k, x in list(v.items()):
             if isinstance(x, (str, list)):
@@ -139,14 +140,14 @@ class HMmunch(Munch):
     def _parse(self):
         mk_parse(self)
 
-    def __init__(self, *args, **kvargs):
-        super().__init__(*args, **kvargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._parse()
 
 
 class HMCache(Cache):
-    def read(self, *args, **kvargs):
-        d = super().read(*args, **kvargs)
+    def read(self, *args, **kwargs):
+        d = super().read(*args, **kwargs)
         if d is None:
             return None
         d = mk_parse(d)

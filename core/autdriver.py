@@ -47,7 +47,7 @@ re_autentica_down = re.compile(
     re.IGNORECASE | re.DOTALL)
 
 
-def is_error_box(n, reg_exp):
+def is_error_box(n, reg_exp: re.Pattern):
     if not isinstance(n, Tag):
         return False
     if n.name != "div":
@@ -80,7 +80,7 @@ class AutDriver(Driver):
         return False
 
     @in_autentica.setter
-    def in_autentica(self, b):
+    def in_autentica(self, b: bool):
         self._in_autentica = b
 
     def autentica_login(self):
@@ -105,13 +105,13 @@ class AutDriver(Driver):
         self.__raise_if_find(AutenticaWeakPassword, "p", text=re_autentica_error)
         self.in_autentica = True
 
-    def __raise_if_find(self, exp, *args, **kwargs):
+    def __raise_if_find(self, exp: Exception, *args, **kwargs):
         error = self.get_soup().find(*args, **kwargs)
         if error:
             msg = re.sub(r"\s+", " ", error.get_text()).strip()
             raise exp(msg)
 
-    def get(self, url, *args, **kwargs):
+    def get(self, url: str, *args, **kwargs):
         super().get(url, *args, **kwargs)
         dom = urlparse(url).netloc.lower()
         if dom in NEED_AUTENTICA:

@@ -1,12 +1,13 @@
 from munch import Munch
 import re
 from .util import notnull
+from typing import Union
 
 re_sp = re.compile(r"\s+")
 ORDINAL = ['primer', 'segund', 'tercer', 'cuart', 'quint', 'sext', 'septim', 'octav', 'noven', 'decim']
 
 
-def parse_user(k, v):
+def parse_user(k: str, v: Union[str, None]):
     if v is None:
         return None
     v = re_sp.sub(" ", v).strip()

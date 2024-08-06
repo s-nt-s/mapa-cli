@@ -9,7 +9,7 @@ from .util import get_text, to_num
 from .cache import Cache
 from glob import glob
 import requests
-from typing import NamedTuple, Dict, List
+from typing import NamedTuple, Dict, List, Union, Tuple
 
 re_sp = re.compile(r"\s+")
 
@@ -30,10 +30,10 @@ class NominaCache(Cache):
             d = [Nomina.build(**n) for n in d]
         return tuple(d)
 
-    def save(self, file, data, *args, **kvargs):
+    def save(self, file, data: Union[List[NamedTuple], Tuple[NamedTuple]], *args, **kwargs):
         if isinstance(data, (list, tuple)):
             data = [d._asdict() for d in data]
-        return super().save(file, data, *args, **kvargs)
+        return super().save(file, data, *args, **kwargs)
 
 
 class Nomina(NamedTuple):
@@ -61,9 +61,9 @@ class Nomina(NamedTuple):
 def query_nom(href):
     q = get_query(href)
     q["file"] = None
-    if "mesano" in q:
-        mesano = q["mesano"].split("/")
-        _, mes, year = (int(i) for i in mesano)
+    mesano = q.get("mesano")
+    if isinstance(mesano, str):
+        _, mes, year = map(int, mesano.split("/"))
         q["mes"] = mes
         q["year"] = year
         try:
@@ -79,7 +79,7 @@ def get_int_match(txt, *regx):
             c = r.search(txt)
         else:
             c = re.search(r, txt, flags=re.MULTILINE | re.IGNORECASE)
-        if c:
+        if isinstance(c, re.Match):
             return to_num(c.group(1))
 
 
@@ -114,7 +114,7 @@ class Funciona:
                 FileManager.get().dump(nom.file, rq.content)
             if not isfile(expanduser(nom.file)):
                 return nom
-            txt = FileManager.get().load(nom.file, physical=True)
+            txt: str = FileManager.get().load(nom.file, physical=True)
             txt = txt.split("IMPORTES EN NOMINA", 1)[-1]
             nom = nom.merge(
                 neto=get_int_match(

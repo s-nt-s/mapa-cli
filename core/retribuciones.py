@@ -10,7 +10,8 @@ from munch import Munch
 import urllib3
 from .cache import Cache
 from datetime import date
-from functools import lru_cache
+from functools import cache
+from typing import Tuple, Union
 
 urllib3.disable_warnings()
 
@@ -18,8 +19,8 @@ re_cellnb = re.compile(r'\s([\d\.,]+)\s')
 
 
 class RtCache(Cache):
-    def read(self, file, *args, **kvargs):
-        d = super().read(file, *args, **kvargs)
+    def read(self, file: str, *args, **kwargs):
+        d = super().read(file, *args, **kwargs)
         if d is None or len(d) == 0:
             return None
         if d["niveles"]:
@@ -28,9 +29,9 @@ class RtCache(Cache):
         return d
 
 
-def parseTb(table):
+def parseTb(table) -> Tuple[Tuple[Union[str, int, float], ...]]:
     if table is None:
-        return []
+        return tuple()
     s = StringIO()
     sep = '\t'
     table.to_csv(s, index=False, header=False, sep=sep)
@@ -49,13 +50,13 @@ def parseTb(table):
                     row.extend(slp)
                     continue
             row.append(c)
-        rows.append(row)
-    return rows
+        rows.append(tuple(row))
+    return tuple(rows)
 
 
 class Retribuciones:
 
-    @lru_cache(maxsize=None)
+    @cache
     def get_docs(self):
         w = Web(verify=False)
         retribucion = {}

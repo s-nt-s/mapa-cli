@@ -1,10 +1,12 @@
 from datetime import datetime, date, timedelta
+from typing import List, Tuple, Set
 from .filemanager import CNF
+import bs4
 import re
 from .util import html_to_md, mk_re, strptime
 from munch import Munch
 from .web import Web
-from .util import json_serial, tmap, parse_mes, nextone, get_text
+from .util import json_serial, tmap, nextone, get_text
 from requests.auth import HTTPBasicAuth
 from .user import User
 
@@ -27,30 +29,12 @@ re_txt = {
 }
 
 
-def _find_mes(*tds):
-    for td in tds:
-        spl = td.get_text().strip().lower().split()
-        if len(spl) == 3 and spl[1] == "de":
-            year = spl[-1]
-            if year.isdigit():
-                year = int(year)
-                mes = parse_mes(spl[0][:3])
-                return year, mes
-
-
-def dict_style(n):
-    style = [s.split(":")
-             for s in n.attrs["style"].lower().split(";") if s]
-    style = {k: v for k, v in style}
-    return style
-
-
 class Mapa(Web):
     def get_menu(self):
         """
         Obtiene el menú de la sede definida en config.yml
         """
-        menus = []
+        menus: List[Munch] = []
         self.get("https://intranet.mapa.es/servicios-internos/cafeteria/menu/default.aspx")
         for div in self.soup.select("div.panel-heading"):
             h3 = div.get_text().strip()
@@ -68,7 +52,7 @@ class Mapa(Web):
             # if dt < date.today():
             #    continue
             mhtml = div.select_one("div.menu")
-            precios = [p.replace(",", ".") for p, _ in re.findall(r"(\d+([.,]\d+))\s*€", str(mhtml))]
+            precios: List[str] = [p.replace(",", ".") for p, _ in re.findall(r"(\d+([.,]\d+))\s*€", str(mhtml))]
             menu = Munch(
                 fecha=fecha,
                 precio=max(map(float, precios)),
@@ -92,7 +76,7 @@ class Mapa(Web):
                 if field is not None:
                     menu[field].add(txt)
 
-            for li in mhtml.findAll("li"):
+            for li in mhtml.select("li"):
                 txt = get_text(li)
                 if txt is None:
                     continue
@@ -104,8 +88,8 @@ class Mapa(Web):
                     flag = True
                 if flag:
                     li.extract()
-            for li in mhtml.findAll("li"):
-                lis = li.findAll("li")
+            for li in mhtml.select("li"):
+                lis = li.select("li")
                 if len(lis) == 1:
                     li.replaceWith(lis[0])
 
@@ -192,6 +176,7 @@ class Mapa(Web):
                 flag = True
                 n.extract()
             urls = set()
+            a: bs4.Tag
             for a in item.node.select("a"):
                 txt = a.get_text().strip().lower()
                 s_txt = txt.split()
@@ -201,8 +186,10 @@ class Mapa(Web):
                     a.name = "span"
             if len(urls) == 1:
                 if flag:
+                    n: bs4.Tag
                     for n in item.node.select(".lista-documentos"):
                         n.extract()
+                a: bs4.Tag
                 for a in item.node.findAll(["span", "a"]):
                     txt = a.get_text().strip()
                     for r, ntxt in fix_url:
@@ -215,7 +202,7 @@ class Mapa(Web):
                 if len(last) == 0:
                     last = None
                     break
-                last = last[-1]
+                last: bs4.Tag = last[-1]
                 if get_text(last) is None and len(last.select(":scope > *")) == 0:
                     last.extract()
                     continue
@@ -226,9 +213,10 @@ class Mapa(Web):
                                            flags=re.IGNORECASE):
                     last.extract()
             if item.url:
-                a = item.node.find("a", attrs={"href": item.url})
+                a: bs4.Tag = item.node.find("a", attrs={"href": item.url})
                 if a and len(a.get_text().strip()) < 3:
                     a.unwrap()
+            n: bs4.Tag
             for n in item.node.findAll(["p", "div"]):
                 if len(n.get_text().strip()) > 0:
                     continue
@@ -236,6 +224,7 @@ class Mapa(Web):
                 if len(chls) == 0:
                     n.extract()
 
+            n: bs4.Tag
             for n in item.node.findAll(text=r_txt):
                 n.replace_with(r_txt.sub(txt, n.string))
 
@@ -256,7 +245,7 @@ class Mapa(Web):
         return items
 
     def get_ofertas(self):
-        links = set()
+        links: Set[Tuple[str, str]] = set()
         self.get("https://intranet.mapa.es/empleado-publico/ofertas-comerciales-para-los-empleados")
         for a in self.soup.select("ul.fotos-polaroid a[href]"):
             links.add((a.attrs["title"].strip(), a.attrs["href"]))
@@ -296,18 +285,19 @@ class Mapa(Web):
         for table in self.soup.select("table"):
             cap = get_text(table)
             if CNF.sede in cap:
-                td1 = tmap(get_text, table.select("tr > *:nth-of-type(1)"))
-                td2 = tmap(get_text, table.select("tr > *:nth-of-type(2)"))
+                td1: Tuple[str, ...] = tmap(get_text, table.select("tr > *:nth-of-type(1)"))
+                td2: Tuple[str, ...] = tmap(get_text, table.select("tr > *:nth-of-type(2)"))
                 for tds in (td1, td2):
-                    if len(tds) > 1:
-                        v = tds[0]
-                        t = [i for i in tds if i.startswith("Tfno:")]
-                        if len(t) > 0:
-                            t = t[0].split()[-1]
-                            if v not in kv:
-                                v = v.title()
-                            if v in kv:
-                                kv[v] = t
+                    if len(tds) <= 1:
+                        continue
+                    v = tds[0]
+                    t = [i for i in tds if i.startswith("Tfno:")]
+                    if len(t) > 0:
+                        t = t[0].split()[-1]
+                        if v not in kv:
+                            v = v.title()
+                        if v in kv:
+                            kv[v] = t
 
         fnd_tlf = re.compile(r"(\d[\d ]+\d)")
         self.get("https://intranet.mapa.es/servicios-internos/atencion-usuarios/default.aspx")
@@ -320,14 +310,16 @@ class Mapa(Web):
             elif "Correo" in txt:
                 kv["C.A.U."]["Correo"] = txt.split()[-1]
             elif "Teléfono" in txt:
-                tlf = [i.strip().replace(" ", "") for i in fnd_tlf.findall(txt)]
+                tlf: List[str] = fnd_tlf.findall(txt)
+                tlf = [i.strip().replace(" ", "") for i in tlf]
                 if tlf:
                     kv["C.A.U."]["Teléfono"] = tlf
 
         self.get("https://intranet.mapa.es/app/Intranet_Form_Web/Web/Directory/DirectorySearch.aspx")
         ctr = self.soup.select_one("#telefonos-centralita")
         if ctr:
-            kv["Centralita"] = [i.strip().replace(" ", "") for i in fnd_tlf.findall(get_text(ctr))]
+            tlf: List[str] = fnd_tlf.findall(get_text(ctr))
+            kv["Centralita"] = [i.strip().replace(" ", "") for i in tlf]
 
         user = CNF.mapa.user.split("@")[0]
         url = "https://servicio.mapama.gob.es/cucm-uds/user/"
@@ -375,7 +367,7 @@ class Mapa(Web):
         elif isinstance(searchMethod, int):
             searchMethod = (searchMethod,)
         self.get("https://intranet.mapa.es//app/Intranet_Form_Web/Web/Directory/DirectorySearch.aspx")
-        nodos = []
+        nodos: List[bs4.Tag] = []
         users = set()
         keys = set()
         url = "https://intranet.mapa.es//app/Intranet_Form_Web/Web/Directory/DirectoryWebService.asmx/ResultadoBusquedaList?count=1&contextKey=3&prefixText=" + args

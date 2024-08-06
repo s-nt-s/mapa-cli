@@ -1,7 +1,8 @@
 import re
+import bs4
 from markdownify import markdownify
 from typing import NamedTuple
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from .hm import HM
 
 DAYNAME = ('Lunes', 'Martes', 'Miércoles',
@@ -20,11 +21,12 @@ re_mail = re.compile(r"^([a-záéíóú0-9_\-\.]+)@([a-záéíóú0-9_\-\.]+)\.(
 re_sp = re.compile(r"\s+")
 
 
-def get_times(ini, fin, delta):
+def get_times(ini: date, fin: date, delta: timedelta):
     while ini < fin:
         end = ini + delta
         yield ini, min(fin, end)
         ini = ini + delta
+
 
 def get_months(ini: date, count: int):
     for i in range(count+1):
@@ -34,6 +36,7 @@ def get_months(ini: date, count: int):
         if m == 0:
             m = 12
         yield ini.replace(year=y, month=m)
+
 
 def get_text(node, default=None):
     if node is None:
@@ -254,3 +257,13 @@ def strptime(dt: str, *args: str):
         except ValueError:
             if i == len(args) - 1:
                 raise
+
+
+def dict_style(n: bs4.Tag):
+    style = {}
+    for s in n.attrs["style"].lower().split(";"):
+        s = s.split(":")
+        if len(s) != 2:
+            continue
+        style[s[0].strip()] = s[1].strip()
+    return style

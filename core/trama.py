@@ -14,6 +14,7 @@ import re
 import time
 import logging
 from typing import Dict, List, Tuple, Union
+import bs4
 
 re_sp = re.compile(r"\s+")
 JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"
@@ -23,7 +24,7 @@ FCH_INI = date(2022, 5, 29)
 logger = logging.getLogger(__name__)
 
 
-def get_from_label(sp, lb):
+def get_from_label(sp: bs4.Tag, lb):
     tb = sp.find("span", text=lb)
     if tb is None:
         return
@@ -53,7 +54,7 @@ class Trama:
             ff.click("//a[text()='Calendario']")
             ff.click("//a[@id='idCuadranteEmpleados']")
             return ff.to_web()
-        
+
     @Cache(file="data/autentica/trama.incedencias.pickle", maxOld=(1 / 48))
     def _get_inc_session(self):
         logger.debug("_get_inc_session()")
@@ -82,10 +83,10 @@ class Trama:
             # ff.val("maximoElementosPagina", "100")
             return ff.to_web()
 
-    def _get_dias(self, ini, fin):
+    def _get_dias(self, ini: date, fin: date):
         logger.debug("_get_dias(%s, %s)", ini, fin)
         dias = []
-        w = self._get_cal_session()
+        w: Web = self._get_cal_session()
         for a, z in get_times(ini, fin, timedelta(days=59)):
             w.get("https://trama.administracionelectronica.gob.es/calendario/marcajesRango.html",
                   fechaInicio=a.strftime("%d/%m/%Y"),
@@ -97,7 +98,7 @@ class Trama:
                     cls = cls[0]
                 if cls not in ("even", "odd"):
                     continue
-                tds = tmap(get_text, tr.findAll("td"))
+                tds: Tuple[str, ...] = tmap(get_text, tr.findAll("td"))
                 prs = None
                 fec, mar, obs, ttt, tto, sld = tds
                 if "Permisos:" in mar:
@@ -105,16 +106,9 @@ class Trama:
                 fec = fec[:-1].split("(", 1)[-1]
                 fec = tmap(int, reversed(fec.split("/")))
                 fec = date(*fec)
-                mar = tmap(HM, sorted(re.findall(r"\d+:\d+:\d+", mar)))
-                if prs:
+                mar: Tuple[HM, ...] = tmap(HM, sorted(re.findall(r"\d+:\d+:\d+", mar)))
+                if isinstance(prs, str):
                     obs = ((obs or "") + " "+prs).strip()
-
-                # if sld == "00:00:00" or len(mar) == 0:
-                #    continue
-                #if len(mar) == 5 and str(fec) == "2024-05-14":
-                #    ttt = "06:07:00"
-                #    sld = "01:07:00"
-                #    mar = (mar[0], mar[-1])
 
                 i = Munch(
                     fecha=fec,
@@ -127,7 +121,7 @@ class Trama:
                 dias.append(i)
         return dias
 
-    def get_dias(self, ini, fin):
+    def get_dias(self, ini: date, fin: date):
         logger.debug("get_dias(%s, %s)", ini, fin)
         dias = []
         fln_dias = JS_DIAS.format(ini)
@@ -156,7 +150,7 @@ class Trama:
         # dias = [d for d in dias if d.fecha >= ini]
         return dias
 
-    def get_calendario(self, ini, fin):
+    def get_calendario(self, ini: date, fin: date):
         """
         Devuelve el control horario entre dos fechas
         """
@@ -220,7 +214,7 @@ class Trama:
         return self.get_calendario(ini, fin)
 
     @HMCache(file="data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=(1 / 24))
-    def _get_informe(self, ini, fin):
+    def _get_informe(self, ini: date, fin: date):
         logger.debug("Trama._get_informe(%s, %s)", ini, fin)
         r = Munch(
             ini=ini,
@@ -250,7 +244,7 @@ class Trama:
             # r.vacaciones += inf.vacaciones
         return r
 
-    def get_informe(self, ini=None, fin=None):
+    def get_informe(self, ini: Union[None, date] = None, fin: Union[None, date] = None):
         # Por defecto da el informe desde el inicio
         # hasta el último día del último mes completo
         hoy = date.today()
@@ -268,7 +262,7 @@ class Trama:
             return None
         return self._get_informe(ini, fin)
 
-    def get_vacaciones(self, year=None):
+    def get_vacaciones(self, year: Union[int, None] = None):
         GESPER_BREAK = 2022
         vac = {}
         cyr = datetime.today().year
@@ -288,7 +282,7 @@ class Trama:
         def _add(v):
             vac[(v.year, v.key)] = v
 
-        w = self._get_cal_session()
+        w: Web = self._get_cal_session()
         w.get("https://trama.administracionelectronica.gob.es/calendario/calendario.html")
         yrs = set()
         while True:
@@ -355,7 +349,15 @@ class Trama:
 
     @MunchCache("data/trama/incidencias_{estado}.json", maxOld=0, json_default=json_serial, json_hook=json_hook)
     def get_incidencias(self, estado=3):
-        w = self._get_inc_session()
+        def to_date(x: str):
+            return date(*map(int, reversed(x.split("/"))))
+
+        def to_hm(x: Union[str, None]):
+            if x is None:
+                return None
+            return HM(x)
+
+        w: Web = self._get_inc_session()
         w.get("https://trama.administracionelectronica.gob.es/incidencias/bandejaEnviadas.html")
         mx = w.soup.select("#maximoElementosPagina option")[-1]
         mx = mx.attrs["value"]
@@ -365,9 +367,7 @@ class Trama:
             data["idEstadoIncidencia"] = str(estado)
         w.get(action, **data)
         r = []
-        to_date = lambda x: date(*map(int, reversed(x.split("/"))))
-        to_hm = lambda x: HM(x) if x is not None else None
-        head = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
+        head: Tuple[str, ...] = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
             tds = tmap(get_text, tr.findAll("td"))
             tds = {k: v for k, v in zip(head, tds)}
@@ -401,7 +401,7 @@ class Trama:
                     observaciones=observaciones,
                     mensaje=mensaje
                 ))
-        w = self._get_vac_session()
+        w: Web = self._get_vac_session()
         w.get("https://trama.administracionelectronica.gob.es/Permisos/bandejaEnviadas.html")
         mx = w.soup.select("#maximoElementosPagina option")[-1]
         mx = mx.attrs["value"]
@@ -410,14 +410,14 @@ class Trama:
         if estado is not None:
             data["idEstadoIncidencia"] = str(estado)
         w.get(action, **data)
-        head = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
+        head: Tuple[str, ...] = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
             tds = tmap(get_text, tr.findAll("td"))
             if len(tds) != len(head):
                 continue
             tds = {k: v for k, v in zip(head, tds)}
             fechas = tds['Fechas Solicitadas/Anuladas']
-            fechas = tmap(to_date, re.findall(r'\d\d/\d\d/\d\d\d\d', fechas))
+            fechas: Tuple[date, ...] = tmap(to_date, re.findall(r'\d\d/\d\d/\d\d\d\d', fechas))
             i = Munch(
                 id=int(tds['Proceso']),
                 tipo=tds['Tipo Solicitud'],
@@ -478,7 +478,7 @@ class Trama:
                 tds = tr.findAll("td")
                 if len(tds) < 28:
                     continue
-                name =  get_text(tds[0]).title()
+                name = get_text(tds[0]).title()
                 if name not in cuadrante:
                     cuadrante[name] = []
                 for td in tds[1:]:
@@ -487,8 +487,8 @@ class Trama:
                     if day is None or not day.isdigit() or not __check_cls(cls):
                         continue
                     cuadrante[name].append(cur.replace(day=int(day)))
-        
-        r = {k: tuple(v) for k,v in cuadrante.items() if v}
+
+        r = {k: tuple(v) for k, v in cuadrante.items() if v}
         return r
 
 if __name__ == "__main__":

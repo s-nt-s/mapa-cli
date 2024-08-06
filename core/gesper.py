@@ -3,14 +3,16 @@ from .filemanager import CNF, FileManager
 import re
 from munch import Munch
 from .web import Web
-from .util import json_serial, parse_mes, parse_dia, get_text, tmap, to_num, json_hook
+from .util import json_serial, parse_mes, parse_dia, get_text, tmap, to_num, json_hook, dict_style
 from os.path import isdir, join, isfile, expanduser
 from .hm import HM, GesperIH, GesperIHCache
 import json
 from .retribuciones import Retribuciones
-from functools import lru_cache
+from functools import cache, cached_property
 import logging
 from .cache import Cache
+import bs4
+from typing import Tuple, Union, Dict, List, Any
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
@@ -25,7 +27,7 @@ FCH_FIN = date(2022, 5, 29)
 logger = logging.getLogger(__name__)
 
 
-def _find_mes(*tds):
+def _find_mes(*tds: bs4.Tag):
     for td in tds:
         spl = td.get_text().strip().lower().split()
         if len(spl) == 3 and spl[1] == "de":
@@ -36,22 +38,14 @@ def _find_mes(*tds):
                 return year, mes
 
 
-def dict_style(n):
-    style = [s.split(":")
-             for s in n.attrs["style"].lower().split(";") if s]
-    style = {k: v for k, v in style}
-    return style
-
-
-def tr_clave_valor(soup, id, *args, **keys):
+def tr_clave_valor(soup: bs4.Tag, id: str, *args, **keys):
     ok_key = tuple(args) + tuple(keys.keys())
     for tr in soup.select("#" + id + " tr"):
-        tds = [td.get_text().strip() for td in tr.findAll("td")]
+        tds: Tuple[str, ...] = tmap(get_text, tr.findAll("td"))
         if len(tds) < 2:
             continue
-        clave = tds[0]
-        valor = tds[1]
-        if not clave or not valor:
+        clave, valor = tds
+        if None in (clave, valor):
             continue
         if ok_key and clave not in ok_key:
             continue
@@ -67,7 +61,7 @@ def tr_clave_valor(soup, id, *args, **keys):
         yield clave, valor
 
 
-def parse_festivo(nombre):
+def parse_festivo(nombre: str):
     nombre = nombre.capitalize()
     if nombre == "Lunes siguiente a todos los santos":
         return "Todos los santos"
@@ -105,9 +99,9 @@ class Gesper(Web):
         self.get("https://intranet.mapa.es/app/GESPER/CalendarioLaboral.aspx")
         while max_iter != 0:
             max_iter = max_iter - 1
-            table = self.soup.select("#CalFestivos")[0]
-            nxt = table.findAll("a")[-1]
-            tds = table.findAll("td")
+            table: bs4.Tag = self.soup.select("#CalFestivos")[0]
+            nxt: bs4.Tag = table.findAll("a")[-1]
+            tds: bs4.ResultSet[bs4.Tag] = table.findAll("td")
             year, mes = _find_mes(*tds)
             delta = (year - today.year)
             if delta > 1 or (delta == 1 and mes > 1):
@@ -118,7 +112,7 @@ class Gesper(Web):
                     if not (style.get("background-color") == "pink" and style.get("font-style") != "italic"):
                         continue
                     br = td.find("br")
-                    if br is None:
+                    if not isinstance(br, bs4.Tag):
                         continue
                     br.replaceWith(" ")
                     dia, nombre = td.get_text().strip().split(None, 1)
@@ -140,16 +134,22 @@ class Gesper(Web):
         return r
 
     def get_expediente(self):
+        def _find_a(tr: bs4.Tag):
+            for a in tr.select("a[href]"):
+                if a.attrs["href"].startswith("http"):
+                    return a
+
         self.get("https://intranet.mapa.es/app/GESPER/Expediente/Consulta.aspx")
         exps = []
         for tr in reversed(self.soup.select("#TablaDocumentos tr")):
-            a = [a for a in tr.select("a[href]") if a.attrs["href"].startswith("http")]
+            a = _find_a(tr)
             tds = tmap(get_text, tr.findAll("td"))
-            if len(a) == 0 or len(tds) != 4:
+            if a is None or len(tds) != 4:
                 continue
-            a = a[0]
-            url = a.attrs["href"]
-            tipo, fecha, desc, _ = tds
+            url: str = a.attrs["href"]
+            tipo: str = tds[0]
+            fecha: str = tds[1]
+            desc: str = tds[2]
             desc = desc.capitalize()
             desc = desc.replace("/", " - ")
             desc = desc.replace("\\", " - ")
@@ -176,7 +176,7 @@ class Gesper(Web):
         exps = sorted(exps, key=lambda x: (x.fecha, x.index))
         return exps
 
-    def get_vacaciones(self, year=None):
+    def get_vacaciones(self, year: Union[int, None] = None):
         vac = []
         cyr = datetime.today().year
         if year is None:
@@ -187,11 +187,14 @@ class Gesper(Web):
         if year < 0:
             year = cyr + year
         self.get("https://intranet.mapa.es/app/GESPER/Permisos/Lapso.aspx")
-        r = self.s.post("https://intranet.mapa.es/app/GESPER/JSon/Permiso.ashx",
-                        data={"accion": "enjoy", "anio": year}, verify=self.verify)
-        data = r.json()
+        r = self.s.post(
+            "https://intranet.mapa.es/app/GESPER/JSon/Permiso.ashx",
+            data={"accion": "enjoy", "anio": year},
+            verify=self.verify
+        )
+        data: Dict = r.json()
         disf = data.get("Disfrute")
-        if disf is None or len(disf) != 1:
+        if not isinstance(disf, list) or len(disf) != 1:
             return []
         disf = disf[0]
         total = re_sp.sub(" ", disf["_textoCorresponde"]).strip()
@@ -223,19 +226,20 @@ class Gesper(Web):
                 continue
             js = js.split(var_permisos)[1]
             js = re.split(r";\s*//", js)[0]
-            js = json.loads(js)
+            js: List[Dict] = json.loads(js)
             for i, j in enumerate(js):
                 if j.get("_anio"):
                     j["_anio"] = int(j["_anio"])
-                j["txt"] = j["_literalLicencia"].capitalize()
+                _literalLicencia: str = j["_literalLicencia"]
+                j["txt"] = _literalLicencia.capitalize()
                 j["date"] = datetime.strptime(
                     j["_fechaInicio"], '%d/%m/%Y').date()
                 if j["_dias"] > 1:
                     j["date_fin"] = datetime.strptime(
                         j["_fechaFin"], '%d/%m/%Y').date()
                 else:
-                    hi = j.get("_horaInicio")
-                    hf = j.get("_horaFin")
+                    hi: str = j.get("_horaInicio")
+                    hf: str = j.get("_horaFin")
                     if hi and hf:
                         j["_horaInicio"] = HM(hi)
                         j["_horaFin"] = HM(hf)
@@ -267,7 +271,7 @@ class Gesper(Web):
             "Despacho": "contacto.despacho",
         }
 
-        kv = {}
+        kv: Dict[str, Any] = {}
         mi_grupo = None
         mi_nivel = None
 
@@ -350,13 +354,12 @@ class Gesper(Web):
 
         return kv
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def fecha_inicio(self):
         return self.get_puesto()['inicio']
 
     @GesperIHCache(file="data/gesper/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=None)
-    def _get_informe(self, ini, fin):
+    def _get_informe(self, ini: date, fin: date):
         logger.debug("Gesper._get_informe(%s, %s)", ini, fin)
         _fin = date(fin.year, fin.month, fin.day)
         rst = []
@@ -381,6 +384,7 @@ class Gesper(Web):
                 n_fechas = len(re.findall(r"\b\d\d/\d\d/\d\d\d\d\b", page))
                 jornadas = jornadas + n_fechas - 3
                 laborables = laborables + n_fechas - 3
+                i: str
                 for i in re.findall(r"([\d:\.]+)\s+((?:VAC|FESTIVO|PCI|PAP|FP|VFP|L2|BAJA)\b\S*)", page):
                     h = HM(i[0])
                     t = tuple(a.strip() for a in i[1].strip().lower().split(","))
@@ -399,7 +403,7 @@ class Gesper(Web):
                 r"^\s*(-?[\d:\.,]+)\s+(-?[\d:\.,]+)\s+(-?[\d:\.,]+)\s+(-?[\d:\.,]+)\s+(-?[\d:\.,]+)\s+(-?[\d,\.,]+)\s*$",
                 page, re.MULTILINE)
 
-            if m is not None and len(m.groups())==6:
+            if m is not None and len(m.groups()) == 6:
                 # Fix: Error en el informe 2021 y 2022
                 if ini <= date(2022, 5, 17) and fin >= date(2022, 5, 20):
                     fiestas_patronales = 4
@@ -439,7 +443,7 @@ class Gesper(Web):
                 r[k] = r[k] + i[k]
         return r
 
-    def get_informe(self, ini=None, fin=FCH_FIN):  # fin=date(2022, 6, 5)):
+    def get_informe(self, ini: Union[date, None] = None, fin: date = FCH_FIN):  # fin=date(2022, 6, 5)):
         hoy = date.today()
         if ini is None:
             ini = self.fecha_inicio

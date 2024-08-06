@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 from .trama import Trama
 from .funciona import Funciona, Nomina
 from datetime import date, datetime, timedelta
@@ -21,31 +22,32 @@ PRNT = Munch(
 )
 
 
-def print(*args, **kvargs):
+def print(*args, **kwargs):
     # Previene imprimir dos lineas vacias seguidas
     io_line = StringIO()
-    PRNT.func(*args, file=io_line, flush=True, **kvargs)
+    PRNT.func(*args, file=io_line, flush=True, **kwargs)
     line = io_line.getvalue()
     line = line.strip()
     if tmap(len, (line, PRNT.line)) == (0, 0):
         return
     PRNT.line = line
-    PRNT.func(*args, **kvargs)
+    PRNT.func(*args, **kwargs)
 
 
-def print_dict(kv, prefix=""):
+def print_dict(kv: Dict, prefix=""):
     max_campo = max(len(i[0]) for i in kv.items())
     line = "%-" + str(max_campo) + "s:"
     for k, v in kv.items():
-        if v:
-            print(prefix + (line % k), end="")
-            if isinstance(v, (tuple, list, set)):
-                v = ", ".join(str(i) for i in v)
-            if isinstance(v, dict):
-                print("")
-                print_dict(v, prefix="  ")
-            else:
-                print(" " + str(v))
+        if not v:
+            continue
+        print(prefix + (line % k), end="")
+        if isinstance(v, (tuple, list, set)):
+            v = ", ".join(str(i) for i in v)
+        if isinstance(v, dict):
+            print("")
+            print_dict(v, prefix="  ")
+        else:
+            print(" " + str(v))
 
 
 class Printer:
@@ -229,7 +231,7 @@ class Printer:
         sldhr = None
         print("")
         print("Media último/s:")
-        for l, c in print_medias:
+        for ln, c in print_medias:
             if len(n_ym) <= c:
                 continue
             cant = 0
@@ -245,7 +247,7 @@ class Printer:
                     sldhr = Munch(sueldo=cant, hora=per_hour)
                 per_hour = "({}€/h)".format(to_strint(per_hour))
             cant = to_strint(cant / c)
-            print("{}: {:>5}€".format(l, cant), per_hour)
+            print("{}: {:>5}€".format(ln, cant), per_hour)
         if sldhr and sueldo == 'bruto':
             print("")
             print("Sueldo anual: " + to_strint(sldhr.sueldo))
@@ -268,7 +270,7 @@ class Printer:
         agg_nomias = {}
         for n in nominas:
             k = (n.year, n.mes)
-            agg_nomias[k] = agg_nomias.get(k, set()).union({n.irpf})
+            agg_nomias[k] = agg_nomias.get(k, set()).union({n.irpf, })
         last = None
         for ((y, mes), irpf) in agg_nomias.items():
             for i in sorted(irpf):
