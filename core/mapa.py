@@ -6,7 +6,7 @@ import re
 from .util import html_to_md, mk_re, strptime
 from munch import Munch
 from .web import Web
-from .util import json_serial, tmap, nextone, get_text
+from .util import json_serial, ttext, nextone, get_text
 from requests.auth import HTTPBasicAuth
 from .user import User
 
@@ -285,8 +285,8 @@ class Mapa(Web):
         for table in self.soup.select("table"):
             cap = get_text(table)
             if CNF.sede in cap:
-                td1: Tuple[str, ...] = tmap(get_text, table.select("tr > *:nth-of-type(1)"))
-                td2: Tuple[str, ...] = tmap(get_text, table.select("tr > *:nth-of-type(2)"))
+                td1 = ttext(table.select("tr > *:nth-of-type(1)"))
+                td2 = ttext(table.select("tr > *:nth-of-type(2)"))
                 for tds in (td1, td2):
                     if len(tds) <= 1:
                         continue

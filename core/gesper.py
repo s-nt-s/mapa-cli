@@ -3,16 +3,16 @@ from .filemanager import CNF, FileManager
 import re
 from munch import Munch
 from .web import Web
-from .util import json_serial, parse_mes, parse_dia, get_text, tmap, to_num, json_hook, dict_style
+from .util import json_serial, parse_mes, parse_dia, get_text, ttext, to_num, json_hook, dict_style
 from os.path import isdir, join, isfile, expanduser
 from .hm import HM, GesperIH, GesperIHCache
 import json
 from .retribuciones import Retribuciones
-from functools import cache, cached_property
+from functools import cached_property
 import logging
 from .cache import Cache
 import bs4
-from typing import Tuple, Union, Dict, List, Any
+from typing import Union, Dict, List, Any
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
@@ -41,7 +41,7 @@ def _find_mes(*tds: bs4.Tag):
 def tr_clave_valor(soup: bs4.Tag, id: str, *args, **keys):
     ok_key = tuple(args) + tuple(keys.keys())
     for tr in soup.select("#" + id + " tr"):
-        tds: Tuple[str, ...] = tmap(get_text, tr.findAll("td"))
+        tds = ttext(tr.findAll("td"))
         if len(tds) < 2:
             continue
         clave, valor = tds
@@ -143,7 +143,7 @@ class Gesper(Web):
         exps = []
         for tr in reversed(self.soup.select("#TablaDocumentos tr")):
             a = _find_a(tr)
-            tds = tmap(get_text, tr.findAll("td"))
+            tds = ttext(tr.findAll("td"))
             if a is None or len(tds) != 4:
                 continue
             url: str = a.attrs["href"]

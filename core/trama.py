@@ -3,7 +3,7 @@ from munch import Munch
 
 from .autdriver import AutDriver
 from .web import Web
-from .util import json_serial, tmap, get_text, get_times, json_hook, get_months
+from .util import json_serial, tmap, ttext, get_text, get_times, json_hook, get_months
 from .hm import HM, HMCache, HMmunch
 from .cache import Cache, MunchCache
 from .gesper import Gesper
@@ -98,7 +98,7 @@ class Trama:
                     cls = cls[0]
                 if cls not in ("even", "odd"):
                     continue
-                tds: Tuple[str, ...] = tmap(get_text, tr.findAll("td"))
+                tds = ttext(tr.findAll("td"))
                 prs = None
                 fec, mar, obs, ttt, tto, sld = tds
                 if "Permisos:" in mar:
@@ -288,11 +288,11 @@ class Trama:
         while True:
             yr = None
             for tr in w.soup.select("div.resumenMarcajes tbody tr"):
-                tds = tmap(get_text, tr.select("td"))
+                tds = ttext(tr.select("td"))
                 yr = int(tds[0])
                 yrs.add(yr)
-                vc = tmap(int, re.findall(r"\d+", tds[1]))
-                pe = tmap(int, re.findall(r"\d+", tds[2]))
+                vc: Tuple[int, ...] = tmap(int, re.findall(r"\d+", tds[1]))
+                pe: Tuple[int, ...] = tmap(int, re.findall(r"\d+", tds[2]))
                 _add(Munch(
                     key="permiso",
                     total=pe[1],
@@ -367,9 +367,9 @@ class Trama:
             data["idEstadoIncidencia"] = str(estado)
         w.get(action, **data)
         r = []
-        head: Tuple[str, ...] = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
+        head = ttext(w.soup.select("#listaTablaMaestra thead tr th"))
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
-            tds = tmap(get_text, tr.findAll("td"))
+            tds = ttext(tr.findAll("td"))
             tds = {k: v for k, v in zip(head, tds)}
             i = Munch(
                 id=int(tds['Proceso']),
@@ -391,7 +391,7 @@ class Trama:
             i.incidencias = []
             tb.select_one("thead").extract()
             for tr in tb.select("tr"):
-                tds = tmap(get_text, tr.findAll("td"))
+                tds = ttext(tr.findAll("td"))
                 tipo, fecha, inicio, fin, observaciones, mensaje = tds
                 i.incidencias.append(Munch(
                     tipo=tipo,
@@ -410,9 +410,9 @@ class Trama:
         if estado is not None:
             data["idEstadoIncidencia"] = str(estado)
         w.get(action, **data)
-        head: Tuple[str, ...] = tmap(get_text, w.soup.select("#listaTablaMaestra thead tr th"))
+        head = ttext(w.soup.select("#listaTablaMaestra thead tr th"))
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
-            tds = tmap(get_text, tr.findAll("td"))
+            tds = ttext(tr.findAll("td"))
             if len(tds) != len(head):
                 continue
             tds = {k: v for k, v in zip(head, tds)}

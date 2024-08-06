@@ -1,7 +1,7 @@
 import re
 import bs4
 from markdownify import markdownify
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 from datetime import date, datetime, timedelta
 from .hm import HM
 
@@ -45,6 +45,10 @@ def get_text(node, default=None):
     if len(txt) == 0:
         return default
     return txt
+
+
+def ttext(nodes: bs4.ResultSet[bs4.Tag]) -> Tuple[str, ...]:
+    return tmap(get_text, nodes)
 
 
 def get_html(soup):
