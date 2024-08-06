@@ -3,16 +3,20 @@ from .filemanager import CNF, FileManager
 import re
 from munch import Munch
 from .web import Web
-from .util import json_serial, parse_mes, parse_dia, get_text, ttext, to_num, json_hook, dict_style
+from .util import json_serial, parse_mes, parse_dia, ttext, to_num, json_hook, dict_style
 from os.path import isdir, join, isfile, expanduser
 from .hm import HM, GesperIH, GesperIHCache
 import json
 from .retribuciones import Retribuciones
 from functools import cached_property
 import logging
-from .cache import Cache
+from .cache import TupleCache
 import bs4
 from typing import Union, Dict, List, Any
+from .types.festivo import Festivo
+from .types.expediente import Expediente
+from .types.vacaciones import Vacaciones
+
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
@@ -94,7 +98,7 @@ class Gesper(Web):
         self.submit("#Form1", TxtDNI=CNF.gesper.user, TxtClave=CNF.gesper.pssw)
 
     def get_festivos(self, max_iter=-1):
-        r = []
+        r: List[Festivo] = []
         today = datetime.today()
         self.get("https://intranet.mapa.es/app/GESPER/CalendarioLaboral.aspx")
         while max_iter != 0:
@@ -121,7 +125,7 @@ class Gesper(Web):
                     if dt >= today and dt.weekday() not in (5, 6):
                         nombre = parse_festivo(nombre)
                         semana = parse_dia(dt)
-                        r.append(Munch(
+                        r.append(Festivo(
                             date=dt,
                             year=dt.year,
                             semana=semana,
@@ -131,7 +135,7 @@ class Gesper(Web):
                         ))
             nxt = nxt.attrs["href"].split("'")[-2]
             self.submit("#Form1", __EVENTARGUMENT=nxt, __EVENTTARGET="CalFestivos")
-        return r
+        return tuple(r)
 
     def get_expediente(self):
         def _find_a(tr: bs4.Tag):
@@ -140,7 +144,7 @@ class Gesper(Web):
                     return a
 
         self.get("https://intranet.mapa.es/app/GESPER/Expediente/Consulta.aspx")
-        exps = []
+        exps: List[Expediente] = []
         for tr in reversed(self.soup.select("#TablaDocumentos tr")):
             a = _find_a(tr)
             tds = ttext(tr.findAll("td"))
@@ -157,7 +161,7 @@ class Gesper(Web):
             fecha = date(year, mes, dia)
             name = "{:%Y.%m.%d} - {} - {}.pdf".format(fecha, tipo, desc)
             name = re_sp.sub(" ", name)
-            exp = Munch(
+            exp = Expediente(
                 fecha=fecha,
                 name=name,
                 tipo=tipo,
@@ -174,10 +178,10 @@ class Gesper(Web):
                     FileManager.get().dump(exp.file, r.content)
 
         exps = sorted(exps, key=lambda x: (x.fecha, x.index))
-        return exps
+        return tuple(exps)
 
     def get_vacaciones(self, year: Union[int, None] = None):
-        vac = []
+        vac: List[Vacaciones] = []
         cyr = datetime.today().year
         if year is None:
             for v in self.get_vacaciones(-1):
@@ -209,24 +213,30 @@ class Gesper(Web):
         for key in sorted(keys):
             t = total.get(key, 0)
             u = usados.get(key, 0)
-            vac.append(Munch(
+            vac.append(Vacaciones(
                 key=key,
                 total=t,
                 usados=u,
                 year=year
             ))
-        return vac
+        return tuple(vac)
 
-    @Cache("data/gesper/lapso.json", maxOld=None, json_default=json_serial, json_hook=json_hook)
+    @TupleCache(
+        "data/gesper/lapso.json",
+        maxOld=None,
+        json_default=json_serial,
+        json_hook=json_hook,
+        builder=lambda x: x,
+    )
     def get_lapso(self):
         self.get("https://intranet.mapa.es/app/GESPER/Permisos/Lapso.aspx")
         var_permisos = 'var _permisos = '
-        for js in map(get_text, self.soup.select("script")):
-            if js is None or var_permisos not in js:
+        for txt in ttext(self.soup.select("script")):
+            if txt is None or var_permisos not in txt:
                 continue
-            js = js.split(var_permisos)[1]
-            js = re.split(r";\s*//", js)[0]
-            js: List[Dict] = json.loads(js)
+            txt = txt.split(var_permisos)[1]
+            txt = re.split(r";\s*//", txt)[0]
+            js: List[Dict] = json.loads(txt)
             for i, j in enumerate(js):
                 if j.get("_anio"):
                     j["_anio"] = int(j["_anio"])
@@ -249,7 +259,7 @@ class Gesper(Web):
                         del j[k]
                 js[i] = j
             js = sorted(js, key=lambda x: x["date"])
-            return js
+            return tuple(js)
 
     def get_puesto(self):
         keys = {

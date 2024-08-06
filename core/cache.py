@@ -72,6 +72,20 @@ class Cache:
         return callCache
 
 
+class TupleCache(Cache):
+    def __init__(self, *args, builder=None, **kwargs):
+        if not callable(builder):
+            raise ValueError('builder is None')
+        self.builder = builder
+        super().__init__(*args, **kwargs)
+
+    def read(self, file, *args, **kwargs):
+        data = super().read(file, *args, **kwargs)
+        if isinstance(data, dict):
+            return self.builder(data)
+        return tuple((self.builder(d) for d in data))
+
+
 class MunchCache(Cache):
     def read(self, *args, **kwargs):
         d = super().read(*args, **kwargs)
