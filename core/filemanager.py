@@ -158,7 +158,7 @@ class FileManager:
 
         ext = self.normalize_ext(file.suffix)
 
-        load_fl = getattr(self, "load_" + ext, None)
+        load_fl = getattr(self, "_load_" + ext, None)
         if load_fl is None:
             raise Exception(
                 "No existe metodo para leer ficheros {} [{}]".format(ext, file.name))
@@ -179,61 +179,61 @@ class FileManager:
             return
 
         ext = self.normalize_ext(file.suffix)
-        dump_fl = getattr(self, "dump_" + ext, None)
+        dump_fl = getattr(self, "_dump_" + ext, None)
         if dump_fl is None:
             raise Exception(f"No existe método para guardar ficheros {ext} [{file.name}]")
 
         dump_fl(file, obj, *args, **kwargs)
 
-    def load_json(self, file: Path, *args, **kwargs):
+    def _load_json(self, file: Path, *args, **kwargs):
         with open(file, "r") as f:
             return json.load(f, *args, **kwargs)
 
-    def dump_json(self, file: Path, obj, *args, indent=2, **kwargs):
+    def _dump_json(self, file: Path, obj, *args, indent=2, **kwargs):
         with open(file, "w") as f:
             json.dump(obj, f, *args, indent=indent, **kwargs)
 
-    def load_csv(self, file: Path, *args, **kwargs):
+    def _load_csv(self, file: Path, *args, **kwargs):
         return pd.read_csv(file, *args, **kwargs)
 
-    def dump_csv(self, file: Path, obj, *args, **kwargs):
+    def _dump_csv(self, file: Path, obj, *args, **kwargs):
         obj.to_csv(file, *args, **kwargs)
 
-    def load_yaml(self, file: Path, *args, Loader=yaml.FullLoader, **kwargs):
+    def _load_yaml(self, file: Path, *args, Loader=yaml.FullLoader, **kwargs):
         with open(file, "r") as f:
             data = list(yaml.load_all(f, *args, Loader=Loader, **kwargs))
             if len(data) == 1:
                 data = data[0]
             return data
 
-    def load_xls(self, file: Path, *args, **kwargs):
+    def _load_xls(self, file: Path, *args, **kwargs):
         return pd.read_excel(file, *args, **kwargs)
 
-    def load_txt(self, file: Path, *args, **kwargs):
+    def _load_txt(self, file: Path, *args, **kwargs):
         with open(file, "r") as f:
             txt = f.read()
             if args or kwargs:
                 txt = txt.format(*args, **kwargs)
             return txt
 
-    def dump_txt(self, file: Path, txt, *args, **kwargs):
+    def _dump_txt(self, file: Path, txt, *args, **kwargs):
         if args or kwargs:
             txt = txt.format(*args, **kwargs)
         with open(file, "w") as f:
             f.write(txt)
 
-    def load_pdf(self, file: Path, *args, as_list=False, **kwargs):
+    def _load_pdf(self, file: Path, *args, as_list=False, **kwargs):
         with open(file, 'rb') as fl:
             pdf = pdftotext.PDF(fl, **kwargs)
             if as_list:
                 return list(pdf)
             return "\n".join(pdf)
 
-    def load_pickle(self, file: Path, *args, **kwargs):
+    def _load_pickle(self, file: Path, *args, **kwargs):
         with open(file, "rb") as f:
             return pickle.load(f)
 
-    def dump_pickle(self, file: Path, obj, *args, **kwargs):
+    def _dump_pickle(self, file: Path, obj, *args, **kwargs):
         with open(file, "wb") as f:
             pickle.dump(obj, f)
 

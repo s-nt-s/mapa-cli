@@ -14,16 +14,16 @@ class Cache:
         self.file = file
         self.data = {}
         self.func = None
-        self._maxOld = maxOld
         self.slf = None
         self.json_default = json_default
         self.json_hook = json_hook
         self.keep_if_none = keep_if_none
+        self.__maxOld = maxOld
 
     @property
     def maxOld(self):
-        if self._maxOld is not None:
-            return time.time() - (self._maxOld * 86400)
+        if self.__maxOld is not None:
+            return time.time() - (self.__maxOld * 86400)
 
     def get_file_name(self, *args, **kwargs):
         return self.file.format(*args, **kwargs)
@@ -64,9 +64,12 @@ class Cache:
         return data
 
     def __call__(self, func):
-        functools.update_wrapper(self, func)
+        def callCache(*args, **kwargs):
+            return self.callCache(*args, **kwargs)
+        functools.update_wrapper(callCache, func)
         self.func = func
-        return lambda *args, **kwargs: self.callCache(*args, **kwargs)
+        setattr(callCache, "__cache_obj__", self)
+        return callCache
 
 
 class MunchCache(Cache):
