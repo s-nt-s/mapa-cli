@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from .gesper import Gesper
 from .mapa import Mapa
 from .filemanager import CNF
-from .hm import HM
+from .types.hm import HM
 from .util import to_strint, DAYNAME, MONTHNAME, parse_dia, notnull, tmap
 from io import StringIO
 from munch import Munch

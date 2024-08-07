@@ -3,7 +3,7 @@ import bs4
 from markdownify import markdownify
 from typing import NamedTuple, Tuple
 from datetime import date, datetime, timedelta
-from .hm import HM
+from .types.hm import HM
 
 DAYNAME = ('Lunes', 'Martes', 'Miércoles',
            'Jueves', 'Viernes', 'Sábado', 'Domingo')

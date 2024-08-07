@@ -9,7 +9,6 @@ from typing import Union
 import pdftotext
 import pickle
 
-import pandas as pd
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -135,7 +134,6 @@ class FileManager:
         ext = ext.lstrip(".")
         ext = ext.lower()
         return {
-            "xlsx": "xls",
             "js": "json",
             "yml": "yaml",
             "sql": "txt"
@@ -193,8 +191,6 @@ class FileManager:
         with open(file, "w") as f:
             json.dump(obj, f, *args, indent=indent, **kwargs)
 
-    def _load_csv(self, file: Path, *args, **kwargs):
-        return pd.read_csv(file, *args, **kwargs)
 
     def _dump_csv(self, file: Path, obj, *args, **kwargs):
         obj.to_csv(file, *args, **kwargs)
@@ -205,9 +201,6 @@ class FileManager:
             if len(data) == 1:
                 data = data[0]
             return data
-
-    def _load_xls(self, file: Path, *args, **kwargs):
-        return pd.read_excel(file, *args, **kwargs)
 
     def _load_txt(self, file: Path, *args, **kwargs):
         with open(file, "r") as f:

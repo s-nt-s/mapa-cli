@@ -1,43 +1,36 @@
 from munch import Munch
 from math import modf
 from datetime import date
-from .cache import Cache
+from ..cache import Cache
 import re
-from typing import Union, Dict
+from typing import Union, NamedTuple
 
 
-class HM:
-
-    def __init__(self, hm: Union[str, int, float]):
-        if isinstance(hm, str):
-            signo = True
-            if hm[0] in ('-', '+'):
-                signo = hm[0] == '+'
-                hm = hm[1:]
-            h, m, s = "0 0 0".split()
-            shm = hm.split(":")
-            if len(shm) == 2:
-                h, m = shm
-            elif len(shm) == 3:
-                h, m, s = shm
-            else:
-                raise ValueError(hm)
-            h = int(h.replace(".", ""))
-            m = int(m.replace(".", ""))
-            s = int(s.replace(".", ""))
-            m = (h * 60) + m
-            if s > 0:
-                m = m + (s / 60)
-            if signo is False:
-                m = -m
-            self.minutos = m
-        elif isinstance(hm, (int, float)):
-            self.minutos = hm
-        else:
-            raise TypeError(hm)
+class HM(NamedTuple):
+    minutos: int
 
     @classmethod
-    def intervalo(cls, *args):
+    def build(cls, hm: Union[str, int, float, "HM"]):
+        if isinstance(hm, cls):
+            return hm
+        if isinstance(hm, (int, float)):
+            return HM(minutos=m)
+        if not isinstance(hm, str):
+            raise TypeError(hm)
+        m = re.match(r"^(\-|\+)?(\d+):(\d+)(:\d+)?$", hm)
+        if m is None:
+            raise ValueError(hm)
+        signo = m.groups()[0] != '-'
+        h, m, s = map(lambda x: int(x) if x else 0, m.groups())
+        m = (h * 60) + m
+        if s > 0:
+            m = m + (s / 60)
+        if signo is False:
+            m = -m
+        return HM(minutos=m)
+
+    @staticmethod
+    def intervalo(*args: "HM") -> "HM":
         args = sorted(args)
         intervalo = args[-1] - args[0]
         for i in range(1, len(args) - 1, 2):
@@ -93,16 +86,26 @@ class HM:
         return HM(minutos)
 
 
-class GesperIH(Munch):
-    def __init__(self, *args, **karg):
-        super().__init__(*args, **karg)
+class GesperIH(NamedTuple):
+    laborables: int
+    jornadas: int
+    trabajadas: HM
+    incidencias: HM
+    total: HM
+    teoricas: HM
+    saldo: HM
+    porcentaje: float
+    festivos: HM
+    vacaciones: HM
+    fiestas_patronales: HM
+    pdf: str
+    ini: date
+    fin: date
 
-    @property
-    def computables(self):
+    def get_computables(self):
         return self.teoricas - self.festivos - self.vacaciones - self.fiestas_patronales
 
-    @property
-    def sin_vacaciones(self):
+    def get_sin_vacaciones(self):
         return self.teoricas - self.festivos - self.fiestas_patronales
 
 

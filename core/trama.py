@@ -4,7 +4,7 @@ from munch import Munch
 from .autdriver import AutDriver
 from .web import Web
 from .util import json_serial, tmap, ttext, get_text, get_times, json_hook, get_months
-from .hm import HM, HMCache, HMmunch
+from .types.hm import HM, HMCache, HMmunch
 from .cache import Cache, MunchCache
 from .gesper import Gesper
 from .filemanager import FileManager
