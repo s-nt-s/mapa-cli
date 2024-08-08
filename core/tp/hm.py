@@ -11,17 +11,19 @@ class HM(NamedTuple):
 
     @classmethod
     def build(cls, hm: Union[str, int, float, "HM"]):
+        if hm is None:
+            return None
         if isinstance(hm, cls):
             return hm
         if isinstance(hm, (int, float)):
-            return HM(minutos=m)
+            return HM(minutos=hm)
         if not isinstance(hm, str):
             raise TypeError(hm)
         m = re.match(r"^(\-|\+)?(\d+):(\d+)(:\d+)?$", hm)
         if m is None:
             raise ValueError(hm)
         signo = m.groups()[0] != '-'
-        h, m, s = map(lambda x: int(x) if x else 0, m.groups())
+        h, m, s = map(lambda x: int(x.strip(":")) if x else 0, m.groups()[1:])
         m = (h * 60) + m
         if s > 0:
             m = m + (s / 60)
@@ -36,6 +38,9 @@ class HM(NamedTuple):
         for i in range(1, len(args) - 1, 2):
             intervalo = intervalo - (args[i + 1] - args[i])
         return intervalo
+
+    def _to_json(self):
+        return str(self)
 
     def __str__(self):
         sg, hm = modf(abs(self.minutos))
@@ -107,21 +112,6 @@ class GesperIH(NamedTuple):
 
     def get_sin_vacaciones(self):
         return self.teoricas - self.festivos - self.fiestas_patronales
-
-
-class GesperIHCache(Cache):
-    def read(self, *args, **kwargs):
-        d = super().read(*args, **kwargs)
-        if not isinstance(d, dict):
-            return None
-        for k, v in list(d.items()):
-            if isinstance(v, str):
-                if re.match(r"[\-+]?\d+:\d+(:\d+)?", v):
-                    d[k] = HM(v)
-                elif re.match(r"\d+-\d+-\d+", v):
-                    d[k] = date(*map(int, v.split("-")))
-        d = GesperIH(d)
-        return d
 
 
 def mk_parse(v: Union[str, list, dict]):

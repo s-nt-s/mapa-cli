@@ -8,10 +8,55 @@ from munch import Munch
 from typing import Union
 import pdftotext
 import pickle
+from datetime import datetime, date
+from dataclasses import asdict, is_dataclass
 
 import yaml
 
 logger = logging.getLogger(__name__)
+
+
+class CustomEncoder(json.JSONEncoder):
+
+    def default(self, o):
+        new_obj = CustomEncoder.parse(o)
+        if new_obj is None:
+            return super().default(o)
+        return new_obj
+
+    @classmethod
+    def __has_func(cls, o, func):
+        return callable(getattr(o, func, None))
+
+    @classmethod
+    def parse(cls, o):
+        if cls.__has_func(o, "_to_json"):
+            return o._to_json()
+        if isinstance(o, (datetime, date)):
+            return o.__str__()
+        if isinstance(o, tuple) and hasattr(o, '_fields'):
+            return o._asdict()
+        if is_dataclass(o):
+            return asdict(o)
+
+    @classmethod
+    def prepare(cls, o):
+        new_obj = cls.parse(o)
+        if new_obj is None:
+            o = new_obj
+        if isinstance(o, dict):
+            return {k: cls.prepare(v) for k, v in o.items()}
+        if isinstance(o, set):
+            try:
+                o = tuple(sorted(o))
+            except TypeError:
+                pass
+        if isinstance(o, (list, tuple)):
+            return list(map(cls.prepare, o))
+        return o
+
+    def encode(self, o):
+        return super().encode(CustomEncoder.prepare(o))
 
 
 class FileManager:
@@ -188,9 +233,9 @@ class FileManager:
             return json.load(f, *args, **kwargs)
 
     def _dump_json(self, file: Path, obj, *args, indent=2, **kwargs):
+        obj = CustomEncoder.prepare(obj)
         with open(file, "w") as f:
-            json.dump(obj, f, *args, indent=indent, **kwargs)
-
+            json.dump(obj, f, *args, indent=indent, cls=CustomEncoder, **kwargs)
 
     def _dump_csv(self, file: Path, obj, *args, **kwargs):
         obj.to_csv(file, *args, **kwargs)

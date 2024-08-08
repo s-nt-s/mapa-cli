@@ -4,7 +4,7 @@ from munch import Munch
 from .autdriver import AutDriver
 from .web import Web
 from .util import json_serial, tmap, ttext, get_text, get_times, json_hook, get_months
-from .types.hm import HM, HMCache, HMmunch
+from .tp.hm import HM, HMCache, HMmunch
 from .cache import Cache, MunchCache
 from .gesper import Gesper
 from .filemanager import FileManager
@@ -114,9 +114,9 @@ class Trama:
                     fecha=fec,
                     marcajes=mar,
                     obs=obs,
-                    total=HM(ttt),
-                    teorico=HM(tto),
-                    saldo=HM(sld)
+                    total=HM.build(ttt),
+                    teorico=HM.build(tto),
+                    saldo=HM.build(sld)
                 )
                 dias.append(i)
         return dias
@@ -163,7 +163,7 @@ class Trama:
             jornadas=0,
             fichado=0,
             sal_ahora=Munch(
-                ahora=HM(time.strftime("%H:%M")),
+                ahora=HM.build(time.strftime("%H:%M")),
                 total=None,
                 saldo=None,
             ),
@@ -213,7 +213,7 @@ class Trama:
         fin = ini + timedelta(days=6)
         return self.get_calendario(ini, fin)
 
-    @HMCache(file="data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=(1 / 24))
+    @HMCache(file="data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", maxOld=(1 / 24))
     def _get_informe(self, ini: date, fin: date):
         logger.debug("Trama._get_informe(%s, %s)", ini, fin)
         r = Munch(
@@ -347,15 +347,10 @@ class Trama:
         vac = sorted(rst, key=lambda v: (v.year, v.key))
         return vac
 
-    @MunchCache("data/trama/incidencias_{estado}.json", maxOld=0, json_default=json_serial, json_hook=json_hook)
+    @MunchCache("data/trama/incidencias_{estado}.json", maxOld=0, json_hook=json_hook)
     def get_incidencias(self, estado=3):
         def to_date(x: str):
             return date(*map(int, reversed(x.split("/"))))
-
-        def to_hm(x: Union[str, None]):
-            if x is None:
-                return None
-            return HM(x)
 
         w: Web = self._get_inc_session()
         w.get("https://trama.administracionelectronica.gob.es/incidencias/bandejaEnviadas.html")
@@ -396,8 +391,8 @@ class Trama:
                 i.incidencias.append(Munch(
                     tipo=tipo,
                     fecha=to_date(fecha),
-                    inicio=to_hm(inicio),
-                    fin=to_hm(fin),
+                    inicio=HM.build(inicio),
+                    fin=HM.build(fin),
                     observaciones=observaciones,
                     mensaje=mensaje
                 ))

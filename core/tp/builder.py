@@ -1,16 +1,9 @@
-from typing import Dict, Callable, TypeVar, Set, Tuple, List, NamedTuple, Type, get_type_hints, get_origin, get_args
-from functools import cache
+from typing import Dict, Callable, Union, Any, Set, Tuple, List, NamedTuple, Type, get_type_hints, get_origin, get_args
+from functools import cache, cached_property
 import re
 from datetime import date, datetime
-
-TP = TypeVar('TP', bound=NamedTuple)
-
-
-def is_namedtuple(tp):
-    if not isinstance(tp, type):
-        return False
-    return issubclass(tp, NamedTuple)
-
+from .util import TP, isNamedTuple, getNamedTupleClass, getClass
+    
 
 def __build_date(x) -> date:
     if x is None:
@@ -35,9 +28,11 @@ def __build_datetime(x) -> datetime:
         raise ValueError(x)
     return datetime(*map(int, re.split(r"\D", x)))
 
+
 @cache
 def __get_types(cls: Type):
-    if not isinstance(cls, type):
+    cls = getClass(cls)
+    if cls is None:
         return {}
     tps: Dict[str, Type] = {}
     for k, tk in get_type_hints(cls).items():
@@ -48,6 +43,7 @@ def __get_types(cls: Type):
 
 @cache
 def __get_builder(cls: Type):
+    cls = getClass(cls)
     if not isinstance(cls, type):
         return None
 
@@ -61,8 +57,9 @@ def __get_builder(cls: Type):
     if cls == datetime:
         return __build_datetime
 
-    if issubclass(cls, NamedTuple):
-        return builder(cls.__class__)
+    ntcls = getNamedTupleClass(cls)
+    if ntcls is not None:
+        return builder(ntcls)
 
     origin = get_origin(cls)
     args = get_args(cls)
@@ -86,7 +83,8 @@ def __get_builder(cls: Type):
     ebuild = __get_builder(args[0])
     if not callable(ebuild):
         return None
-    return lambda x: origin.__class__(map(ebuild, x))
+    ocls = origin.__class__
+    return lambda x: ocls(map(ebuild, x))
 
 
 def __get_obj(*args, **kwargs):
@@ -102,8 +100,9 @@ def __get_obj(*args, **kwargs):
 
 
 def build(cls: Type[TP], *args, **kwargs) -> TP:
-    if not issubclass(cls, NamedTuple):
-        raise ValueError('Type must be a NamedTuple')
+    cls = getNamedTupleClass(cls)
+    if cls is None:
+        raise ValueError(f'{cls} Type must be a NamedTuple')
     __build = getattr(cls, "build", None)
     if callable(__build):
         return __build
@@ -115,3 +114,13 @@ def build(cls: Type[TP], *args, **kwargs) -> TP:
             obj[k] = bld(v) if v is not None and callable(bld) else v
     return cls(**obj)
 
+
+def builder(cls: Type[TP]) -> Callable[..., TP]:
+    cls = getNamedTupleClass(cls)
+    if cls is None:
+        raise ValueError(f'{cls} Type must be a NamedTuple')
+
+    def __cls_build(*args, **kwargs) -> TP:
+        return build(cls, *args, **kwargs)
+
+    return __cls_build

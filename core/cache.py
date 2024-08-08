@@ -10,12 +10,11 @@ FM = FileManager.get()
 
 
 class Cache:
-    def __init__(self, file: str, *args, maxOld=30, json_default=None, json_hook=None, keep_if_none=False, **kwargs):
+    def __init__(self, file: str, *args, maxOld=30, json_hook=None, keep_if_none=False, **kwargs):
         self.file = file
         self.data = {}
         self.func = None
         self.slf = None
-        self.json_default = json_default
         self.json_hook = json_hook
         self.keep_if_none = keep_if_none
         self.__maxOld = maxOld
@@ -36,8 +35,6 @@ class Cache:
 
     def save(self, file: str, data, *args, **kwargs):
         logger.debug("SAVE "+file)
-        if self.json_default is not None:
-            return FM.dump(file, data, default=self.json_default)
         return FM.dump(file, data)
 
     def tooOld(self, fl: str):

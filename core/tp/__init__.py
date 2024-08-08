@@ -1,17 +1,6 @@
-from typing import NamedTuple, TypeVar, Type, Callable
-from .builder import build
-
-TP = TypeVar('TP', bound=NamedTuple)
-
-
-def builder(cls: Type[TP]) -> Callable[..., TP]:
-    if not issubclass(cls, NamedTuple):
-        raise ValueError('Type must be a NamedTuple')
-
-    def __cls_build(*args, **kwargs) -> TP:
-        return build(cls, *args, **kwargs)
-
-    return __cls_build
+from typing import NamedTuple
+from datetime import date
+from .builder import builder, TP
 
 
 def merge(tp: TP, **kwargs) -> TP:
@@ -84,4 +73,5 @@ class Puesto(NamedTuple):
     nivel: int
     sueldo: Sueldo
     contacto: Contacto
+    inicio: date
 

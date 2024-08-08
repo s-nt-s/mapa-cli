@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from .gesper import Gesper
 from .mapa import Mapa
 from .filemanager import CNF
-from .types.hm import HM
+from .tp.hm import HM
 from .util import to_strint, DAYNAME, MONTHNAME, parse_dia, notnull, tmap
 from io import StringIO
 from munch import Munch
@@ -128,9 +128,9 @@ class Printer:
         if man.teorico.minutos == 0:
             return
 
-        outhm = HM("14:30")
-        if man.teorico < HM("07:30"):
-            outhm = HM("14:00")
+        outhm = HM.build("14:30")
+        if man.teorico < HM.build("07:30"):
+            outhm = HM.build("14:00")
         if (wf_sld.minutos > 0 and cal.sal_ahora is None) or (
                 cal.sal_ahora is not None and cal.sal_ahora.ahora.minutos > outhm.minutos):
             print("")
