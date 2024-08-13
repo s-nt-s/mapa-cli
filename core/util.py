@@ -1,7 +1,7 @@
 import re
 import bs4
 from markdownify import markdownify
-from typing import NamedTuple, Tuple
+from typing import Tuple, Union
 from datetime import date, datetime, timedelta
 from .tp.hm import HM
 
@@ -89,7 +89,9 @@ def get_html(soup):
     return h
 
 
-def html_to_md(node, links=False, unwrap=None):
+def html_to_md(node: Union[bs4.Tag, str], links=False, unwrap=None):
+    if isinstance(node, str):
+        node = bs4.BeautifulSoup(node, "html.parser")
     if unwrap is None:
         unwrap = tuple()
     for hr in node.select("hr"):

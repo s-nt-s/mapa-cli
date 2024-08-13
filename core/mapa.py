@@ -1,14 +1,15 @@
 from datetime import datetime, date, timedelta
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Union
 from .filemanager import CNF
 import bs4
 import re
 from .util import html_to_md, mk_re, strptime
-from munch import Munch
 from .web import Web
 from .util import json_serial, ttext, nextone, get_text
 from requests.auth import HTTPBasicAuth
 from .user import User
+from . import tp
+
 
 re_sp = re.compile(r"\s+")
 
@@ -29,12 +30,26 @@ re_txt = {
 }
 
 
+def clean_text(t: Union[str, bs4.Tag, None]) -> str:
+    if t is None:
+        return None
+    if isinstance(t, bs4.Tag):
+        for r_txt, txt in re_txt.items():
+            n: bs4.Tag
+            for n in t.findAll(text=r_txt):
+                n.replace_with(r_txt.sub(txt, n.string))
+        return t
+    for r_txt, txt in re_txt.items():
+        t = r_txt.sub(txt, t)
+    return t
+
+
 class Mapa(Web):
     def get_menu(self):
         """
         Obtiene el menú de la sede definida en config.yml
         """
-        menus: List[Munch] = []
+        menus: List[tp.Menu] = []
         self.get("https://intranet.mapa.es/servicios-internos/cafeteria/menu/default.aspx")
         for div in self.soup.select("div.panel-heading"):
             h3 = div.get_text().strip()
@@ -53,7 +68,7 @@ class Mapa(Web):
             #    continue
             mhtml = div.select_one("div.menu")
             precios: List[str] = [p.replace(",", ".") for p, _ in re.findall(r"(\d+([.,]\d+))\s*€", str(mhtml))]
-            menu = Munch(
+            menu = dict(
                 fecha=fecha,
                 precio=max(map(float, precios)),
                 primeros=set(),
@@ -99,14 +114,70 @@ class Mapa(Web):
             mmrk = re.sub(r"^[ \t]+\+\s*", r"  + ", mmrk, flags=re.MULTILINE)
             mmrk = re.sub(r"\n\s*\n\s*\n+", r"\n\n", mmrk)
 
-            menu.carta = mmrk.strip()
+            menu['carta'] = mmrk.strip()
             for field in ("primeros", "segundos"):
                 menu[field] = tuple(sorted(menu[field]))
-            menus.append(menu)
-        return menus
+            menus.append(tp.Menu(**menu))
+        return tuple(menus)
 
     def get_novedades(self):
-        items = []
+        def get_url_and_html(url:str, node: bs4.Tag) -> str:
+            flag = False
+            for n in node.select("span.novedad-lista-documentos"):
+                flag = True
+                n.extract()
+            urls = set()
+            a: bs4.Tag
+            for a in node.select("a"):
+                txt = a.get_text().strip().lower()
+                s_txt = txt.split()
+                urls.add(a.attrs["href"])
+                if "ver" in s_txt or "enlace" in txt or re.match(r"^(para )?más información.*", txt):
+                    a.string = a.attrs["href"]
+                    a.name = "span"
+            if len(urls) == 1:
+                if flag:
+                    n: bs4.Tag
+                    for n in node.select(".lista-documentos"):
+                        n.extract()
+                a: bs4.Tag
+                for a in node.findAll(["span", "a"]):
+                    txt = a.get_text().strip()
+                    for r, ntxt in fix_url:
+                        txt = r.sub(ntxt, txt)
+                    if txt in urls:
+                        a.extract()
+                url = urls.pop()
+            while True:
+                last = node.select(":scope > *")
+                if len(last) == 0:
+                    last = None
+                    break
+                last: bs4.Tag = last[-1]
+                if get_text(last) is None and len(last.select(":scope > *")) == 0:
+                    last.extract()
+                    continue
+                break
+            if last is not None:
+                txt = get_text(last)
+                if txt is None or re.match(r"^(para |Puedes consultar )?más información.*", txt,
+                                           flags=re.IGNORECASE):
+                    last.extract()
+            if url:
+                a: bs4.Tag = node.find("a", attrs={"href": url})
+                if a and len(a.get_text().strip()) < 3:
+                    a.unwrap()
+            n: bs4.Tag
+            for n in node.findAll(["p", "div"]):
+                if len(n.get_text().strip()) > 0:
+                    continue
+                chls = [i for i in n.select(":scope *") if i.name not in ("br", )]
+                if len(chls) == 0:
+                    n.extract()
+            node = clean_text(node)
+            return url, str(node)
+
+        items: List[tp.Novedad] = []
         self.get("https://intranet.mapa.es/comunicaciones-internas/novedades/default.aspx")
         for li in self.soup.select("ul.listado-novedades li"):
             tt = li.find("h3")
@@ -123,17 +194,23 @@ class Mapa(Web):
                 titu = cod[1]
             if titu == titu.upper():
                 titu = titu.capitalize()
-            item = Munch(
-                node=None,
+            url = tt.find("a").attrs["href"]
+
+            self.get(url)
+            node = self.soup.select_one("div.novedad-descripcion")
+            url, html = get_url_and_html(url, node)
+
+            item = tp.Novedad(
                 fecha=dt,
-                titulo=titu,
-                url=tt.find("a").attrs["href"],
+                titulo=clean_text(titu),
+                url=url,
                 descripcion=get_text(li.select_one("div.novedad-descripcion")),
-                tipo="N"
+                tipo="N",
+                html=html
             )
             if item.descripcion:
-                item.descripcion = re.sub(
-                    r"\s*(Más información|Ver declaración)\s*\.?$", "", item.descripcion)
+                item = tp.merge(item, descripcion=re.sub(
+                    r"\s*(Más información|Ver declaración)\s*\.?$", "", item.descripcion))
             items.append(item)
 
         self.get("https://intranet.mapa.es/comunicaciones-internas/tablon-de-anuncios/default.aspx")
@@ -149,130 +226,54 @@ class Mapa(Web):
             li.name = "div"
             h2 = li.select_one("h2")
             h2.extract()
+            url, html = get_url_and_html(None, li)
+            descripcion = html_to_md(html, links=True, unwrap=('span', 'strong', "b"))
+            descripcion = re.sub(r"[ \t]+", " ", descripcion)
+            descripcion = re.sub(r" *\[", " [", descripcion)
+            descripcion = re.sub(r" \* ", r"\n* ", descripcion)
+            descripcion = re.sub(r"\n\s*\n+", r"\n", descripcion)
+            descripcion = re.sub(r"^[ \t]*\.[ \t]*$", r"", descripcion, flags=re.MULTILINE)
+            # descripcion = re.sub(r"^ *", r"> ", descripcion, flags=re.MULTILINE)
+            descripcion = descripcion.strip()
 
-            item = Munch(
-                node=li,
+            item = tp.Novedad(
                 fecha=dt,
-                titulo=get_text(h2),
-                url=None,
-                descripcion=None,
-                tipo="A"
+                titulo=clean_text(get_text(h2)),
+                url=url,
+                descripcion=descripcion,
+                tipo="A",
+                html=html
             )
             items.append(item)
 
-        for item in items:
-            if item.node is None and item.url and item.tipo == "N":
-                self.get(item.url)
-                item.node = self.soup.select_one("div.novedad-descripcion")
-            for r_txt, txt in re_txt.items():
-                if item.titulo:
-                    item.titulo = r_txt.sub(txt, item.titulo)
-
-        for item in items:
-            if item.node is None:
-                continue
-            flag = False
-            for n in item.node.select("span.novedad-lista-documentos"):
-                flag = True
-                n.extract()
-            urls = set()
-            a: bs4.Tag
-            for a in item.node.select("a"):
-                txt = a.get_text().strip().lower()
-                s_txt = txt.split()
-                urls.add(a.attrs["href"])
-                if "ver" in s_txt or "enlace" in txt or re.match(r"^(para )?más información.*", txt):
-                    a.string = a.attrs["href"]
-                    a.name = "span"
-            if len(urls) == 1:
-                if flag:
-                    n: bs4.Tag
-                    for n in item.node.select(".lista-documentos"):
-                        n.extract()
-                a: bs4.Tag
-                for a in item.node.findAll(["span", "a"]):
-                    txt = a.get_text().strip()
-                    for r, ntxt in fix_url:
-                        txt = r.sub(ntxt, txt)
-                    if txt in urls:
-                        a.extract()
-                item.url = urls.pop()
-            while True:
-                last = item.node.select(":scope > *")
-                if len(last) == 0:
-                    last = None
-                    break
-                last: bs4.Tag = last[-1]
-                if get_text(last) is None and len(last.select(":scope > *")) == 0:
-                    last.extract()
-                    continue
-                break
-            if last is not None:
-                txt = get_text(last)
-                if txt is None or re.match(r"^(para |Puedes consultar )?más información.*", txt,
-                                           flags=re.IGNORECASE):
-                    last.extract()
-            if item.url:
-                a: bs4.Tag = item.node.find("a", attrs={"href": item.url})
-                if a and len(a.get_text().strip()) < 3:
-                    a.unwrap()
-            n: bs4.Tag
-            for n in item.node.findAll(["p", "div"]):
-                if len(n.get_text().strip()) > 0:
-                    continue
-                chls = [i for i in n.select(":scope *") if i.name not in ("br", )]
-                if len(chls) == 0:
-                    n.extract()
-
-            n: bs4.Tag
-            for n in item.node.findAll(text=r_txt):
-                n.replace_with(r_txt.sub(txt, n.string))
-
-            item.html = str(item.node)
-            item.descripcion = html_to_md(item.node, links=True, unwrap=('span', 'strong', "b"))
-            item.descripcion = re.sub(r"[ \t]+", " ", item.descripcion)
-            item.descripcion = re.sub(r" *\[", " [", item.descripcion)
-            item.descripcion = re.sub(r" \* ", r"\n* ", item.descripcion)
-            item.descripcion = re.sub(r"\n\s*\n+", r"\n", item.descripcion)
-            item.descripcion = re.sub(r"^[ \t]*\.[ \t]*$", r"", item.descripcion, flags=re.MULTILINE)
-            item.descripcion = item.descripcion.strip()
-            # item.descripcion = re.sub(r"^ *", r"> ", item.descripcion, flags=re.MULTILINE)
-
-        for item in items:
-            del item['node']
-
-        items = sorted(items, key=lambda x: (x.fecha, x.titulo))
-        return items
+        return sorted(items, key=lambda x: (x.fecha, x.titulo))
 
     def get_ofertas(self):
         links: Set[Tuple[str, str]] = set()
         self.get("https://intranet.mapa.es/empleado-publico/ofertas-comerciales-para-los-empleados")
         for a in self.soup.select("ul.fotos-polaroid a[href]"):
             links.add((a.attrs["title"].strip(), a.attrs["href"]))
-        r = []
+        r: List[tp.TreeUrl] = []
         for tipo, url in sorted(links):
             url = url.replace(":443/", "/")
-            r.append(Munch(
-                tipo=tipo,
-                url=url,
-                ofertas=[]
-            ))
             self.get(url)
+            children: List[tp.TreeUrl] = []
             for o in self.soup.select("div.oferta-detalle"):
                 tt = get_text(o.select_one("h3"))
                 if tt.upper() == tt:
                     tt = tt.capitalize()
                 if "." in tt and len(tt.split()) == 1:
                     tt = tt.lower()
-                url = o.select_one("a.ico-website")
-                if url:
-                    url = url.attrs["href"]
-                    url = url.rstrip(".")
-                r[-1].ofertas.append(Munch(
-                    titulo=tt,
-                    url=url
+                c_url = o.select_one("a.ico-website")
+                if c_url:
+                    c_url = c_url.attrs["href"]
+                    c_url = c_url.rstrip(".")
+                children.append(tp.TreeUrl(
+                    txt=tt,
+                    url=c_url
                 ))
-        return r
+            r.append(tp.TreeUrl(txt=tipo, url=url, children=children))
+        return tuple(r)
 
     def get_contactos(self):
         kv = {

@@ -3,9 +3,8 @@ from munch import Munch
 
 from .autdriver import AutDriver
 from .web import Web
-from .util import json_serial, tmap, ttext, get_text, get_times, json_hook, get_months
-from .tp.hm import HM, HMCache, HMmunch
-from .cache import Cache, MunchCache
+from .util import tmap, ttext, get_text, get_times, json_hook, get_months
+from .cache import Cache, TupleCache
 from .gesper import Gesper
 from .filemanager import FileManager
 from .gesper import FCH_FIN as gesper_FCH_FIN
@@ -13,8 +12,9 @@ from os.path import isfile
 import re
 import time
 import logging
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, NamedTuple
 import bs4
+from . import tp
 
 re_sp = re.compile(r"\s+")
 JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"
@@ -22,6 +22,16 @@ RT_URL = "https://trama.administracionelectronica.gob.es/portal/"
 FCH_INI = date(2022, 5, 29)
 
 logger = logging.getLogger(__name__)
+
+
+class Informe(NamedTuple):
+    ini: date
+    fin: date
+    total: tp.HM = tp.HM(0)
+    teorico: tp.HM = tp.HM(0)
+    saldo: tp.HM = tp.HM(0)
+    laborables: int = 0
+    vacaciones: tp.HM = tp.HM(0)
 
 
 def get_from_label(sp: bs4.Tag, lb):
@@ -85,7 +95,7 @@ class Trama:
 
     def _get_dias(self, ini: date, fin: date):
         logger.debug("_get_dias(%s, %s)", ini, fin)
-        dias = []
+        dias: List[tp.Fichaje] = []
         w: Web = self._get_cal_session()
         for a, z in get_times(ini, fin, timedelta(days=59)):
             w.get("https://trama.administracionelectronica.gob.es/calendario/marcajesRango.html",
@@ -106,29 +116,27 @@ class Trama:
                 fec = fec[:-1].split("(", 1)[-1]
                 fec = tmap(int, reversed(fec.split("/")))
                 fec = date(*fec)
-                mar: Tuple[HM, ...] = tmap(HM, sorted(re.findall(r"\d+:\d+:\d+", mar)))
+                mar: Tuple[tp.HM, ...] = tmap(tp.HM.build, sorted(re.findall(r"\d+:\d+:\d+", mar)))
                 if isinstance(prs, str):
                     obs = ((obs or "") + " "+prs).strip()
 
-                i = Munch(
+                i = tp.Fichaje(
                     fecha=fec,
                     marcajes=mar,
                     obs=obs,
-                    total=HM.build(ttt),
-                    teorico=HM.build(tto),
-                    saldo=HM.build(sld)
+                    total=tp.HM.build(ttt),
+                    teorico=tp.HM.build(tto),
+                    saldo=tp.HM.build(sld)
                 )
                 dias.append(i)
         return dias
 
     def get_dias(self, ini: date, fin: date):
         logger.debug("get_dias(%s, %s)", ini, fin)
-        dias = []
+        dias: List[tp.Fichaje] = []
         fln_dias = JS_DIAS.format(ini)
         if isfile(fln_dias):
-            for d in FileManager.get().load(fln_dias):
-                d = HMmunch.fromDict(d)
-                d._parse()
+            for d in map(tp.builder(tp.Fichaje), FileManager.get().load(fln_dias)):
                 if ini <= d.fecha <= fin:
                     dias.append(d)
         if len(dias) == 0:
@@ -146,7 +154,7 @@ class Trama:
         dt_top = today - timedelta(days=59)
         sv_dias = [d for d in dias if d.fecha < dt_top]
         if len(sv_dias):
-            FileManager.get().dump(fln_dias, sv_dias, default=json_serial)
+            FileManager.get().dump(fln_dias, sv_dias)
         # dias = [d for d in dias if d.fecha >= ini]
         return dias
 
@@ -157,17 +165,17 @@ class Trama:
         logger.debug("get_calendario(%s, %s)", ini, fin)
         today = date.today()
         r = Munch(
-            total=HM(0),
-            teorico=HM(0),
-            saldo=HM(0),
+            total=tp.HM(0),
+            teorico=tp.HM(0),
+            saldo=tp.HM(0),
             jornadas=0,
             fichado=0,
             sal_ahora=Munch(
-                ahora=HM.build(time.strftime("%H:%M")),
+                ahora=tp.HM.build(time.strftime("%H:%M")),
                 total=None,
                 saldo=None,
             ),
-            futuro=HM(0),
+            futuro=tp.HM(0),
             index=None,
             dias=self.get_dias(ini, fin)
         )
@@ -213,35 +221,40 @@ class Trama:
         fin = ini + timedelta(days=6)
         return self.get_calendario(ini, fin)
 
-    @HMCache(file="data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", maxOld=(1 / 24))
+    @TupleCache(
+        "data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json",
+        builder=tp.builder(Informe),
+        maxOld=(1 / 24)
+    )
     def _get_informe(self, ini: date, fin: date):
         logger.debug("Trama._get_informe(%s, %s)", ini, fin)
-        r = Munch(
+        r = Informe(
             ini=ini,
-            fin=fin,
-            total=HM(0),
-            teorico=HM(0),
-            saldo=HM(0),
-            laborables=0,
-            vacaciones=HM(0)
+            fin=fin
         )
         if ini <= gesper_FCH_FIN:
             inf = Gesper().get_informe(ini, gesper_FCH_FIN)
             if inf:
-                r.total += inf.total
-                r.teorico += (inf.teoricas - inf.festivos - inf.fiestas_patronales)
-                r.saldo += inf.saldo
-                r.laborables += inf.laborables
-                r.vacaciones += inf.vacaciones
+                r = tp.merge(
+                    r,
+                    total=r.total + inf.total,
+                    teorico=r.teorico+(inf.teoricas - inf.festivos -inf.fiestas_patronales),
+                    saldo=r.saldo + inf.saldo,
+                    laborables=r.laborables + inf.laborables,
+                    vacaciones=r.vacaciones + inf.vacaciones
+                )
             ini = gesper_FCH_FIN + timedelta(days=1)
             if ini >= fin:
                 return r
         for i in self.get_dias(ini, fin):
-            r.total += i.total
-            r.teorico += i.teorico
-            r.saldo += i.saldo
-            r.laborables += int(i.teorico.minutos > 0)
-            # r.vacaciones += inf.vacaciones
+            r = tp.merge(
+                r,
+                total=r.total + i.total,
+                teorico=r.teorico+i.teorico,
+                saldo=r.saldo + i.saldo,
+                laborables=r.laborables + int(i.teorico.minutos > 0),
+                #vacaciones = r.vacaciones + inf.vacaciones
+            )
         return r
 
     def get_informe(self, ini: Union[None, date] = None, fin: Union[None, date] = None):
@@ -347,7 +360,7 @@ class Trama:
         vac = sorted(rst, key=lambda v: (v.year, v.key))
         return vac
 
-    @MunchCache("data/trama/incidencias_{estado}.json", maxOld=0, json_hook=json_hook)
+    #@MunchCache("data/trama/incidencias_{estado}.json", maxOld=0, json_hook=json_hook)
     def get_incidencias(self, estado=3):
         def to_date(x: str):
             return date(*map(int, reversed(x.split("/"))))
@@ -391,8 +404,8 @@ class Trama:
                 i.incidencias.append(Munch(
                     tipo=tipo,
                     fecha=to_date(fecha),
-                    inicio=HM.build(inicio),
-                    fin=HM.build(fin),
+                    inicio=tp.HM.build(inicio),
+                    fin=tp.HM.build(fin),
                     observaciones=observaciones,
                     mensaje=mensaje
                 ))
@@ -486,10 +499,11 @@ class Trama:
         r = {k: tuple(v) for k, v in cuadrante.items() if v}
         return r
 
+
 if __name__ == "__main__":
     a = Trama()
     r = a.get_cuadrante()
     # r = a.get_incidencias()
     import json
 
-    print(json.dumps(r, indent=2, default=json_serial))
+    print(json.dumps(r, indent=2))

@@ -445,11 +445,11 @@ class Printer:
         for index, i in enumerate(Mapa().get_ofertas()):
             if index > 0:
                 print("")
-            print("===", i.tipo, "===")
+            print("===", i.txt, "===")
             print(i.url)
             print("")
-            for o in i.ofertas:
-                print("*", o.titulo)
+            for o in i.children:
+                print("*", o.txt)
 
     def cuadrante(self):
         cuadrante = Trama().get_cuadrante()

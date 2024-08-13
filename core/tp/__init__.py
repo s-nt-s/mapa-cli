@@ -1,6 +1,10 @@
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 from datetime import date
-from .builder import builder, TP
+from .builder import TP
+from .builder import builder as bb_builder
+from .hm import HM
+
+builder = bb_builder
 
 
 def merge(tp: TP, **kwargs) -> TP:
@@ -9,8 +13,7 @@ def merge(tp: TP, **kwargs) -> TP:
 
 def get(tp: TP, field):
     dct = tp._asdict()
-    if isinstance(dct, dict):
-        return dct.get(field)
+    return dct.get(field)
 
 
 class Expediente(NamedTuple):
@@ -75,3 +78,34 @@ class Puesto(NamedTuple):
     contacto: Contacto
     inicio: date
 
+
+class Menu(NamedTuple):
+    fecha: date
+    precio: float
+    primeros: Tuple[str, ...]
+    segundos: Tuple[str, ...]
+    carta: str
+
+
+class Novedad(NamedTuple):
+    fecha: date
+    titulo: str
+    url: str
+    descripcion: str
+    tipo: str
+    html: str
+
+
+class TreeUrl(NamedTuple):
+    txt: str
+    url: str
+    children: Tuple['TreeUrl', ...] = ()
+
+
+class Fichaje(NamedTuple):
+    fecha: date
+    marcajes: Tuple[HM, ...]
+    obs: str
+    total: HM
+    teorico: HM
+    saldo: HM

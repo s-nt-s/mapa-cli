@@ -1,18 +1,16 @@
 from datetime import datetime, date, timedelta
 from .filemanager import CNF, FileManager
 import re
-from munch import Munch
 from .web import Web
 from .util import parse_mes, parse_dia, ttext, to_num, json_hook, dict_style
 from os.path import isdir, join, isfile, expanduser
-from .tp.hm import HM, GesperIH
 import json
 from .retribuciones import Retribuciones
 from functools import cached_property
 import logging
 from .cache import TupleCache
 import bs4
-from typing import Union, Dict, List, Any
+from typing import Union, Dict, List, Any, NamedTuple
 from . import tp as tp
 
 
@@ -27,6 +25,29 @@ fix_url = (
 FCH_FIN = date(2022, 5, 29)
 
 logger = logging.getLogger(__name__)
+
+
+class GesperIH(NamedTuple):
+    jornadas: int
+    trabajadas: tp.HM
+    incidencias: tp.HM
+    total: tp.HM
+    teoricas: tp.HM
+    saldo: tp.HM
+    festivos: tp.HM
+    vacaciones: tp.HM
+    fiestas_patronales: tp.HM
+    ini: date
+    fin: date
+    laborables: Union[int, None] = None
+    porcentaje: Union[float, None] = None
+    pdf: Union[str, None] = None
+
+    def get_computables(self):
+        return self.teoricas - self.festivos - self.vacaciones - self.fiestas_patronales
+
+    def get_sin_vacaciones(self):
+        return self.teoricas - self.festivos - self.fiestas_patronales
 
 
 def _find_mes(*tds: bs4.Tag):
@@ -248,8 +269,8 @@ class Gesper(Web):
                     hi: str = j.get("_horaInicio")
                     hf: str = j.get("_horaFin")
                     if hi and hf:
-                        j["_horaInicio"] = HM.build(hi)
-                        j["_horaFin"] = HM.build(hf)
+                        j["_horaInicio"] = tp.HM.build(hi)
+                        j["_horaFin"] = tp.HM.build(hf)
                         j["_duraccion_hm"] = j["_horaFin"] - j["_horaInicio"]
                 for k, v in list(j.items()):
                     if v is None or (isinstance(v, str) and v.strip() == ""):
@@ -349,7 +370,7 @@ class Gesper(Web):
             obj = kv
             for w in path[:-1]:
                 if w not in obj:
-                    obj[w] = Munch()
+                    obj[w] = dict()
                 obj = obj[w]
             obj[path[-1]] = v
             del kv[k]
@@ -393,8 +414,8 @@ class Gesper(Web):
                 FileManager.get().dump(absn, r.content)
             jornadas = 0
             laborables = 0
-            vacaciones = HM.build("00:00")
-            festivos = HM.build("00:00")
+            vacaciones = tp.HM.build("00:00")
+            festivos = tp.HM.build("00:00")
             fiestas_patronales = 0
             for page in FileManager.get().load(absn, as_list=True, physical=True):
                 n_fechas = len(re.findall(r"\b\d\d/\d\d/\d\d\d\d\b", page))
@@ -402,7 +423,7 @@ class Gesper(Web):
                 laborables = laborables + n_fechas - 3
                 i: str
                 for i in re.findall(r"([\d:\.]+)\s+((?:VAC|FESTIVO|PCI|PAP|FP|VFP|L2|BAJA)\b\S*)", page):
-                    h = HM.build(i[0])
+                    h = tp.HM.build(i[0])
                     t = tuple(a.strip() for a in i[1].strip().lower().split(","))
                     if "festivo" in t:
                         jornadas = jornadas - 1
@@ -427,7 +448,7 @@ class Gesper(Web):
                     fiestas_patronales = 5
                 try:
                     porcentaje = to_num(m.groups()[-1])
-                    trabajadas, incidencias, total, teoricas, saldo = map(HM.build, m.groups()[:-1])
+                    trabajadas, incidencias, total, teoricas, saldo = map(tp.HM.build, m.groups()[:-1])
                 except ValueError:
                     break
                 rst.append(GesperIH(
@@ -441,7 +462,7 @@ class Gesper(Web):
                     porcentaje=porcentaje,
                     festivos=festivos,
                     vacaciones=vacaciones,
-                    fiestas_patronales=HM.build("02:30").mul(fiestas_patronales),
+                    fiestas_patronales=tp.HM.build("02:30").mul(fiestas_patronales),
                     pdf=absn,
                     ini=ini,
                     fin=fin

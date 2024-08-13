@@ -42,7 +42,7 @@ class CustomEncoder(json.JSONEncoder):
     @classmethod
     def prepare(cls, o):
         new_obj = cls.parse(o)
-        if new_obj is None:
+        if new_obj is not None:
             o = new_obj
         if isinstance(o, dict):
             return {k: cls.prepare(v) for k, v in o.items()}

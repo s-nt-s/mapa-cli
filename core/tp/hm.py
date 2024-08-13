@@ -1,7 +1,4 @@
-from munch import Munch
 from math import modf
-from datetime import date
-from ..cache import Cache
 import re
 from typing import Union, NamedTuple
 
@@ -90,58 +87,3 @@ class HM(NamedTuple):
         minutos = int(self.minutos / ot)
         return HM(minutos)
 
-
-class GesperIH(NamedTuple):
-    laborables: int
-    jornadas: int
-    trabajadas: HM
-    incidencias: HM
-    total: HM
-    teoricas: HM
-    saldo: HM
-    porcentaje: float
-    festivos: HM
-    vacaciones: HM
-    fiestas_patronales: HM
-    pdf: str
-    ini: date
-    fin: date
-
-    def get_computables(self):
-        return self.teoricas - self.festivos - self.vacaciones - self.fiestas_patronales
-
-    def get_sin_vacaciones(self):
-        return self.teoricas - self.festivos - self.fiestas_patronales
-
-
-def mk_parse(v: Union[str, list, dict]):
-    if isinstance(v, dict):
-        for k, x in list(v.items()):
-            if isinstance(x, (str, list)):
-                v[k] = mk_parse(x)
-        return v
-    if isinstance(v, list):
-        return [mk_parse(i) for i in v]
-    if re.match(r"[\-+]?\d+:\d+(:\d+)?", v):
-        return HM(v)
-    if re.match(r"\d+-\d+-\d+", v):
-        return date(*map(int, v.split("-")))
-    return v
-
-
-class HMmunch(Munch):
-    def _parse(self):
-        mk_parse(self)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._parse()
-
-
-class HMCache(Cache):
-    def read(self, *args, **kwargs):
-        d = super().read(*args, **kwargs)
-        if d is None:
-            return None
-        d = mk_parse(d)
-        return Munch.fromDict(d)
