@@ -58,53 +58,51 @@ class Printer:
         t = Trama()
         cal = t.get_semana()
 
-        quedan = cal.jornadas - cal.fichado
-        idx_trabajando = None
-        if cal.sal_ahora is not None and cal.index is not None:
-            idx_trabajando = cal.index
+        quedan = cal.jornadas - cal.fichados
+        sal_ahora = cal.ahora
 
         if cal.jornadas > 0:
             print("Semana:", cal.teorico.div(cal.jornadas), "*", cal.jornadas, "=", cal.teorico)
         else:
             print("Semana:", cal.teorico)
         print("")
-        for index, dia in enumerate(cal.dias):
+        for dia in cal.dias:
             hms = list(dia.marcajes)
             if not hms:
                 continue
             print("%2d:" % dia.fecha.day, end=" ")
-            if idx_trabajando == index:
+            if dia == cal.jornada_en_curso:
                 hms.append("--_--")
             str_hms = ["{} - {}".format(hms[i], (hms + ["--_--"])[i + 1]) for i in range(0, len(hms), 2)]
             str_hms = " + ".join(str_hms)
-            if idx_trabajando == index:
-                print("%s = %s" % (str_hms, cal.sal_ahora.hoy_total), "▲")
+            if dia == cal.jornada_en_curso:
+                print("%s = %s" % (str_hms, cal.ahora.ahora), "▲")
             else:
                 print("%s = %s" % (str_hms, dia.total))
         print("")
-        if cal.fichado > 1:
-            print("Media:", cal.total.div(cal.fichado), "*", cal.fichado, "=", cal.total)
-            if idx_trabajando is not None:
-                print("Media:", cal.sal_ahora.total.div(cal.fichado + 1), "*", cal.fichado + 1, "=",
-                      cal.sal_ahora.total)
+        if cal.fichados > 1:
+            print("Media:", cal.total.div(cal.fichados), "*", cal.fichados, "=", cal.total)
+            if cal.jornada_en_curso is not None:
+                print("Media:", cal.ahora.total.div(cal.fichados + 1), "*", cal.fichados + 1, "=",
+                      cal.ahora.total)
 
         sld, dqn = cal.saldo, quedan
-        if idx_trabajando is not None:
-            sld, dqn = cal.sal_ahora.saldo, quedan - 1
-        if (quedan - (int(idx_trabajando is not None))) > 0:
+        if cal.jornada_en_curso is not None:
+            sld, dqn = cal.ahora.saldo, quedan - 1
+        if (quedan - (int(cal.jornada_en_curso is not None))) > 0:
             sgn = sld.minutos > 0
             us_sld = HM(abs(sld.minutos))
             line = ["Falta:", us_sld.div(dqn), "*", dqn, "=", us_sld]
             if sgn > 0:
                 line[0] = "Queda:"
-            if idx_trabajando is not None:
+            if cal.jornada_en_curso is not None:
                 line.append("▲" if sgn else "▼")
             print(*line)
 
         print("")
         wf_sld = sld - cal.futuro
         sgn = wf_sld.minutos > 0
-        if idx_trabajando is not None:
+        if cal.jornada_en_curso is not None:
             print("Desfase:", wf_sld, "▲" if sgn else "▼")
         else:
             print("Desfase:", wf_sld)
@@ -112,30 +110,29 @@ class Printer:
         if cal.index is None:
             return
 
-        if idx_trabajando is not None:
+        if cal.jornada_en_curso is not None:
             print("")
             if quedan < 2 and wf_sld.minutos > 0:
                 print("¡¡SAL AHORA!!")
                 return
             if wf_sld.minutos <= 0:
-                print("Sal a las", cal.sal_ahora.ahora - wf_sld)
+                print("Sal a las", cal.ahora.ahora - wf_sld)
                 return
 
         if cal.futuro.minutos == 0:
             return
 
-        man = cal.dias[cal.index + 1]
-        if man.teorico.minutos == 0:
+        if cal.tomorrow is None or cal.tomorrow.teorico.minutos == 0:
             return
 
         outhm = HM.build("14:30")
-        if man.teorico < HM.build("07:30"):
+        if cal.tomorrow.teorico < HM.build("07:30"):
             outhm = HM.build("14:00")
-        if (wf_sld.minutos > 0 and cal.sal_ahora is None) or (
-                cal.sal_ahora is not None and cal.sal_ahora.ahora.minutos > outhm.minutos):
+        if (wf_sld.minutos > 0 and cal.ahora is None) or (
+                cal.ahora is not None and cal.ahora.ahora.minutos > outhm.minutos):
             print("")
-            man = man.teorico - wf_sld
-            if cal.sal_ahora:
+            man = cal.tomorrow.teorico - wf_sld
+            if cal.ahora:
                 print("Sal ahora y mañana haz", man)
             else:
                 print("Mañana haz", man)

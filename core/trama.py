@@ -1,9 +1,11 @@
 from datetime import datetime, date, timedelta
 from munch import Munch
+from dataclasses import dataclass, field
+from functools import cached_property
 
 from .autdriver import AutDriver
 from .web import Web
-from .util import tmap, ttext, get_text, get_times, json_hook, get_months
+from .util import tmap, ttext, get_text, get_times, get_months
 from .cache import Cache, TupleCache
 from .gesper import Gesper
 from .filemanager import FileManager
@@ -32,6 +34,69 @@ class Informe(NamedTuple):
     saldo: tp.HM = tp.HM(0)
     laborables: int = 0
     vacaciones: tp.HM = tp.HM(0)
+
+
+@dataclass(frozen=True)
+class Calendario:
+    dias: Tuple[tp.Fichaje, ...]
+    saldo: tp.HM = field(init=False, default=0)
+    total: tp.HM = field(init=False, default=0)
+    teorico: tp.HM = field(init=False, default=0)
+    futuro: tp.HM = field(init=False, default=0)
+    fichados: int = field(init=False, default=0)
+    jornadas: int = field(init=False, default=0)
+
+    def __post_init__(self):
+        for k in ("saldo", "total", "teorico"):
+            setattr(self, k, sum(getattr(d, k) for d in self.dias))
+        today = date.today()
+        setattr(self, "futuro", sum(d.saldo for d in self.dias if d.fecha > today))
+        setattr(self, "fichados", sum(int(len(d.marcajes) > 0) for d in self.dias))
+        setattr(self, "jornadas", sum(int(d.teorico.minutos > 0) for d in self.dias))
+        if self.jornada_en_curso is not None:
+            # Hasta que salgamos no deberíamos contar este día
+            setattr(self, "fichados",  getattr(self, "fichados")-1)
+            if self.jornada_en_curso.total.minutos > 0:
+                # Si hay algo ya computado (por ejemplo, tenemos 3 fichajes)
+                # lo restamos del total porque aún no sabemos cuanto se va
+                # a terminar imputando al día actual
+                for k in ("saldo", "total"):
+                    setattr(self, k, getattr(self, k) - self.jornada_en_curso.total)
+
+    @cached_property
+    def hoy(self):
+        today = date.today()
+        for d in self.dias:
+            if d.fecha == today:
+                return d
+
+    @cached_property
+    def tomorrow(self):
+        tomorrow = date.today() + timedelta(days=1)
+        for d in self.dias:
+            if d.fecha == tomorrow:
+                return d
+
+    @cached_property
+    def jornada_en_curso(self):
+        if self.hoy and len(self.hoy.marcajes) % 2 != 0:
+            return self.hoy
+
+    @cached_property
+    def ahora(self):
+        if self.jornada_en_curso is None:
+            return None
+
+        ahora = tp.HM.build(time.strftime("%H:%M"))
+
+        # Aún estamos en la oficina
+        sld = ahora - self.jornada_en_curso.marcajes[-1]
+
+        return tp.SiFichoAhora(
+            saldo=self.saldo + sld,
+            total=self.total + sld,
+            ahora=self.jornada_en_curso.total + sld
+        )
 
 
 def get_from_label(sp: bs4.Tag, lb):
@@ -163,55 +228,9 @@ class Trama:
         Devuelve el control horario entre dos fechas
         """
         logger.debug("get_calendario(%s, %s)", ini, fin)
-        today = date.today()
-        r = Munch(
-            total=tp.HM(0),
-            teorico=tp.HM(0),
-            saldo=tp.HM(0),
-            jornadas=0,
-            fichado=0,
-            sal_ahora=Munch(
-                ahora=tp.HM.build(time.strftime("%H:%M")),
-                total=None,
-                saldo=None,
-            ),
-            futuro=tp.HM(0),
-            index=None,
+        return Calendario(
             dias=self.get_dias(ini, fin)
         )
-        for index, i in enumerate(r.dias):
-            r.total += i.total
-            r.teorico += i.teorico
-            r.saldo += i.saldo
-            if i.fecha == today:
-                r.index = index
-            elif i.fecha > today:
-                r.futuro += i.saldo
-            if i.teorico.minutos > 0:
-                r.jornadas += 1
-            if len(i.marcajes) > 0:
-                r.fichado += 1
-        if r.index is None:
-            r.sal_ahora = None
-        else:
-            hoy = r.dias[r.index]
-            if len(hoy.marcajes) % 2 == 0:
-                r.sal_ahora = None
-            else:
-                # Aún estamos en la oficina
-                sld = r.sal_ahora.ahora - hoy.marcajes[-1]
-                r.sal_ahora.hoy_total = hoy.total + sld
-                r.sal_ahora.total = r.total + sld
-                r.sal_ahora.saldo = r.saldo + sld
-                # Hasta que salgamos no deberíamos contar este día
-                r.fichado = r.fichado - 1
-                if hoy.total.minutos > 0:
-                    # Si hay algo ya computado (por ejemplo, tenemos 3 fichajes)
-                    # lo restamos del total porque aún no sabemos cuanto se va
-                    # a terminar imputando al día actual
-                    r.total = r.total - hoy.total
-                    r.saldo = r.saldo - hoy.total
-        return r
 
     def get_semana(self):
         logger.debug("get_semana()")

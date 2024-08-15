@@ -3,6 +3,8 @@ from datetime import date
 from .builder import TP
 from .builder import builder as bb_builder
 from .hm import HM
+from functools import cache
+import time
 
 builder = bb_builder
 
@@ -109,3 +111,10 @@ class Fichaje(NamedTuple):
     total: HM
     teorico: HM
     saldo: HM
+
+
+class SiFichoAhora(NamedTuple):
+    saldo: HM
+    total: HM
+    ahora: HM
+
