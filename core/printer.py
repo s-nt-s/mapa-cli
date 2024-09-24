@@ -152,6 +152,7 @@ class Printer:
             print("No hay marcajes")
             return
         total = HM(0)
+        teorico = HM(0)
         for dia in dias:
             if len(dia.marcajes) == 0 and dia.obs:
                 line = "%s %2d: %s = %s" % (parse_dia(dia.fecha), dia.fecha.day, dia.total, dia.obs)
@@ -165,8 +166,11 @@ class Printer:
                 line += " (" + dia.obs + ")"
             print(line)
             total += dia.total
+            teorico += dia.teorico
         print("")
         print("Media: %s * %s = %s" % (total.div(len(dias)), len(dias), total))
+        print("Desfase:", total-teorico)
+        
 
     def nominas(self, sueldo='neto'):
         f = Funciona()
