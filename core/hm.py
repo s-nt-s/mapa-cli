@@ -1,5 +1,5 @@
 from munch import Munch
-from math import modf
+from math import modf, ceil, floor
 from datetime import date
 from .cache import Cache
 import re
@@ -35,6 +35,11 @@ class HM:
             self.minutos = hm
         else:
             raise TypeError(hm)
+        
+    def trunc(self):
+        if self.minutos < 0:
+            return HM(ceil(self.minutos))
+        return HM(floor(self.minutos))
 
     @classmethod
     def intervalo(cls, *args):
@@ -83,6 +88,9 @@ class HM:
 
     def __ge__(self, ot: "HM"):
         return self.minutos >= ot.minutos
+
+    def __hash__(self):
+        return self.minutos
 
     def mul(self, ot: "HM"):
         minutos = self.minutos * ot

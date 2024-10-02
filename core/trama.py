@@ -162,11 +162,7 @@ class Trama:
             saldo=HM(0),
             jornadas=0,
             fichado=0,
-            sal_ahora=Munch(
-                ahora=HM(time.strftime("%H:%M")),
-                total=None,
-                saldo=None,
-            ),
+            sal_ahora=None,
             futuro=HM(0),
             index=None,
             dias=self.get_dias(ini, fin)
@@ -183,26 +179,36 @@ class Trama:
                 r.jornadas += 1
             if len(i.marcajes) > 0:
                 r.fichado += 1
+                if i.total.minutos > 0:
+                    mrc: List[HM] = sorted(set(m.trunc() for m in i.marcajes))
+                    for x in reversed(tuple(range(1, len(mrc) - 1, 2))):
+                        if mrc[x].minutos+1 == mrc[x+1].minutos:
+                            del mrc[x+1]
+                            del mrc[x]
+                    i.marcajes = tuple(mrc)
         if r.index is None:
-            r.sal_ahora = None
-        else:
-            hoy = r.dias[r.index]
-            if len(hoy.marcajes) % 2 == 0:
-                r.sal_ahora = None
-            else:
-                # Aún estamos en la oficina
-                sld = r.sal_ahora.ahora - hoy.marcajes[-1]
-                r.sal_ahora.hoy_total = hoy.total + sld
-                r.sal_ahora.total = r.total + sld
-                r.sal_ahora.saldo = r.saldo + sld
-                # Hasta que salgamos no deberíamos contar este día
-                r.fichado = r.fichado - 1
-                if hoy.total.minutos > 0:
-                    # Si hay algo ya computado (por ejemplo, tenemos 3 fichajes)
-                    # lo restamos del total porque aún no sabemos cuanto se va
-                    # a terminar imputando al día actual
-                    r.total = r.total - hoy.total
-                    r.saldo = r.saldo - hoy.total
+            return r
+        hoy = r.dias[r.index]
+        if len(hoy.marcajes) % 2 == 0:
+            return r
+        r.sal_ahora = Munch(
+            ahora=HM(time.strftime("%H:%M")),
+            total=None,
+            saldo=None,
+        )
+        # Aún estamos en la oficina
+        sld = r.sal_ahora.ahora - hoy.marcajes[-1]
+        r.sal_ahora.hoy_total = hoy.total + sld
+        r.sal_ahora.total = r.total + sld
+        r.sal_ahora.saldo = r.saldo + sld
+        # Hasta que salgamos no deberíamos contar este día
+        r.fichado = r.fichado - 1
+        if hoy.total.minutos > 0:
+            # Si hay algo ya computado (por ejemplo, tenemos 3 fichajes)
+            # lo restamos del total porque aún no sabemos cuanto se va
+            # a terminar imputando al día actual
+            r.total = r.total - hoy.total
+            r.saldo = r.saldo - hoy.total
         return r
 
     def get_semana(self):
