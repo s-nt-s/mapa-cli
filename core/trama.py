@@ -155,6 +155,23 @@ class Trama:
         Devuelve el control horario entre dos fechas
         """
         logger.debug("get_calendario(%s, %s)", ini, fin)
+        def __simplificar(marcajes: Tuple[HM], total: HM):
+            if len(marcajes) < 2 or total is None or total.minutos == 0:
+                return marcajes
+            mrc: List[HM] = sorted(set(m.trunc() for m in marcajes))
+            for x in reversed(tuple(range(1, len(mrc) - 1, 2))):
+                if mrc[x].minutos+1 == mrc[x+1].minutos:
+                    del mrc[x+1]
+                    del mrc[x]
+            if len(mrc) == len(marcajes) or len(mrc) % 2 == 1:
+                return marcajes
+            tt = HM(0)
+            for x in range(1, len(mrc), 2):
+                tt = tt + (mrc[x]-mrc[x-1])
+            if abs(tt.minutos-total.minutos)>2:
+                return marcajes
+            return tuple(mrc)
+
         today = date.today()
         r = Munch(
             total=HM(0),
@@ -168,6 +185,7 @@ class Trama:
             dias=self.get_dias(ini, fin)
         )
         for index, i in enumerate(r.dias):
+            i.marcajes = __simplificar(i.marcajes, i.total)
             r.total += i.total
             r.teorico += i.teorico
             r.saldo += i.saldo
@@ -179,13 +197,6 @@ class Trama:
                 r.jornadas += 1
             if len(i.marcajes) > 0:
                 r.fichado += 1
-                if i.total.minutos > 0:
-                    mrc: List[HM] = sorted(set(m.trunc() for m in i.marcajes))
-                    for x in reversed(tuple(range(1, len(mrc) - 1, 2))):
-                        if mrc[x].minutos+1 == mrc[x+1].minutos:
-                            del mrc[x+1]
-                            del mrc[x]
-                    i.marcajes = tuple(mrc)
         if r.index is None:
             return r
         hoy = r.dias[r.index]
