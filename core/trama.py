@@ -473,11 +473,11 @@ class Trama:
 
     def get_cuadrante(self, ini=None, months=6):
         def __check_cls(cls: Union[str, None, List[str]]):
-            if cls is None:
+            if isinstance(cls, str):
+                cls = cls.strip().split()
+            if cls is None or len(cls)==0:
                 return False
-            if isinstance(cls, str) and cls in ("FESTIVOANUAL", ""):
-                return False
-            if isinstance(cls, list) and ("FESTIVOANUAL" in cls or tuple(cls) == tuple()):
+            if "FESTIVOANUAL" in cls:
                 return False
             return True
 

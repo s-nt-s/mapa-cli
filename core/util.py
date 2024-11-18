@@ -35,6 +35,7 @@ def get_months(ini: date, count: int):
         m = m % 12
         if m == 0:
             m = 12
+            y = y -1
         yield ini.replace(year=y, month=m)
 
 
