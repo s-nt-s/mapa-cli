@@ -283,14 +283,12 @@ class Printer:
                     last = i
 
     def festivos(self):
-        g = Gesper()
-        dt_now = datetime.now()
-        cYear = dt_now.year
-        for f in g.get_festivos():
-            if cYear != f.year:
-                print("===", f.year, "===")
-                cYear = f.year
-            print("%s %2d.%02d %s" % (f.semana, f.dia, f.mes, f.nombre))
+        t = Trama()
+        dates = t.get_festivos()
+        for i, d in enumerate(dates):
+            if (i==0 or (dates[i-1].year, dates[i-1].month)!=(d.year, d.month)):
+                print("====", f"{d:%Y-%m}", MONTHNAME[d.month-1], "====")
+            print(parse_dia(d)+ f" {d:%d}")
 
     def expediente(self):
         exps = Gesper().get_expediente()

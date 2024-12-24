@@ -196,7 +196,7 @@ def parse_mes(m):
     return None
 
 
-def parse_dia(d):
+def parse_dia(d: date):
     d = d.weekday()
     return ["L", "M", "X", "J", "V", "S", "D"][d]
 

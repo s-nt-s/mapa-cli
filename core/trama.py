@@ -13,7 +13,7 @@ from os.path import isfile
 import re
 import time
 import logging
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Set
 import bs4
 
 re_sp = re.compile(r"\s+")
@@ -507,6 +507,36 @@ class Trama:
 
         r = {k: tuple(v) for k, v in cuadrante.items() if v}
         return r
+
+    def get_festivos(self, max_iter=-1):
+        r: Set[date] = set()
+        today=date.today()
+        top = today.year + 2
+        w: Web = self._get_cal_session()
+        w.get("https://trama.administracionelectronica.gob.es/calendario/calendario.html")
+        while True:
+            size = len(r)
+            for td in w.soup.select("td.FESTIVOANUAL"):
+                day = get_text(td)
+                if not isinstance(day, str) or not day.isdigit():
+                    continue
+                day = int(day)
+                monday = td.find_parent("tr").attrs["class"][0]
+                dt = date(int(monday[4:]), int(monday[2:4]), day)
+                if dt.weekday() not in (5, 6):
+                    r.add(dt)
+            if size == len(r) or max(r).year >= top:
+                break
+            action, data = w.prepare_submit("#formularioPrincipal")
+            for b in w.soup.select("button[type='submit']"):
+                name = b.attrs.get('name')
+                if name in data.keys() and name != 'avanzaAnyo':
+                    del data[name]
+            b = w.soup.select_one("#avanzaAnyo")
+            data[b.attrs["name"]] = b.attrs['value']
+            w.get(action, **data)
+        fest = tuple(sorted([f for f in r if f>=today and f.year<top]))
+        return fest
 
 if __name__ == "__main__":
     a = Trama()
