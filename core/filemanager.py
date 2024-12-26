@@ -181,7 +181,8 @@ class FileManager:
         return {
             "js": "json",
             "yml": "yaml",
-            "sql": "txt"
+            "sql": "txt",
+            "ics": "txt"
         }.get(ext, ext)
 
     def exist(self, file: Union[Path, str]):

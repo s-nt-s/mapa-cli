@@ -1,3 +1,4 @@
+*.ics
 config.yml
 *.html
 lapso.js

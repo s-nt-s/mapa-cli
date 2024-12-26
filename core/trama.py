@@ -15,6 +15,7 @@ import time
 import logging
 from typing import Dict, List, Tuple, Union, NamedTuple, Set
 import bs4
+from . import ics
 from . import tp
 
 re_sp = re.compile(r"\s+")
@@ -624,6 +625,18 @@ class Trama:
             data[b.attrs["name"]] = b.attrs['value']
             w.get(action, **data)
         fest = tuple(sorted([f for f in r if f>=today and f.year<top]))
+        events: List[ics.IcsEvent] = []
+        for f in fest:
+            events.append(ics.IcsEvent(
+                uid="festivo_"+str(f),
+                dtstamp=f,
+                dtstart=f,
+                dtend=f,
+                categories="Festivo",
+                summary=f.nombre,
+                description=None
+            ))
+        ics.IcsEvent.dump("data/festivos.ics", *events)
         return fest
 
 if __name__ == "__main__":
