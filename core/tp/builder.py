@@ -1,8 +1,8 @@
-from typing import Dict, Callable, Union, Any, Set, Tuple, List, NamedTuple, Type, get_type_hints, get_origin, get_args
+from typing import _GenericAlias, Dict, Callable, Union, Any, Set, Tuple, List, NamedTuple, Type, get_type_hints, get_origin, get_args
 from functools import cache, cached_property
 import re
 from datetime import date, datetime
-from .util import TP, isNamedTuple, getNamedTupleClass, getClass
+from .util import TP, isNamedTuple, getNamedTupleClass, getClass, isClassNamedTuple, isObjectNamedTuple
     
 
 def __build_date(x) -> date:
@@ -34,18 +34,32 @@ def __get_types(cls: Type):
     cls = getClass(cls)
     if cls is None:
         return {}
-    tps: Dict[str, Type] = {}
+    tps: Dict[str, Union[Type, _GenericAlias]] = {}
     for k, tk in get_type_hints(cls).items():
         if isinstance(tk, type):
+            tps[k] = tk
+        elif get_origin(tk) in (list, tuple, dict):
             tps[k] = tk
     return tps
 
 
+def __get_type_or_alias(obj: Any):
+    if isinstance(obj, (type, _GenericAlias)):
+        return obj
+    if get_origin(obj) in (list, tuple, dict):
+        return obj
+    cls = getClass(obj)
+    if isinstance(cls, (type, _GenericAlias)):
+        return cls
+    if get_origin(cls) in (list, tuple, dict):
+        return cls
+    return None
+
 @cache
-def __get_builder(cls: Type):
-    cls = getClass(cls)
-    if not isinstance(cls, type):
-        return None
+def __get_builder(obj: Any):
+    cls = __get_type_or_alias(obj)
+    if cls is None:
+        return
 
     __build = getattr(cls, "build", None)
     if callable(__build):
@@ -66,7 +80,7 @@ def __get_builder(cls: Type):
     if len(args) == 0:
         return None
 
-    if origin == Dict:
+    if origin in (Dict, dict):
         if len(args) != 2:
             return None
         btk, btv = map(__get_builder, args)
@@ -78,13 +92,14 @@ def __get_builder(cls: Type):
             return lambda x: {btk(k): v for k, v in x.items()}
         return lambda x: {btk(k): btv(v) for k, v in x.items()}
 
-    if origin not in (Set, Tuple, List):
+    if origin not in (Set, Tuple, List, set, tuple, list):
         return lambda x: x
     ebuild = __get_builder(args[0])
     if not callable(ebuild):
         return None
-    ocls = origin.__class__
-    return lambda x: ocls(map(ebuild, x))
+    ocls = origin if isinstance(origin, type) else origin.__class__
+    mpbuid = lambda x: ocls(map(ebuild, x))
+    return mpbuid
 
 
 def __get_obj(*args, **kwargs):

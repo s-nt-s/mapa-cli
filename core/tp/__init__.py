@@ -1,8 +1,9 @@
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Tuple, Union, Dict
 from datetime import date
 from .builder import TP
 from .builder import builder as bb_builder
 from .hm import HM
+from .config import Config
 from functools import cache
 import time
 
@@ -19,7 +20,7 @@ def get(tp: TP, field):
 
 
 class Expediente(NamedTuple):
-    fecha: str
+    fecha: date
     name: str
     tipo: str
     desc: str
@@ -46,6 +47,13 @@ class Vacaciones(NamedTuple):
     url: str = None
 
 
+class VacacionesResumen(NamedTuple):
+    key: str
+    total: int
+    usados: int
+    year: int
+
+
 class Extra(NamedTuple):
     junio: float
     diciembre: float
@@ -56,11 +64,17 @@ class Complemento(NamedTuple):
     destino: float
 
 
+class Trienio(NamedTuple):
+    base: float
+    extra: Extra
+
+
 class Sueldo(NamedTuple):
+    fuente: str
     base: float
     extra: Extra
     complemento: Complemento
-    trienios: float
+    trienios: Trienio
 
 
 class Contacto(NamedTuple):
@@ -79,6 +93,8 @@ class Puesto(NamedTuple):
     sueldo: Sueldo
     contacto: Contacto
     inicio: date
+    jornada: str
+    trienios: Dict[str, int]
 
 
 class Menu(NamedTuple):
@@ -117,4 +133,24 @@ class SiFichoAhora(NamedTuple):
     saldo: HM
     total: HM
     ahora: HM
+
+
+class Incidencia(NamedTuple):
+    id: int
+    tipo: str
+    solicitud: date
+    validador: str
+    autorizador: str
+    incidencias: Union[str, "Incidencia", None]
+    permiso: str
+    estado: str
+    tarea: date
+    fecha: date
+    fin: Union[date, HM]
+    dias: Union[int, str, None]
+    year: Union[int, str, None]
+    inicio: HM
+    observaciones: str
+    mensaje: str
+
 

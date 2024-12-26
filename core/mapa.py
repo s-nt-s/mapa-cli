@@ -387,7 +387,7 @@ class Mapa(Web):
                 u[k] = i.get_text().strip()
             u = frozenset(u.items())
             users.add(u)
-        users = sorted((User(**{k: v for k, v in u}) for u in users),
+        users = sorted((User.build({k: v for k, v in u}) for u in users),
                        key=lambda u: (u.nombre, u.apellido1, u.apellido2))
         return users
 

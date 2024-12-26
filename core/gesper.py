@@ -160,7 +160,7 @@ class Gesper(Web):
         return tuple(exps)
 
     def get_vacaciones(self, year: Union[int, None] = None):
-        vac: List[tp.Vacaciones] = []
+        vac: List[tp.VacacionesResumen] = []
         cyr = datetime.today().year
         if year is None:
             for v in self.get_vacaciones(-1):
@@ -192,7 +192,7 @@ class Gesper(Web):
         for key in sorted(keys):
             t = total.get(key, 0)
             u = usados.get(key, 0)
-            vac.append(tp.Vacaciones(
+            vac.append(tp.VacacionesResumen(
                 key=key,
                 total=t,
                 usados=u,

@@ -1,5 +1,4 @@
 from datetime import datetime, date, timedelta
-from munch import Munch
 from dataclasses import dataclass, field
 from functools import cached_property
 
@@ -87,21 +86,22 @@ class Calendario:
     jornadas: int = field(init=False, default=0)
 
     def __post_init__(self):
+        sumHM = lambda x: sum(x, start=tp.HM(0))
         for k in ("saldo", "total", "teorico"):
-            setattr(self, k, sum(getattr(d, k) for d in self.dias))
+            object.__setattr__(self, k, sumHM((getattr(d, k) for d in self.dias)))
         today = date.today()
-        setattr(self, "futuro", sum(d.saldo for d in self.dias if d.fecha > today))
-        setattr(self, "fichados", sum(int(len(d.marcajes) > 0) for d in self.dias))
-        setattr(self, "jornadas", sum(int(d.teorico.minutos > 0) for d in self.dias))
+        object.__setattr__(self, "futuro", sumHM(d.saldo for d in self.dias if d.fecha > today))
+        object.__setattr__(self, "fichados", sum(int(len(d.marcajes) > 0) for d in self.dias))
+        object.__setattr__(self, "jornadas", sum(int(d.teorico.minutos > 0) for d in self.dias))
         if self.jornada_en_curso is not None:
             # Hasta que salgamos no deberíamos contar este día
-            setattr(self, "fichados",  getattr(self, "fichados")-1)
+            object.__setattr__(self, "fichados",  getattr(self, "fichados")-1)
             if self.jornada_en_curso.total.minutos > 0:
                 # Si hay algo ya computado (por ejemplo, tenemos 3 fichajes)
                 # lo restamos del total porque aún no sabemos cuanto se va
                 # a terminar imputando al día actual
                 for k in ("saldo", "total"):
-                    setattr(self, k, getattr(self, k) - self.jornada_en_curso.total)
+                    object.__setattr__(self, k, getattr(self, k) - self.jornada_en_curso.total)
 
     @cached_property
     def hoy(self):
@@ -140,7 +140,7 @@ class Calendario:
 
 
 def get_from_label(sp: bs4.Tag, lb):
-    tb = sp.find("span", text=lb)
+    tb = sp.find("span", string=lb)
     if tb is None:
         return
     val = get_text(tb.find_parent("div").find("p"))
@@ -336,7 +336,7 @@ class Trama:
 
     def get_vacaciones(self, year: Union[int, None] = None):
         GESPER_BREAK = 2022
-        vac = {}
+        vac: Dict[Tuple[int, int], tp.VacacionesResumen] = {}
         cyr = datetime.today().year
         if year is None:
             for v in self.get_vacaciones(-1):
@@ -351,7 +351,7 @@ class Trama:
             # hack gesper
             return Gesper().get_vacaciones(year)
 
-        def _add(v):
+        def _add(v: tp.VacacionesResumen):
             vac[(v.year, v.key)] = v
 
         w: Web = self._get_cal_session()
@@ -365,7 +365,7 @@ class Trama:
                 yrs.add(yr)
                 vc: Tuple[int, ...] = tmap(int, re.findall(r"\d+", tds[1]))
                 pe: Tuple[int, ...] = tmap(int, re.findall(r"\d+", tds[2]))
-                _add(Munch(
+                _add(tp.VacacionesResumen(
                     key="permiso",
                     total=pe[1],
                     usados=pe[0],
@@ -377,13 +377,13 @@ class Trama:
                     vtotal = vtotal - vitotal
                     vgast = min(vtotal, vgastadas - vigast)
                     vigast = vgastadas - vgast
-                    _add(Munch(
+                    _add(tp.VacacionesResumen(
                         key="sueltos",
                         total=vitotal,
                         usados=vigast,
                         year=yr
                     ))
-                _add(Munch(
+                _add(tp.VacacionesResumen(
                     key="vacaciones",
                     total=vtotal,
                     usados=vgast,
@@ -409,15 +409,17 @@ class Trama:
                     vac[k] = gv
                 else:
                     tv = vac[k]
-                    tv.total = gv.total
-                    tv.usados = gv.usados + tv.usados
+                    vac[k] = tv._replace(
+                        total=gv.total,
+                        usados=gv.usados + tv.usados
+                    )
 
-        rst = []
+        rst: List[tp.VacacionesResumen] = []
         for v in vac.values():
             if v.year == year or (v.year == year - 1 and v.total > v.usados):
                 rst.append(v)
-        vac = sorted(rst, key=lambda v: (v.year, v.key))
-        return vac
+        arr = tuple(sorted(rst, key=lambda v: (v.year, v.key)))
+        return arr
 
     #@MunchCache("data/trama/incidencias_{estado}.json", maxOld=0, json_hook=json_hook)
     def get_incidencias(self, estado=3):
@@ -433,12 +435,12 @@ class Trama:
         if estado is not None:
             data["idEstadoIncidencia"] = str(estado)
         w.get(action, **data)
-        r = []
+        r: List[tp.Incidencia] = []
         head = ttext(w.soup.select("#listaTablaMaestra thead tr th"))
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
             tds = ttext(tr.findAll("td"))
             tds = {k: v for k, v in zip(head, tds)}
-            i = Munch(
+            i = tp.Incidencia(
                 id=int(tds['Proceso']),
                 tipo=tds['Tipo Solicitud'],
                 solicitud=to_date(tds['Fecha solicitud']),
@@ -447,27 +449,47 @@ class Trama:
                 incidencias=tds['Incidencias'],
                 estado=tds['Estado'],
                 tarea=to_date(tds['Fecha tarea']),
+                permiso=None,
+                fecha=None,
+                fin=None,
+                dias=None,
+                year=None,
+                inicio=None,
+                observaciones=None,
+                mensaje=None
             )
-            r.append(i)
             data['accion'] = 'REDIRIGIR_SOLICITUDES'
             data['idProceso'] = str(i.id)
             w.get(action, **data)
             tb = w.soup.select_one("#tablaIncidencias")
-            if tb is None:
-                continue
-            i.incidencias = []
-            tb.select_one("thead").extract()
-            for tr in tb.select("tr"):
-                tds = ttext(tr.findAll("td"))
-                tipo, fecha, inicio, fin, observaciones, mensaje = tds
-                i.incidencias.append(Munch(
-                    tipo=tipo,
-                    fecha=to_date(fecha),
-                    inicio=tp.HM.build(inicio),
-                    fin=tp.HM.build(fin),
-                    observaciones=observaciones,
-                    mensaje=mensaje
-                ))
+            if tb is not None:
+                incidencias = []
+                tb.select_one("thead").extract()
+                for tr in tb.select("tr"):
+                    tds = ttext(tr.findAll("td"))
+                    tipo, fecha, inicio, fin, observaciones, mensaje = tds
+                    incidencias.append(tp.Incidencia(
+                        tipo=tipo,
+                        fecha=to_date(fecha),
+                        inicio=tp.HM.build(inicio),
+                        fin=tp.HM.build(fin),
+                        observaciones=observaciones,
+                        mensaje=mensaje,
+                        id=None,
+                        solicitud=None,
+                        validador=None,
+                        autorizador=None,
+                        incidencias=None,
+                        permiso=None,
+                        estado=None,
+                        tarea=None,
+                        dias=None,
+                        year=None
+                    ))
+                i = i._replace(
+                    incidencias=tuple(incidencias)
+                )
+            r.append(i)
         w: Web = self._get_vac_session()
         w.get("https://trama.administracionelectronica.gob.es/Permisos/bandejaEnviadas.html")
         mx = w.soup.select("#maximoElementosPagina option")[-1]
@@ -485,7 +507,7 @@ class Trama:
             tds = {k: v for k, v in zip(head, tds)}
             fechas = tds['Fechas Solicitadas/Anuladas']
             fechas: Tuple[date, ...] = tmap(to_date, re.findall(r'\d\d/\d\d/\d\d\d\d', fechas))
-            i = Munch(
+            i = tp.Incidencia(
                 id=int(tds['Proceso']),
                 tipo=tds['Tipo Solicitud'],
                 solicitud=to_date(tds['Fecha solicitud']),
@@ -496,30 +518,36 @@ class Trama:
                 tarea=to_date(tds['Fecha tarea']),
                 fecha=fechas[0],
                 fin=fechas[-1],
+                incidencias=None,
+                dias=None,
+                year=None,
+                inicio=None,
+                observaciones=None,
+                mensaje=None
             )
-            r.append(i)
             data['accion'] = 'REDIRIGIR_SOLICITUDES'
             data['idProceso'] = str(i.id)
             w.get(action, **data)
             dias = get_from_label(w.soup, "Días")
             year = get_from_label(w.soup, "Ejercicio")
             if dias is not None:
-                i.dias = dias
+                i = i._replace(dias=dias)
             if year is not None:
-                i.year = year
-        return r
+                i = i._replace(year=year)
+            r.append(i)
+        return tuple(r)
 
     def get_lapso(self, estado=3):
-        lps = []
+        lps: List[tp.Incidencia] = []
         for x in self.get_incidencias(estado=estado):
-            if x.get('incidencias'):
+            if x.incidencias:
                 for i in x.incidencias:
                     lps.append(i)
                 continue
-            if x.get('fecha'):
+            if x.fecha is not None:
                 lps.append(x)
         lps = sorted(lps, key=lambda x: x.fecha)
-        return lps
+        return tuple(lps)
 
     def get_cuadrante(self, ini=None, months=6):
         def __check_cls(cls: Union[str, None, List[str]]):
@@ -596,8 +624,8 @@ class Trama:
 
 if __name__ == "__main__":
     a = Trama()
-    r = a.get_cuadrante()
-    # r = a.get_incidencias()
+    #r = a.get_cuadrante()
+    r = a.get_incidencias()
     import json
 
     print(json.dumps(r, indent=2))

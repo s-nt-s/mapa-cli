@@ -4,12 +4,12 @@ from os import W_OK, access, makedirs
 from os.path import dirname, realpath
 from pathlib import Path
 from tempfile import gettempdir
-from munch import Munch
 from typing import Union
 import pdftotext
 import pickle
 from datetime import datetime, date
 from dataclasses import asdict, is_dataclass
+from . import tp as tp
 
 import yaml
 
@@ -276,7 +276,7 @@ class FileManager:
             pickle.dump(obj, f)
 
 
-CNF = Munch.fromDict(FileManager.get().load("config.yml"))
+CNF = tp.builder(tp.Config)(FileManager.get().load("config.yml"))
 
 # Mejoras dinámicas en la documentación
 FileManager.resolve_path.__doc__ = FileManager._resolve_path.__doc__

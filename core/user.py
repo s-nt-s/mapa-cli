@@ -1,7 +1,7 @@
-from munch import Munch
 import re
 from .util import notnull
-from typing import Union
+from typing import Union, Dict, Any
+from dataclasses import dataclass, asdict, fields
 
 re_sp = re.compile(r"\s+")
 ORDINAL = ['primer', 'segund', 'tercer', 'cuart', 'quint', 'sext', 'septim', 'octav', 'noven', 'decim']
@@ -42,19 +42,59 @@ def join_str(*args, sep=" "):
     return sep.join(w) if w else None
 
 
-class User(Munch):
-    def __init__(self, *args, **karg):
-        c = karg.get("centro")
-        u = karg.get("unidad")
-        if c and u and u in c:
-            karg["unidad"] = None
-        karg = {k: parse_user(k, v) for k, v in karg.items()}
-        super().__init__(*args, **karg)
+@dataclass(frozen=True)
+class User:
+    nombre: str
+    apellido1: str
+    apellido2: str
+    centro: str
+    unidad: str
+    puesto: str
+    despacho: str
+    planta: str
+    ubicacion: str
+    telefono: str
+    telefonoext: str
+    correo: str
+
+    @classmethod
+    def build(cls, obj: Dict[str, Any]):
+        fls = tuple(f.name for f in fields(cls))
+        data = {}
+        for k, v in obj.items():
+            if k in fls:
+                data[k]=v
+        for k, v in obj.items():
+            if k.endswith("limpio"):
+                k = k[:-6]
+                if k in fls and data.get(k) is None:
+                    data[k]=v
+
+        return User(**data)
+
+    def __post_init__(self):
+        if self.centro and self.unidad and self.unidad in self.centro:
+            object.__setattr__(self, 'unidad', None)
+        for k, v in asdict(self).items():
+            object.__setattr__(self, k, parse_user(k, v))
 
     def isEmpty(self):
-        for k in ("unidad", "unidad", "puesto", "despacho", "planta", "ubicacion", "telefono", "telefonoext", "correo"):
-            if self[k]:
-                return False
+        if self.unidad is not None:
+            return False
+        if self.puesto is not None:
+            return False
+        if self.despacho is not None:
+            return False
+        if self.planta is not None:
+            return False
+        if self.ubicacion is not None:
+            return False
+        if self.telefono is not None:
+            return False
+        if self.telefonoext is not None:
+            return False
+        if self.correo is not None:
+            return False
         return True
 
     def __str__(self):

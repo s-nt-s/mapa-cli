@@ -2,7 +2,6 @@ import functools
 from os import stat
 import time
 from .filemanager import FileManager
-from munch import Munch
 import logging
 
 logger = logging.getLogger(__name__)
@@ -82,10 +81,3 @@ class TupleCache(Cache):
             return self.builder(data)
         return tuple((self.builder(d) for d in data))
 
-
-class MunchCache(Cache):
-    def read(self, *args, **kwargs):
-        d = super().read(*args, **kwargs)
-        if isinstance(d, dict) or (isinstance(d, list) and len(d)>0 and isinstance(d[0], dict)):
-            return Munch.fromDict(d)
-        return d
