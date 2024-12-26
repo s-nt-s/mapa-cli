@@ -35,6 +35,7 @@ def get_months(ini: date, count: int):
         m = m % 12
         if m == 0:
             m = 12
+            y = y -1
         yield ini.replace(year=y, month=m)
 
 
@@ -197,7 +198,7 @@ def parse_mes(m):
     return None
 
 
-def parse_dia(d):
+def parse_dia(d: date):
     d = d.weekday()
     return ["L", "M", "X", "J", "V", "S", "D"][d]
 

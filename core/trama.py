@@ -14,7 +14,7 @@ from os.path import isfile
 import re
 import time
 import logging
-from typing import Dict, List, Tuple, Union, NamedTuple
+from typing import Dict, List, Tuple, Union, NamedTuple, Set
 import bs4
 from . import tp
 
@@ -24,6 +24,46 @@ RT_URL = "https://trama.administracionelectronica.gob.es/portal/"
 FCH_INI = date(2022, 5, 29)
 
 logger = logging.getLogger(__name__)
+
+
+class Festivo(date):
+    @property
+    def nombre(self):
+        wd = self.weekday()
+        dm = (self.month, self.day)
+        if dm == (1, 1):
+            return "Año nuevo"
+        if dm == (1, 6):
+            return "Epifanía"
+        if self.month == 4:
+            if wd == 3 and self.day == 17:
+                return "Jueves santo"
+            if wd == 4 and self.day == 18:
+                return "Viernes santo"
+        if dm == (5, 1):
+            return "Día del trabajo"
+        if dm == (5, 2):
+            return "Comunidad de Madrid"
+        if dm == (5, 15):
+            return "San Isidro"
+        if dm == (7, 25):
+            return "Santiago Apóstol"
+        if dm == (8, 15):
+            return "Asunción de la virgen"
+        if dm in ((11, 9), (11, 10)):
+            return "Almudena"
+        if self.month == 12:
+            if self.day == 6:
+                return "Constitución española"
+            if self.day == 8:
+                return "Inmaculada concepción"
+            if self.day == 24:
+                return "Noche buena"
+            if self.day == 25:
+                return "Navidad"
+            if self.day == 31:
+                return "Noche vieja"
+        return ""
 
 
 class Informe(NamedTuple):
@@ -483,11 +523,11 @@ class Trama:
 
     def get_cuadrante(self, ini=None, months=6):
         def __check_cls(cls: Union[str, None, List[str]]):
-            if cls is None:
+            if isinstance(cls, str):
+                cls = cls.strip().split()
+            if cls is None or len(cls)==0:
                 return False
-            if isinstance(cls, str) and cls in ("FESTIVOANUAL", ""):
-                return False
-            if isinstance(cls, list) and ("FESTIVOANUAL" in cls or tuple(cls) == tuple()):
+            if "FESTIVOANUAL" in cls:
                 return False
             return True
 
@@ -518,6 +558,41 @@ class Trama:
         r = {k: tuple(v) for k, v in cuadrante.items() if v}
         return r
 
+    def get_festivos(self, max_iter=-1):
+        r: Set[Festivo] = set()
+        today=date.today()
+        top = today.year + 2
+        w: Web = self._get_cal_session()
+        w.get("https://trama.administracionelectronica.gob.es/calendario/calendario.html")
+        while True:
+            size = len(r)
+            for td in w.soup.select("td.FESTIVOANUAL"):
+                day = get_text(td)
+                if not isinstance(day, str) or not day.isdigit():
+                    continue
+                day = int(day)
+                monday = td.find_parent("tr").attrs["class"][0]
+                mday, mmonth, myear = tuple(map(int, (monday[:2], monday[2:4], monday[4:])))
+                if day < mday:
+                    mmonth = mmonth + 1
+                if mmonth == 13:
+                    mmonth = 1
+                    myear = myear + 1
+                dt = Festivo(myear, mmonth, day)
+                if dt.weekday() not in (5, 6):
+                    r.add(dt)
+            if size == len(r) or max(r).year >= top:
+                break
+            action, data = w.prepare_submit("#formularioPrincipal")
+            for b in w.soup.select("button[type='submit']"):
+                name = b.attrs.get('name')
+                if name in data.keys() and name != 'avanzaAnyo':
+                    del data[name]
+            b = w.soup.select_one("#avanzaAnyo")
+            data[b.attrs["name"]] = b.attrs['value']
+            w.get(action, **data)
+        fest = tuple(sorted([f for f in r if f>=today and f.year<top]))
+        return fest
 
 if __name__ == "__main__":
     a = Trama()

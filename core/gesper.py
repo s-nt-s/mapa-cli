@@ -116,46 +116,6 @@ class Gesper(Web):
             self.get(url)
         self.submit("#Form1", TxtDNI=CNF.gesper.user, TxtClave=CNF.gesper.pssw)
 
-    def get_festivos(self, max_iter=-1):
-        r: List[tp.Festivo] = []
-        today = datetime.today()
-        self.get("https://intranet.mapa.es/app/GESPER/CalendarioLaboral.aspx")
-        while max_iter != 0:
-            max_iter = max_iter - 1
-            table: bs4.Tag = self.soup.select("#CalFestivos")[0]
-            nxt: bs4.Tag = table.findAll("a")[-1]
-            tds: bs4.ResultSet[bs4.Tag] = table.findAll("td")
-            year, mes = _find_mes(*tds)
-            delta = (year - today.year)
-            if delta > 1 or (delta == 1 and mes > 1):
-                break
-            if year > today.year or (year == today.year and mes >= today.month):
-                for td in tds:
-                    style = dict_style(td)
-                    if not (style.get("background-color") == "pink" and style.get("font-style") != "italic"):
-                        continue
-                    br = td.find("br")
-                    if not isinstance(br, bs4.Tag):
-                        continue
-                    br.replaceWith(" ")
-                    dia, nombre = td.get_text().strip().split(None, 1)
-                    dia = int(dia)
-                    dt = datetime(year, mes, dia)
-                    if dt >= today and dt.weekday() not in (5, 6):
-                        nombre = parse_festivo(nombre)
-                        semana = parse_dia(dt)
-                        r.append(tp.Festivo(
-                            date=dt,
-                            year=dt.year,
-                            semana=semana,
-                            dia=dia,
-                            mes=mes,
-                            nombre=nombre
-                        ))
-            nxt = nxt.attrs["href"].split("'")[-2]
-            self.submit("#Form1", __EVENTARGUMENT=nxt, __EVENTTARGET="CalFestivos")
-        return tuple(r)
-
     def get_expediente(self):
         def _find_a(tr: bs4.Tag):
             for a in tr.select("a[href]"):

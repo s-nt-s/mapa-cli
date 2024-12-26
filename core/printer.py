@@ -149,6 +149,7 @@ class Printer:
             print("No hay marcajes")
             return
         total = HM(0)
+        teorico = HM(0)
         for dia in dias:
             if len(dia.marcajes) == 0 and dia.obs:
                 line = "%s %2d: %s = %s" % (parse_dia(dia.fecha), dia.fecha.day, dia.total, dia.obs)
@@ -162,8 +163,11 @@ class Printer:
                 line += " (" + dia.obs + ")"
             print(line)
             total += dia.total
+            teorico += dia.teorico
         print("")
         print("Media: %s * %s = %s" % (total.div(len(dias)), len(dias), total))
+        print("Desfase:", total-teorico)
+        
 
     def nominas(self, sueldo='neto'):
         f = Funciona()
@@ -276,14 +280,12 @@ class Printer:
                     last = i
 
     def festivos(self):
-        g = Gesper()
-        dt_now = datetime.now()
-        cYear = dt_now.year
-        for f in g.get_festivos():
-            if cYear != f.year:
-                print("===", f.year, "===")
-                cYear = f.year
-            print("%s %2d.%02d %s" % (f.semana, f.dia, f.mes, f.nombre))
+        t = Trama()
+        dates = t.get_festivos()
+        for i, d in enumerate(dates):
+            if (i==0 or (dates[i-1].year, dates[i-1].month)!=(d.year, d.month)):
+                print("====", f"{d:%Y-%m}", MONTHNAME[d.month-1], "====")
+            print(parse_dia(d)+ f" {d:%d}", d.nombre)
 
     def expediente(self):
         exps = Gesper().get_expediente()
