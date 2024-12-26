@@ -421,7 +421,11 @@ class Trama:
         arr = tuple(sorted(rst, key=lambda v: (v.year, v.key)))
         return arr
 
-    #@MunchCache("data/trama/incidencias_{estado}.json", maxOld=0, json_hook=json_hook)
+    @TupleCache(
+        "data/trama/incidencias_{estado}.json",
+        builder=tp.builder(tp.Incidencia),
+        maxOld=(1 / 24)
+    )
     def get_incidencias(self, estado=3):
         def to_date(x: str):
             return date(*map(int, reversed(x.split("/"))))
@@ -446,7 +450,7 @@ class Trama:
                 solicitud=to_date(tds['Fecha solicitud']),
                 validador=tds['Validador'],
                 autorizador=tds['Autorizador'],
-                incidencias=tds['Incidencias'],
+                incidencias=tuple(),#tds['Incidencias'],
                 estado=tds['Estado'],
                 tarea=to_date(tds['Fecha tarea']),
                 permiso=None,
@@ -479,7 +483,7 @@ class Trama:
                         solicitud=None,
                         validador=None,
                         autorizador=None,
-                        incidencias=None,
+                        incidencias=tuple(),
                         permiso=None,
                         estado=None,
                         tarea=None,
@@ -518,7 +522,7 @@ class Trama:
                 tarea=to_date(tds['Fecha tarea']),
                 fecha=fechas[0],
                 fin=fechas[-1],
-                incidencias=None,
+                incidencias=tuple(),
                 dias=None,
                 year=None,
                 inicio=None,

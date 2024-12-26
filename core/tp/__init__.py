@@ -141,7 +141,7 @@ class Incidencia(NamedTuple):
     solicitud: date
     validador: str
     autorizador: str
-    incidencias: Union[str, "Incidencia", None]
+    incidencias: Tuple["Incidencia"]
     permiso: str
     estado: str
     tarea: date
