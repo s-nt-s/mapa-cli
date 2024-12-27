@@ -1,16 +1,18 @@
-import tabula
-from io import StringIO
 import json
 import re
-from .util import to_num, json_serial, tmap
-from .web import Web
-from .filemanager import CNF, FileManager
-from os.path import join, isfile
-import urllib3
-from .cache import Cache
 from datetime import date
 from functools import cache
+from io import StringIO
+from os.path import isfile, join
 from typing import Tuple, Union
+
+import tabula
+import urllib3
+
+from .cache import Cache
+from .filemanager import CNF, FileManager
+from .util import json_serial, tmap, to_num
+from .web import Web
 
 urllib3.disable_warnings()
 

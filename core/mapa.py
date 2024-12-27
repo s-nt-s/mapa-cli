@@ -1,15 +1,16 @@
-from datetime import datetime, date, timedelta
-from typing import List, Tuple, Set, Union
-from .filemanager import CNF
-import bs4
 import re
-from .util import html_to_md, mk_re, strptime
-from .web import Web
-from .util import json_serial, ttext, nextone, get_text
-from requests.auth import HTTPBasicAuth
-from .user import User
-from . import tp
+from datetime import date, datetime, timedelta
+from typing import List, Set, Tuple, Union
 
+import bs4
+from requests.auth import HTTPBasicAuth
+
+from . import tp
+from .filemanager import CNF
+from .user import User
+from .util import (get_text, html_to_md, json_serial, mk_re, nextone, strptime,
+                   ttext)
+from .web import Web
 
 re_sp = re.compile(r"\s+")
 

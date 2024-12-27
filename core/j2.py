@@ -2,11 +2,11 @@ import json
 import os
 import re
 from datetime import date, datetime
-from typing import Union, Any, Callable
-from unidecode import unidecode
+from typing import Any, Callable, Union
 
 import bs4
 from jinja2 import Environment, FileSystemLoader
+from unidecode import unidecode
 
 re_br = re.compile(r"<br/>(\s*</)")
 

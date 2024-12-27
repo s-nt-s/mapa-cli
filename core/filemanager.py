@@ -1,17 +1,18 @@
 import json
 import logging
+import pickle
+from dataclasses import asdict, is_dataclass
+from datetime import date, datetime
 from os import W_OK, access, makedirs
 from os.path import dirname, realpath
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Union
-import pdftotext
-import pickle
-from datetime import datetime, date
-from dataclasses import asdict, is_dataclass
-from . import tp as tp
 
+import pdftotext
 import yaml
+
+from . import tp as tp
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,9 @@
 import functools
-from os import stat
-import time
-from .filemanager import FileManager
 import logging
+import time
+from os import stat
+
+from .filemanager import FileManager
 
 logger = logging.getLogger(__name__)
 FM = FileManager.get()

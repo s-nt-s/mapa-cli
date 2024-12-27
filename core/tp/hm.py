@@ -1,6 +1,6 @@
-from math import modf
 import re
-from typing import Union, NamedTuple
+from math import modf
+from typing import NamedTuple, Union
 
 
 class HM(NamedTuple):

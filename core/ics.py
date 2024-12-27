@@ -1,11 +1,13 @@
-from textwrap import dedent
-from datetime import datetime, date
-import pytz
-from dataclasses import dataclass, asdict
-import uuid
 import re
-from .filemanager import FileManager
+import uuid
+from dataclasses import asdict, dataclass
+from datetime import date, datetime
+from textwrap import dedent
 from typing import Union
+
+import pytz
+
+from .filemanager import FileManager
 
 UUID_NAMESPACE = uuid.UUID('00000000-0000-0000-0000-000000000000')
 

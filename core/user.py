@@ -1,7 +1,8 @@
 import re
+from dataclasses import asdict, dataclass, fields
+from typing import Any, Dict, Union
+
 from .util import notnull
-from typing import Union, Dict, Any
-from dataclasses import dataclass, asdict, fields
 
 re_sp = re.compile(r"\s+")
 ORDINAL = ['primer', 'segund', 'tercer', 'cuart', 'quint', 'sext', 'septim', 'octav', 'noven', 'decim']

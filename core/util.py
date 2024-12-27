@@ -1,8 +1,10 @@
 import re
+from datetime import date, datetime, timedelta
+from typing import Tuple, Union
+
 import bs4
 from markdownify import markdownify
-from typing import Tuple, Union
-from datetime import date, datetime, timedelta
+
 from .tp.hm import HM
 
 DAYNAME = ('Lunes', 'Martes', 'Miércoles',

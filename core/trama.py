@@ -1,22 +1,22 @@
-from datetime import datetime, date, timedelta
-from dataclasses import dataclass, field
-from functools import cached_property
-
-from .autdriver import AutDriver
-from .web import Web
-from .util import tmap, ttext, get_text, get_times, get_months
-from .cache import Cache, TupleCache
-from .gesper import Gesper
-from .filemanager import FileManager
-from .gesper import FCH_FIN as gesper_FCH_FIN
-from os.path import isfile
+import logging
 import re
 import time
-import logging
-from typing import Dict, List, Tuple, Union, NamedTuple, Set
+from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
+from functools import cached_property
+from os.path import isfile
+from typing import Dict, List, NamedTuple, Set, Tuple, Union
+
 import bs4
-from . import ics
-from . import tp
+
+from . import ics, tp
+from .autdriver import AutDriver
+from .cache import Cache, TupleCache
+from .filemanager import FileManager
+from .gesper import FCH_FIN as gesper_FCH_FIN
+from .gesper import Gesper
+from .util import get_months, get_text, get_times, tmap, ttext
+from .web import Web
 
 re_sp = re.compile(r"\s+")
 JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"

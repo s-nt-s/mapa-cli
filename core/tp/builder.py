@@ -1,8 +1,10 @@
-from typing import _GenericAlias, Dict, Callable, Union, Any, Set, Tuple, List, NamedTuple, Type, get_type_hints, get_origin, get_args
-from functools import cache, cached_property
 import re
 from datetime import date, datetime
-from .util import TP, isNamedTuple, getNamedTupleClass, getClass, isClassNamedTuple, isObjectNamedTuple
+from functools import cache
+from typing import (Any, Callable, Dict, List, Set, Tuple, Type,
+                    Union, _GenericAlias, get_args, get_origin, get_type_hints)
+
+from .util import (TP, getClass, getNamedTupleClass)
 
 
 def __build_date(x) -> date:

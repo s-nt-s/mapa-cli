@@ -1,18 +1,19 @@
-from datetime import datetime, date, timedelta
-from .filemanager import CNF, FileManager
-import re
-from .web import Web
-from .util import parse_mes, parse_dia, ttext, to_num, json_hook, dict_style
-from os.path import isdir, join, isfile, expanduser
 import json
-from .retribuciones import Retribuciones
-from functools import cached_property
 import logging
-from .cache import TupleCache
-import bs4
-from typing import Union, Dict, List, Any, NamedTuple
-from . import tp as tp
+import re
+from datetime import date, datetime, timedelta
+from functools import cached_property
+from os.path import expanduser, isdir, isfile, join
+from typing import Any, Dict, List, NamedTuple, Union
 
+import bs4
+
+from . import tp as tp
+from .cache import TupleCache
+from .filemanager import CNF, FileManager
+from .retribuciones import Retribuciones
+from .util import json_hook, parse_mes, to_num, ttext
+from .web import Web
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")

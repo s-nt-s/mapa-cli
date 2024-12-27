@@ -4,16 +4,16 @@
 import argparse
 import logging
 import sys
-
-import slixmpp
 import time
+from datetime import date, timedelta
 from textwrap import dedent
 
+import slixmpp
+
 from cli import str_main
+from core.autdriver import AutenticaException
 from core.filemanager import CNF, FileManager
 from core.timeout import timeout
-from core.autdriver import AutenticaException
-from datetime import date, timedelta
 
 parser = argparse.ArgumentParser(
     description='Arranca un bot xmpp para interactuar con mapa-cli')

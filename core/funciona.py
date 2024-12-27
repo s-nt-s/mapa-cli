@@ -1,15 +1,15 @@
 import re
+from glob import glob
+from os.path import basename, expanduser, isfile, join
+from typing import Dict, List, NamedTuple, Tuple, Union
 
-from os.path import isfile, join, expanduser, basename
+import requests
 
-from .web import get_query, Web
 from .autdriver import AutDriver
+from .cache import Cache
 from .filemanager import CNF, FileManager
 from .util import get_text, to_num
-from .cache import Cache
-from glob import glob
-import requests
-from typing import NamedTuple, Dict, List, Union, Tuple
+from .web import Web, get_query
 
 re_sp = re.compile(r"\s+")
 

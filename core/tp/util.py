@@ -1,5 +1,5 @@
-from typing import Union, Any, TypeVar, NamedTuple, Type
 from inspect import isclass, isfunction, ismodule
+from typing import Any, NamedTuple, Type, TypeVar, Union
 
 TP = TypeVar('TP', bound=NamedTuple)
 

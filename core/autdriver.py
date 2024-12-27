@@ -1,10 +1,12 @@
-from .web import Driver
-from bs4 import Tag
-from .filemanager import CNF
-from urllib.parse import urlparse
-from selenium.common.exceptions import TimeoutException
-import time
 import re
+import time
+from urllib.parse import urlparse
+
+from bs4 import Tag
+from selenium.common.exceptions import TimeoutException
+
+from .filemanager import CNF
+from .web import Driver
 
 NEED_AUTENTICA = (
     'trama.administracionelectronica.gob.es',

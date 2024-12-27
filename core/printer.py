@@ -1,16 +1,17 @@
 import re
-from typing import Dict
-from .trama import Trama
-from .funciona import Funciona, Nomina
 from datetime import date, datetime, timedelta
+from io import StringIO
+from typing import Dict, List, Set, Tuple
+
+from dateutil.relativedelta import relativedelta
+
+from .filemanager import CNF
+from .funciona import Funciona, Nomina
 from .gesper import Gesper
 from .mapa import Mapa
-from .filemanager import CNF
 from .tp.hm import HM
-from .util import to_strint, DAYNAME, MONTHNAME, parse_dia, notnull, tmap
-from io import StringIO
-from dateutil.relativedelta import relativedelta
-from typing import Tuple, List, Set
+from .trama import Trama
+from .util import DAYNAME, MONTHNAME, notnull, parse_dia, tmap, to_strint
 
 re_rtrim = re.compile(r"^\s*\n")
 re_sp = re.compile(r"\s+")
