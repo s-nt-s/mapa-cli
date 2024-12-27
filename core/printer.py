@@ -10,8 +10,7 @@ from .tp.hm import HM
 from .util import to_strint, DAYNAME, MONTHNAME, parse_dia, notnull, tmap
 from io import StringIO
 from dateutil.relativedelta import relativedelta
-from typing import NamedTuple
-from typing import List, Set
+from typing import Tuple, List, Set
 
 re_rtrim = re.compile(r"^\s*\n")
 re_sp = re.compile(r"\s+")
@@ -267,7 +266,7 @@ class Printer:
     def irpf(self):
         f = Funciona()
         nominas: List[Nomina] = (f.get_nominas() or [])
-        nominas = [n for n in nominas if n.get('irpf') is not None]
+        nominas = [n for n in nominas if n.irpf is not None]
         n_ym = sorted(set((n.year, n.mes) for n in nominas))
         for n in CNF.tmp_nominas:
             if n.irpf is None:
@@ -280,7 +279,7 @@ class Printer:
                     bruto=n.bruto
                 ))
         nominas = sorted(nominas, key=lambda n: (n.year, n.mes, -nominas.index(n)))
-        agg_nomias = {}
+        agg_nomias: Dict[Tuple[int, int], Set[float]] = {}
         for n in nominas:
             k = (n.year, n.mes)
             agg_nomias[k] = agg_nomias.get(k, set()).union({n.irpf, })
