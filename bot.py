@@ -25,7 +25,7 @@ parser.add_argument('--amistoso', action='store_true', help=dedent('''
 parser.add_argument(
     '--send', help="Manda por chat el resultado del comando pasado como argumento")
 
-logging.basicConfig(level=CNF.xmpp.get('LOG', logging.INFO), format='%(levelname)-8s %(message)s')
+logging.basicConfig(level=CNF.xmpp.LOG, format='%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 
 
@@ -39,9 +39,9 @@ class BaseBot(slixmpp.ClientXMPP):
 
     def run(self, loop=True):
         while True:
-            if CNF.xmpp.get('address'):
+            if CNF.xmpp.address:
                 logger.info("Connecting %s to %s:%s", CNF.xmpp.user, *CNF.xmpp.address)
-                self.connect(address=tuple(CNF.xmpp.address))
+                self.connect(address=CNF.xmpp.address)
             else:
                 logger.info("Connecting %s", CNF.xmpp.user)
                 self.connect()
