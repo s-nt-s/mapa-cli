@@ -3,7 +3,7 @@ from functools import cache, cached_property
 import re
 from datetime import date, datetime
 from .util import TP, isNamedTuple, getNamedTupleClass, getClass, isClassNamedTuple, isObjectNamedTuple
-    
+
 
 def __build_date(x) -> date:
     if x is None:

@@ -60,7 +60,7 @@ class IcsEvent:
             return s.upper()
         except ValueError:
             return str(uuid.uuid5(UUID_NAMESPACE, s)).upper()
-        
+
     def parse_description(self, s: str):
         if s is None:
             return None
@@ -68,7 +68,7 @@ class IcsEvent:
         if len(s) == 0:
             return None
         return re.sub(r"\n", r"\\n", s)
-    
+
     def __str__(self):
         lines = ["BEGIN:VEVENT", "STATUS:CONFIRMED"]
         for k, v in asdict(self).items():
@@ -79,11 +79,11 @@ class IcsEvent:
 
     def __lt__(self, o: "IcsEvent"):
         return self.key_order < o.key_order
-    
+
     @property
     def key_order(self):
         return (self.dtstart, self.dtend, self.uid)
-    
+
     @staticmethod
     def dump(path, *events: "IcsEvent"):
         events = sorted(events)

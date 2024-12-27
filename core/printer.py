@@ -164,7 +164,7 @@ class Printer:
         print("")
         print("Media: %s * %s = %s" % (total.div(len(dias)), len(dias), total))
         print("Desfase:", total-teorico)
-        
+
 
     def nominas(self, sueldo='neto'):
         f = Funciona()
