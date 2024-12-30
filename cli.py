@@ -3,9 +3,10 @@ import argparse
 import re
 import sys
 from io import StringIO
-from typing import Tuple
-from os.path import abspath, dirname
 from os import chdir
+from os.path import abspath, dirname
+from typing import Tuple
+
 from unidecode import unidecode
 
 chdir(dirname(abspath(__file__)))

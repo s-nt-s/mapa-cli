@@ -1,17 +1,18 @@
-import tabula
-from io import StringIO
 import json
 import re
-from .util import to_num, json_serial, tmap
-from .web import Web
-from .filemanager import CNF, FileManager
-from os.path import join, isfile
-from munch import Munch
-import urllib3
-from .cache import Cache
 from datetime import date
 from functools import cache
+from io import StringIO
+from os.path import isfile, join
 from typing import Tuple, Union
+
+import tabula
+import urllib3
+
+from .cache import Cache
+from .filemanager import CNF, FileManager
+from .util import json_serial, tmap, to_num
+from .web import Web
 
 urllib3.disable_warnings()
 
@@ -25,7 +26,6 @@ class RtCache(Cache):
             return None
         if d["niveles"]:
             d["niveles"] = {int(k): v for k, v in d["niveles"].items()}
-        d = Munch.fromDict(d)
         return d
 
 
@@ -102,13 +102,13 @@ class Retribuciones:
             elif 'A2' in t.columns and 'A2' in t.columns and 'C1' in t.columns:
                 tableS = t
 
-        data = Munch(
+        data = dict(
             year=year,
             fuente=link
         )
         grupos = ("A1", "A2", "B", "C1", "C2", "E")
         for g in grupos:
-            data[g] = Munch()
+            data[g] = dict()
 
         tableS = parseTb(tableS)
         tableC = parseTb(tableC)
@@ -131,12 +131,12 @@ class Retribuciones:
             if key is None:
                 continue
             for i, g in enumerate(grupos):
-                data[g][key] = Munch(
+                data[g][key] = dict(
                     sueldo=sld[i],
                     trienio=tri[i]
                 )
 
-        data.niveles = {}
+        data['niveles'] = {}
         for row in tableC:
             if row[0] is None or not isinstance(row[0], int):
                 continue
@@ -144,7 +144,7 @@ class Retribuciones:
             row = iter(row)
             nivel = next(row)
             compd = next(row)
-            data.niveles[nivel] = compd
+            data['niveles'][nivel] = compd
 
         return data
 
@@ -152,20 +152,20 @@ class Retribuciones:
         rt = self.get()
         rg = rt.get(grupo)
 
-        sl = Munch(
-            fuente=rt.fuente,
-            base=rg.base.sueldo,
-            complemento=Munch(
-                destino=rt.niveles.get(nivel),
+        sl = dict(
+            fuente=rt['fuente'],
+            base=rg['base']['sueldo'],
+            complemento=dict(
+                destino=rt['niveles'].get(nivel),
                 especifico=especifico
             ),
-            extra=Munch(
-                junio=rg.junio.sueldo,
-                diciembre=rg.diciembre.sueldo
+            extra=dict(
+                junio=rg['junio']['sueldo'],
+                diciembre=rg['diciembre']['sueldo']
             ),
-            trienios=Munch(
+            trienios=dict(
                 base=0,
-                extra=Munch(
+                extra=dict(
                     junio=0,
                     diciembre=0
                 )
@@ -173,9 +173,9 @@ class Retribuciones:
         )
 
         for grupo, num in (trienios or {}).items():
-            sl.trienios.base = sl.trienios.base + rt[grupo].base.trienio
-            sl.trienios.extra.junio = sl.trienios.extra.junio + rt[grupo].junio.trienio
-            sl.trienios.extra.diciembre = sl.trienios.extra.diciembre + rt[grupo].diciembre.trienio
+            sl['trienios']['base'] = sl['trienios']['base'] + rt[grupo]['base']['trienio']
+            sl['trienios']['extra']['junio'] = sl['trienios']['extra']['junio'] + rt[grupo]['junio']['trienio']
+            sl['trienios']['extra']['diciembre'] = sl['trienios']['extra']['diciembre'] + rt[grupo]['diciembre']['trienio']
 
         return sl
 

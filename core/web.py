@@ -1,16 +1,15 @@
-import re
 import os
+import re
 import time
-from urllib.parse import urljoin, urlsplit, parse_qsl
+from urllib.parse import parse_qsl, urljoin, urlsplit
 
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common.exceptions import (ElementNotInteractableException,
-                                        TimeoutException,
-                                        WebDriverException,
+                                        ElementNotVisibleException,
                                         StaleElementReferenceException,
-                                        ElementNotVisibleException)
+                                        TimeoutException, WebDriverException)
 from selenium.webdriver.chrome.options import Options as CMoptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys

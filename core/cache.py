@@ -1,21 +1,20 @@
 import functools
-from os import stat
-import time
-from .filemanager import FileManager
-from munch import Munch
 import logging
+import time
+from os import stat
+
+from .filemanager import FileManager
 
 logger = logging.getLogger(__name__)
 FM = FileManager.get()
 
 
 class Cache:
-    def __init__(self, file: str, *args, maxOld=30, json_default=None, json_hook=None, keep_if_none=False, **kwargs):
+    def __init__(self, file: str, *args, maxOld=30, json_hook=None, keep_if_none=False, **kwargs):
         self.file = file
         self.data = {}
         self.func = None
         self.slf = None
-        self.json_default = json_default
         self.json_hook = json_hook
         self.keep_if_none = keep_if_none
         self.__maxOld = maxOld
@@ -36,8 +35,6 @@ class Cache:
 
     def save(self, file: str, data, *args, **kwargs):
         logger.debug("SAVE "+file)
-        if self.json_default is not None:
-            return FM.dump(file, data, default=self.json_default)
         return FM.dump(file, data)
 
     def tooOld(self, fl: str):
@@ -85,10 +82,3 @@ class TupleCache(Cache):
             return self.builder(data)
         return tuple((self.builder(d) for d in data))
 
-
-class MunchCache(Cache):
-    def read(self, *args, **kwargs):
-        d = super().read(*args, **kwargs)
-        if isinstance(d, dict) or (isinstance(d, list) and len(d)>0 and isinstance(d[0], dict)):
-            return Munch.fromDict(d)
-        return d

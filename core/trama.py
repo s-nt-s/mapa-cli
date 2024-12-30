@@ -1,20 +1,22 @@
-from datetime import datetime, date, timedelta
-from munch import Munch
-
-from .autdriver import AutDriver
-from .web import Web
-from .util import json_serial, tmap, ttext, get_text, get_times, json_hook, get_months
-from .hm import HM, HMCache, HMmunch
-from .cache import Cache, MunchCache
-from .gesper import Gesper
-from .filemanager import FileManager
-from .gesper import FCH_FIN as gesper_FCH_FIN
-from os.path import isfile
+import logging
 import re
 import time
-import logging
-from typing import Dict, List, Tuple, Union, Set
+from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
+from functools import cached_property
+from os.path import isfile
+from typing import Dict, List, NamedTuple, Set, Tuple, Union
+
 import bs4
+
+from . import ics, tp
+from .autdriver import AutDriver
+from .cache import Cache, TupleCache
+from .filemanager import FileManager
+from .gesper import FCH_FIN as gesper_FCH_FIN
+from .gesper import Gesper
+from .util import get_months, get_text, get_times, tmap, ttext
+from .web import Web
 
 re_sp = re.compile(r"\s+")
 JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"
@@ -24,8 +26,122 @@ FCH_INI = date(2022, 5, 29)
 logger = logging.getLogger(__name__)
 
 
+class Festivo(date):
+    @property
+    def nombre(self):
+        wd = self.weekday()
+        dm = (self.month, self.day)
+        if dm == (1, 1):
+            return "Año nuevo"
+        if dm == (1, 6):
+            return "Epifanía"
+        if self.month == 4:
+            if wd == 3 and self.day == 17:
+                return "Jueves santo"
+            if wd == 4 and self.day == 18:
+                return "Viernes santo"
+        if dm == (5, 1):
+            return "Día del trabajo"
+        if dm == (5, 2):
+            return "Comunidad de Madrid"
+        if dm == (5, 15):
+            return "San Isidro"
+        if dm == (7, 25):
+            return "Santiago Apóstol"
+        if dm == (8, 15):
+            return "Asunción de la virgen"
+        if dm in ((11, 9), (11, 10)):
+            return "Almudena"
+        if self.month == 12:
+            if self.day == 6:
+                return "Constitución española"
+            if self.day == 8:
+                return "Inmaculada concepción"
+            if self.day == 24:
+                return "Noche buena"
+            if self.day == 25:
+                return "Navidad"
+            if self.day == 31:
+                return "Noche vieja"
+        return ""
+
+
+class Informe(NamedTuple):
+    ini: date
+    fin: date
+    total: tp.HM = tp.HM(0)
+    teorico: tp.HM = tp.HM(0)
+    saldo: tp.HM = tp.HM(0)
+    laborables: int = 0
+    vacaciones: tp.HM = tp.HM(0)
+
+
+@dataclass(frozen=True)
+class Calendario:
+    dias: Tuple[tp.Fichaje, ...]
+    saldo: tp.HM = field(init=False, default=0)
+    total: tp.HM = field(init=False, default=0)
+    teorico: tp.HM = field(init=False, default=0)
+    futuro: tp.HM = field(init=False, default=0)
+    fichados: int = field(init=False, default=0)
+    jornadas: int = field(init=False, default=0)
+
+    def __post_init__(self):
+        sumHM = lambda x: sum(x, start=tp.HM(0))
+        for k in ("saldo", "total", "teorico"):
+            object.__setattr__(self, k, sumHM((getattr(d, k) for d in self.dias)))
+        today = date.today()
+        object.__setattr__(self, "futuro", sumHM(d.saldo for d in self.dias if d.fecha > today))
+        object.__setattr__(self, "fichados", sum(int(len(d.marcajes) > 0) for d in self.dias))
+        object.__setattr__(self, "jornadas", sum(int(d.teorico.minutos > 0) for d in self.dias))
+        if self.jornada_en_curso is not None:
+            # Hasta que salgamos no deberíamos contar este día
+            object.__setattr__(self, "fichados",  getattr(self, "fichados")-1)
+            if self.jornada_en_curso.total.minutos > 0:
+                # Si hay algo ya computado (por ejemplo, tenemos 3 fichajes)
+                # lo restamos del total porque aún no sabemos cuanto se va
+                # a terminar imputando al día actual
+                for k in ("saldo", "total"):
+                    object.__setattr__(self, k, getattr(self, k) - self.jornada_en_curso.total)
+
+    @cached_property
+    def hoy(self):
+        today = date.today()
+        for d in self.dias:
+            if d.fecha == today:
+                return d
+
+    @cached_property
+    def tomorrow(self):
+        tomorrow = date.today() + timedelta(days=1)
+        for d in self.dias:
+            if d.fecha == tomorrow:
+                return d
+
+    @cached_property
+    def jornada_en_curso(self):
+        if self.hoy and len(self.hoy.marcajes) % 2 != 0:
+            return self.hoy
+
+    @cached_property
+    def ahora(self):
+        if self.jornada_en_curso is None:
+            return None
+
+        ahora = tp.HM.build(time.strftime("%H:%M"))
+
+        # Aún estamos en la oficina
+        sld = ahora - self.jornada_en_curso.marcajes[-1]
+
+        return tp.SiFichoAhora(
+            saldo=self.saldo + sld,
+            total=self.total + sld,
+            ahora=self.jornada_en_curso.total + sld
+        )
+
+
 def get_from_label(sp: bs4.Tag, lb):
-    tb = sp.find("span", text=lb)
+    tb = sp.find("span", string=lb)
     if tb is None:
         return
     val = get_text(tb.find_parent("div").find("p"))
@@ -85,7 +201,7 @@ class Trama:
 
     def _get_dias(self, ini: date, fin: date):
         logger.debug("_get_dias(%s, %s)", ini, fin)
-        dias = []
+        dias: List[tp.Fichaje] = []
         w: Web = self._get_cal_session()
         for a, z in get_times(ini, fin, timedelta(days=59)):
             w.get("https://trama.administracionelectronica.gob.es/calendario/marcajesRango.html",
@@ -100,35 +216,34 @@ class Trama:
                     continue
                 tds = ttext(tr.findAll("td"))
                 prs = None
-                fec, mar, obs, ttt, tto, sld = tds
-                if "Permisos:" in mar:
-                    prs = mar.split("Permisos:", 1)[-1].strip()
+                fec, marc, obs, ttt, tto, sld = tds
+                if "Permisos:" in marc:
+                    prs = marc.split("Permisos:", 1)[-1].strip()
                 fec = fec[:-1].split("(", 1)[-1]
                 fec = tmap(int, reversed(fec.split("/")))
                 fec = date(*fec)
-                mar: Tuple[HM, ...] = tmap(HM, sorted(re.findall(r"\d+:\d+:\d+", mar)))
+                mar: Tuple[tp.HM, ...] = tmap(tp.HM.build, sorted(re.findall(r"\d+:\d+:\d+", marc)))
                 if isinstance(prs, str):
                     obs = ((obs or "") + " "+prs).strip()
 
-                i = Munch(
+                i = tp.Fichaje(
                     fecha=fec,
                     marcajes=mar,
                     obs=obs,
-                    total=HM(ttt),
-                    teorico=HM(tto),
-                    saldo=HM(sld)
+                    total=tp.HM.build(ttt),
+                    teorico=tp.HM.build(tto),
+                    saldo=tp.HM.build(sld),
+                    permiso=prs is not None
                 )
                 dias.append(i)
         return dias
 
     def get_dias(self, ini: date, fin: date):
         logger.debug("get_dias(%s, %s)", ini, fin)
-        dias = []
+        dias: List[tp.Fichaje] = []
         fln_dias = JS_DIAS.format(ini)
         if isfile(fln_dias):
-            for d in FileManager.get().load(fln_dias):
-                d = HMmunch.fromDict(d)
-                d._parse()
+            for d in map(tp.builder(tp.Fichaje), FileManager.get().load(fln_dias)):
                 if ini <= d.fecha <= fin:
                     dias.append(d)
         if len(dias) == 0:
@@ -146,7 +261,7 @@ class Trama:
         dt_top = today - timedelta(days=59)
         sv_dias = [d for d in dias if d.fecha < dt_top]
         if len(sv_dias):
-            FileManager.get().dump(fln_dias, sv_dias, default=json_serial)
+            FileManager.get().dump(fln_dias, sv_dias)
         # dias = [d for d in dias if d.fecha >= ini]
         return dias
 
@@ -155,72 +270,9 @@ class Trama:
         Devuelve el control horario entre dos fechas
         """
         logger.debug("get_calendario(%s, %s)", ini, fin)
-        def __simplificar(marcajes: Tuple[HM], total: HM):
-            if len(marcajes) < 2 or total is None or total.minutos == 0:
-                return marcajes
-            mrc: List[HM] = sorted(set(m.trunc() for m in marcajes))
-            for x in reversed(tuple(range(1, len(mrc) - 1, 2))):
-                if mrc[x].minutos+1 == mrc[x+1].minutos:
-                    del mrc[x+1]
-                    del mrc[x]
-            if len(mrc) == len(marcajes) or len(mrc) % 2 == 1:
-                return marcajes
-            tt = HM(0)
-            for x in range(1, len(mrc), 2):
-                tt = tt + (mrc[x]-mrc[x-1])
-            if abs(tt.minutos-total.minutos)>2:
-                return marcajes
-            return tuple(mrc)
-
-        today = date.today()
-        r = Munch(
-            total=HM(0),
-            teorico=HM(0),
-            saldo=HM(0),
-            jornadas=0,
-            fichado=0,
-            sal_ahora=None,
-            futuro=HM(0),
-            index=None,
+        return Calendario(
             dias=self.get_dias(ini, fin)
         )
-        for index, i in enumerate(r.dias):
-            i.marcajes = __simplificar(i.marcajes, i.total)
-            r.total += i.total
-            r.teorico += i.teorico
-            r.saldo += i.saldo
-            if i.fecha == today:
-                r.index = index
-            elif i.fecha > today:
-                r.futuro += i.saldo
-            if i.teorico.minutos > 0:
-                r.jornadas += 1
-            if len(i.marcajes) > 0:
-                r.fichado += 1
-        if r.index is None:
-            return r
-        hoy = r.dias[r.index]
-        if len(hoy.marcajes) % 2 == 0:
-            return r
-        r.sal_ahora = Munch(
-            ahora=HM(time.strftime("%H:%M")),
-            total=None,
-            saldo=None,
-        )
-        # Aún estamos en la oficina
-        sld = r.sal_ahora.ahora - hoy.marcajes[-1]
-        r.sal_ahora.hoy_total = hoy.total + sld
-        r.sal_ahora.total = r.total + sld
-        r.sal_ahora.saldo = r.saldo + sld
-        # Hasta que salgamos no deberíamos contar este día
-        r.fichado = r.fichado - 1
-        if hoy.total.minutos > 0:
-            # Si hay algo ya computado (por ejemplo, tenemos 3 fichajes)
-            # lo restamos del total porque aún no sabemos cuanto se va
-            # a terminar imputando al día actual
-            r.total = r.total - hoy.total
-            r.saldo = r.saldo - hoy.total
-        return r
 
     def get_semana(self):
         logger.debug("get_semana()")
@@ -230,35 +282,40 @@ class Trama:
         fin = ini + timedelta(days=6)
         return self.get_calendario(ini, fin)
 
-    @HMCache(file="data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=(1 / 24))
+    @TupleCache(
+        "data/trama/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json",
+        builder=tp.builder(Informe),
+        maxOld=(1 / 24)
+    )
     def _get_informe(self, ini: date, fin: date):
         logger.debug("Trama._get_informe(%s, %s)", ini, fin)
-        r = Munch(
+        r = Informe(
             ini=ini,
-            fin=fin,
-            total=HM(0),
-            teorico=HM(0),
-            saldo=HM(0),
-            laborables=0,
-            vacaciones=HM(0)
+            fin=fin
         )
         if ini <= gesper_FCH_FIN:
             inf = Gesper().get_informe(ini, gesper_FCH_FIN)
             if inf:
-                r.total += inf.total
-                r.teorico += (inf.teoricas - inf.festivos - inf.fiestas_patronales)
-                r.saldo += inf.saldo
-                r.laborables += inf.laborables
-                r.vacaciones += inf.vacaciones
+                r = tp.merge(
+                    r,
+                    total=r.total + inf.total,
+                    teorico=r.teorico+(inf.teoricas - inf.festivos -inf.fiestas_patronales),
+                    saldo=r.saldo + inf.saldo,
+                    laborables=r.laborables + inf.laborables,
+                    vacaciones=r.vacaciones + inf.vacaciones
+                )
             ini = gesper_FCH_FIN + timedelta(days=1)
             if ini >= fin:
                 return r
         for i in self.get_dias(ini, fin):
-            r.total += i.total
-            r.teorico += i.teorico
-            r.saldo += i.saldo
-            r.laborables += int(i.teorico.minutos > 0)
-            # r.vacaciones += inf.vacaciones
+            r = tp.merge(
+                r,
+                total=r.total + i.total,
+                teorico=r.teorico+i.teorico,
+                saldo=r.saldo + i.saldo,
+                laborables=r.laborables + int(i.teorico.minutos > 0),
+                #vacaciones = r.vacaciones + inf.vacaciones
+            )
         return r
 
     def get_informe(self, ini: Union[None, date] = None, fin: Union[None, date] = None):
@@ -281,7 +338,7 @@ class Trama:
 
     def get_vacaciones(self, year: Union[int, None] = None):
         GESPER_BREAK = 2022
-        vac = {}
+        vac: Dict[Tuple[int, int], tp.VacacionesResumen] = {}
         cyr = datetime.today().year
         if year is None:
             for v in self.get_vacaciones(-1):
@@ -296,7 +353,7 @@ class Trama:
             # hack gesper
             return Gesper().get_vacaciones(year)
 
-        def _add(v):
+        def _add(v: tp.VacacionesResumen):
             vac[(v.year, v.key)] = v
 
         w: Web = self._get_cal_session()
@@ -310,7 +367,7 @@ class Trama:
                 yrs.add(yr)
                 vc: Tuple[int, ...] = tmap(int, re.findall(r"\d+", tds[1]))
                 pe: Tuple[int, ...] = tmap(int, re.findall(r"\d+", tds[2]))
-                _add(Munch(
+                _add(tp.VacacionesResumen(
                     key="permiso",
                     total=pe[1],
                     usados=pe[0],
@@ -322,13 +379,13 @@ class Trama:
                     vtotal = vtotal - vitotal
                     vgast = min(vtotal, vgastadas - vigast)
                     vigast = vgastadas - vgast
-                    _add(Munch(
+                    _add(tp.VacacionesResumen(
                         key="sueltos",
                         total=vitotal,
                         usados=vigast,
                         year=yr
                     ))
-                _add(Munch(
+                _add(tp.VacacionesResumen(
                     key="vacaciones",
                     total=vtotal,
                     usados=vgast,
@@ -354,25 +411,26 @@ class Trama:
                     vac[k] = gv
                 else:
                     tv = vac[k]
-                    tv.total = gv.total
-                    tv.usados = gv.usados + tv.usados
+                    vac[k] = tv._replace(
+                        total=gv.total,
+                        usados=gv.usados + tv.usados
+                    )
 
-        rst = []
+        rst: List[tp.VacacionesResumen] = []
         for v in vac.values():
             if v.year == year or (v.year == year - 1 and v.total > v.usados):
                 rst.append(v)
-        vac = sorted(rst, key=lambda v: (v.year, v.key))
-        return vac
+        arr = tuple(sorted(rst, key=lambda v: (v.year, v.key)))
+        return arr
 
-    @MunchCache("data/trama/incidencias_{estado}.json", maxOld=0, json_default=json_serial, json_hook=json_hook)
+    @TupleCache(
+        "data/trama/incidencias_{estado}.json",
+        builder=tp.builder(tp.Incidencia),
+        maxOld=(1 / 24)
+    )
     def get_incidencias(self, estado=3):
         def to_date(x: str):
             return date(*map(int, reversed(x.split("/"))))
-
-        def to_hm(x: Union[str, None]):
-            if x is None:
-                return None
-            return HM(x)
 
         w: Web = self._get_inc_session()
         w.get("https://trama.administracionelectronica.gob.es/incidencias/bandejaEnviadas.html")
@@ -383,41 +441,61 @@ class Trama:
         if estado is not None:
             data["idEstadoIncidencia"] = str(estado)
         w.get(action, **data)
-        r = []
+        r: List[tp.Incidencia] = []
         head = ttext(w.soup.select("#listaTablaMaestra thead tr th"))
         for tr in w.soup.select("#listaTablaMaestra tbody tr"):
             tds = ttext(tr.findAll("td"))
             tds = {k: v for k, v in zip(head, tds)}
-            i = Munch(
+            i = tp.Incidencia(
                 id=int(tds['Proceso']),
                 tipo=tds['Tipo Solicitud'],
                 solicitud=to_date(tds['Fecha solicitud']),
                 validador=tds['Validador'],
                 autorizador=tds['Autorizador'],
-                incidencias=tds['Incidencias'],
+                incidencias=tuple(),#tds['Incidencias'],
                 estado=tds['Estado'],
                 tarea=to_date(tds['Fecha tarea']),
+                permiso=None,
+                fecha=None,
+                fin=None,
+                dias=None,
+                year=None,
+                inicio=None,
+                observaciones=None,
+                mensaje=None
             )
-            r.append(i)
             data['accion'] = 'REDIRIGIR_SOLICITUDES'
             data['idProceso'] = str(i.id)
             w.get(action, **data)
             tb = w.soup.select_one("#tablaIncidencias")
-            if tb is None:
-                continue
-            i.incidencias = []
-            tb.select_one("thead").extract()
-            for tr in tb.select("tr"):
-                tds = ttext(tr.findAll("td"))
-                tipo, fecha, inicio, fin, observaciones, mensaje = tds
-                i.incidencias.append(Munch(
-                    tipo=tipo,
-                    fecha=to_date(fecha),
-                    inicio=to_hm(inicio),
-                    fin=to_hm(fin),
-                    observaciones=observaciones,
-                    mensaje=mensaje
-                ))
+            if tb is not None:
+                incidencias = []
+                tb.select_one("thead").extract()
+                for tr in tb.select("tr"):
+                    tds = ttext(tr.findAll("td"))
+                    tipo, fecha, inicio, fin, observaciones, mensaje = tds
+                    incidencias.append(tp.Incidencia(
+                        tipo=tipo,
+                        fecha=to_date(fecha),
+                        inicio=tp.HM.build(inicio),
+                        fin=tp.HM.build(fin),
+                        observaciones=observaciones,
+                        mensaje=mensaje,
+                        id=None,
+                        solicitud=None,
+                        validador=None,
+                        autorizador=None,
+                        incidencias=tuple(),
+                        permiso=None,
+                        estado=None,
+                        tarea=None,
+                        dias=None,
+                        year=None
+                    ))
+                i = i._replace(
+                    incidencias=tuple(incidencias)
+                )
+            r.append(i)
         w: Web = self._get_vac_session()
         w.get("https://trama.administracionelectronica.gob.es/Permisos/bandejaEnviadas.html")
         mx = w.soup.select("#maximoElementosPagina option")[-1]
@@ -435,7 +513,7 @@ class Trama:
             tds = {k: v for k, v in zip(head, tds)}
             fechas = tds['Fechas Solicitadas/Anuladas']
             fechas: Tuple[date, ...] = tmap(to_date, re.findall(r'\d\d/\d\d/\d\d\d\d', fechas))
-            i = Munch(
+            i = tp.Incidencia(
                 id=int(tds['Proceso']),
                 tipo=tds['Tipo Solicitud'],
                 solicitud=to_date(tds['Fecha solicitud']),
@@ -446,30 +524,36 @@ class Trama:
                 tarea=to_date(tds['Fecha tarea']),
                 fecha=fechas[0],
                 fin=fechas[-1],
+                incidencias=tuple(),
+                dias=None,
+                year=None,
+                inicio=None,
+                observaciones=None,
+                mensaje=None
             )
-            r.append(i)
             data['accion'] = 'REDIRIGIR_SOLICITUDES'
             data['idProceso'] = str(i.id)
             w.get(action, **data)
             dias = get_from_label(w.soup, "Días")
             year = get_from_label(w.soup, "Ejercicio")
             if dias is not None:
-                i.dias = dias
+                i = i._replace(dias=dias)
             if year is not None:
-                i.year = year
-        return r
+                i = i._replace(year=year)
+            r.append(i)
+        return tuple(r)
 
     def get_lapso(self, estado=3):
-        lps = []
+        lps: List[tp.Incidencia] = []
         for x in self.get_incidencias(estado=estado):
-            if x.get('incidencias'):
+            if x.incidencias:
                 for i in x.incidencias:
                     lps.append(i)
                 continue
-            if x.get('fecha'):
+            if x.fecha is not None:
                 lps.append(x)
         lps = sorted(lps, key=lambda x: x.fecha)
-        return lps
+        return tuple(lps)
 
     def get_cuadrante(self, ini=None, months=6):
         def __check_cls(cls: Union[str, None, List[str]]):
@@ -509,7 +593,7 @@ class Trama:
         return r
 
     def get_festivos(self, max_iter=-1):
-        r: Set[date] = set()
+        r: Set[Festivo] = set()
         today=date.today()
         top = today.year + 2
         w: Web = self._get_cal_session()
@@ -522,7 +606,13 @@ class Trama:
                     continue
                 day = int(day)
                 monday = td.find_parent("tr").attrs["class"][0]
-                dt = date(int(monday[4:]), int(monday[2:4]), day)
+                mday, mmonth, myear = tuple(map(int, (monday[:2], monday[2:4], monday[4:])))
+                if day < mday:
+                    mmonth = mmonth + 1
+                if mmonth == 13:
+                    mmonth = 1
+                    myear = myear + 1
+                dt = Festivo(myear, mmonth, day)
                 if dt.weekday() not in (5, 6):
                     r.add(dt)
             if size == len(r) or max(r).year >= top:
@@ -536,12 +626,24 @@ class Trama:
             data[b.attrs["name"]] = b.attrs['value']
             w.get(action, **data)
         fest = tuple(sorted([f for f in r if f>=today and f.year<top]))
+        events: List[ics.IcsEvent] = []
+        for f in fest:
+            events.append(ics.IcsEvent(
+                uid="festivo_"+str(f),
+                dtstamp=f,
+                dtstart=f,
+                dtend=f,
+                categories="Festivo",
+                summary=f.nombre,
+                description=None
+            ))
+        ics.IcsEvent.dump("data/festivos.ics", *events)
         return fest
 
 if __name__ == "__main__":
     a = Trama()
-    r = a.get_cuadrante()
-    # r = a.get_incidencias()
+    #r = a.get_cuadrante()
+    r = a.get_incidencias()
     import json
 
-    print(json.dumps(r, indent=2, default=json_serial))
+    print(json.dumps(r, indent=2))

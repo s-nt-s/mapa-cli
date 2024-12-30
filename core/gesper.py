@@ -1,22 +1,19 @@
-from datetime import datetime, date, timedelta
-from .filemanager import CNF, FileManager
-import re
-from munch import Munch
-from .web import Web
-from .util import json_serial, parse_mes, parse_dia, ttext, to_num, json_hook, dict_style
-from os.path import isdir, join, isfile, expanduser
-from .hm import HM, GesperIH, GesperIHCache
 import json
-from .retribuciones import Retribuciones
-from functools import cached_property
 import logging
-from .cache import TupleCache
-import bs4
-from typing import Union, Dict, List, Any
-from .types.festivo import Festivo
-from .types.expediente import Expediente
-from .types.vacaciones import Vacaciones
+import re
+from datetime import date, datetime, timedelta
+from functools import cached_property
+from os.path import expanduser, isdir, isfile, join
+from typing import Any, Dict, List, NamedTuple, Union
 
+import bs4
+
+from . import tp as tp
+from .cache import TupleCache
+from .filemanager import CNF, FileManager
+from .retribuciones import Retribuciones
+from .util import json_hook, parse_mes, to_num, ttext
+from .web import Web
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
@@ -29,6 +26,29 @@ fix_url = (
 FCH_FIN = date(2022, 5, 29)
 
 logger = logging.getLogger(__name__)
+
+
+class GesperIH(NamedTuple):
+    jornadas: int
+    trabajadas: tp.HM
+    incidencias: tp.HM
+    total: tp.HM
+    teoricas: tp.HM
+    saldo: tp.HM
+    festivos: tp.HM
+    vacaciones: tp.HM
+    fiestas_patronales: tp.HM
+    ini: date
+    fin: date
+    laborables: Union[int, None] = None
+    porcentaje: Union[float, None] = None
+    pdf: Union[str, None] = None
+
+    def get_computables(self):
+        return self.teoricas - self.festivos - self.vacaciones - self.fiestas_patronales
+
+    def get_sin_vacaciones(self):
+        return self.teoricas - self.festivos - self.fiestas_patronales
 
 
 def _find_mes(*tds: bs4.Tag):
@@ -104,7 +124,7 @@ class Gesper(Web):
                     return a
 
         self.get("https://intranet.mapa.es/app/GESPER/Expediente/Consulta.aspx")
-        exps: List[Expediente] = []
+        exps: List[tp.Expediente] = []
         for tr in reversed(self.soup.select("#TablaDocumentos tr")):
             a = _find_a(tr)
             tds = ttext(tr.findAll("td"))
@@ -121,7 +141,7 @@ class Gesper(Web):
             fecha = date(year, mes, dia)
             name = "{:%Y.%m.%d} - {} - {}.pdf".format(fecha, tipo, desc)
             name = re_sp.sub(" ", name)
-            exp = Expediente(
+            exp = tp.Expediente(
                 fecha=fecha,
                 name=name,
                 tipo=tipo,
@@ -132,7 +152,7 @@ class Gesper(Web):
             )
             exps.append(exp)
             if isdir(expanduser(CNF.expediente)):
-                exp.file = join(CNF.expediente, exp.name)
+                exp = tp.merge(exp, file=join(CNF.expediente, exp.name))
                 if not isfile(exp.file):
                     r = self.s.get(exp.url, verify=self.verify)
                     FileManager.get().dump(exp.file, r.content)
@@ -141,7 +161,7 @@ class Gesper(Web):
         return tuple(exps)
 
     def get_vacaciones(self, year: Union[int, None] = None):
-        vac: List[Vacaciones] = []
+        vac: List[tp.VacacionesResumen] = []
         cyr = datetime.today().year
         if year is None:
             for v in self.get_vacaciones(-1):
@@ -173,7 +193,7 @@ class Gesper(Web):
         for key in sorted(keys):
             t = total.get(key, 0)
             u = usados.get(key, 0)
-            vac.append(Vacaciones(
+            vac.append(tp.VacacionesResumen(
                 key=key,
                 total=t,
                 usados=u,
@@ -184,7 +204,6 @@ class Gesper(Web):
     @TupleCache(
         "data/gesper/lapso.json",
         maxOld=None,
-        json_default=json_serial,
         json_hook=json_hook,
         builder=lambda x: x,
     )
@@ -211,8 +230,8 @@ class Gesper(Web):
                     hi: str = j.get("_horaInicio")
                     hf: str = j.get("_horaFin")
                     if hi and hf:
-                        j["_horaInicio"] = HM(hi)
-                        j["_horaFin"] = HM(hf)
+                        j["_horaInicio"] = tp.HM.build(hi)
+                        j["_horaFin"] = tp.HM.build(hf)
                         j["_duraccion_hm"] = j["_horaFin"] - j["_horaInicio"]
                 for k, v in list(j.items()):
                     if v is None or (isinstance(v, str) and v.strip() == ""):
@@ -312,27 +331,36 @@ class Gesper(Web):
             obj = kv
             for w in path[:-1]:
                 if w not in obj:
-                    obj[w] = Munch()
+                    obj[w] = dict()
                 obj = obj[w]
             obj[path[-1]] = v
             del kv[k]
 
-        kv = Munch.fromDict(kv)
-        rt = Retribuciones().get_sueldo(mi_grupo, mi_nivel, kv.sueldo.complemento.especifico, kv.trienios)
+        rt = Retribuciones().get_sueldo(
+            mi_grupo,
+            mi_nivel,
+            kv['sueldo']['complemento']['especifico'],
+            kv['trienios']
+        )
         if rt:
-            kv.sueldo = rt
+            kv['sueldo'] = rt
 
-        return kv
+        pst = tp.builder(tp.Puesto)(kv)
+        return pst
 
     @cached_property
     def fecha_inicio(self):
-        return self.get_puesto()['inicio']
+        return self.get_puesto().inicio
 
-    @GesperIHCache(file="data/gesper/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json", json_default=json_serial, maxOld=None)
+    @TupleCache(
+        file="data/gesper/informe_{:%Y-%m-%d}_{:%Y-%m-%d}.json",
+        maxOld=None,
+        builder=tp.builder(GesperIH)
+    )
     def _get_informe(self, ini: date, fin: date):
         logger.debug("Gesper._get_informe(%s, %s)", ini, fin)
         _fin = date(fin.year, fin.month, fin.day)
-        rst = []
+        rst: List[GesperIH] = []
         while ini <= _fin:
             fin = date(ini.year, 12, 31)
             if fin > _fin:
@@ -347,8 +375,8 @@ class Gesper(Web):
                 FileManager.get().dump(absn, r.content)
             jornadas = 0
             laborables = 0
-            vacaciones = HM("00:00")
-            festivos = HM("00:00")
+            vacaciones = tp.HM.build("00:00")
+            festivos = tp.HM.build("00:00")
             fiestas_patronales = 0
             for page in FileManager.get().load(absn, as_list=True, physical=True):
                 n_fechas = len(re.findall(r"\b\d\d/\d\d/\d\d\d\d\b", page))
@@ -356,7 +384,7 @@ class Gesper(Web):
                 laborables = laborables + n_fechas - 3
                 i: str
                 for i in re.findall(r"([\d:\.]+)\s+((?:VAC|FESTIVO|PCI|PAP|FP|VFP|L2|BAJA)\b\S*)", page):
-                    h = HM(i[0])
+                    h = tp.HM.build(i[0])
                     t = tuple(a.strip() for a in i[1].strip().lower().split(","))
                     if "festivo" in t:
                         jornadas = jornadas - 1
@@ -381,7 +409,7 @@ class Gesper(Web):
                     fiestas_patronales = 5
                 try:
                     porcentaje = to_num(m.groups()[-1])
-                    trabajadas, incidencias, total, teoricas, saldo = (HM(i) for i in m.groups()[:-1])
+                    trabajadas, incidencias, total, teoricas, saldo = map(tp.HM.build, m.groups()[:-1])
                 except ValueError:
                     break
                 rst.append(GesperIH(
@@ -395,7 +423,7 @@ class Gesper(Web):
                     porcentaje=porcentaje,
                     festivos=festivos,
                     vacaciones=vacaciones,
-                    fiestas_patronales=HM("02:30").mul(fiestas_patronales),
+                    fiestas_patronales=tp.HM.build("02:30").mul(fiestas_patronales),
                     pdf=absn,
                     ini=ini,
                     fin=fin
@@ -403,14 +431,18 @@ class Gesper(Web):
             ini = ini.replace(year=ini.year + 1, month=1, day=1)
         if len(rst) == 0:
             return None
-        r = rst[0]
-        del r['porcentaje']
-        del r['pdf']
-        r.fin = rst[-1].fin
+        r = tp.merge(
+            rst[0],
+            fin=rst[-1].fin,
+            porcentaje=None,
+            pdf=None,
+        )
+        fields = ("laborables", "jornadas", "trabajadas", "incidencias", "total", "teoricas", "saldo", "festivos", "vacaciones", "fiestas_patronales")
+        overwrite = {k: tp.get(r, k) for k in fields}
         for i in rst[1:]:
-            for k in ('laborables', 'jornadas', 'trabajadas', 'incidencias', 'total', 'teoricas', 'saldo', 'festivos',
-                      'vacaciones', 'fiestas_patronales'):
-                r[k] = r[k] + i[k]
+            for k in fields:
+                overwrite[k] = overwrite[k] + tp.get(i, k)
+        r = tp.merge(r, **overwrite)
         return r
 
     def get_informe(self, ini: Union[date, None] = None, fin: date = FCH_FIN):  # fin=date(2022, 6, 5)):
@@ -429,4 +461,3 @@ class Gesper(Web):
 if __name__ == "__main__":
     f = Gesper()
     r = f.get_informe()
-    print(json.dumps(r, indent=2, default=json_serial))

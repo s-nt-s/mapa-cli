@@ -1,9 +1,11 @@
 import re
+from datetime import date, datetime, timedelta
+from typing import Tuple, Union
+
 import bs4
 from markdownify import markdownify
-from typing import NamedTuple, Tuple
-from datetime import date, datetime, timedelta
-from .hm import HM
+
+from .tp.hm import HM
 
 DAYNAME = ('Lunes', 'Martes', 'Miércoles',
            'Jueves', 'Viernes', 'Sábado', 'Domingo')
@@ -90,7 +92,9 @@ def get_html(soup):
     return h
 
 
-def html_to_md(node, links=False, unwrap=None):
+def html_to_md(node: Union[bs4.Tag, str], links=False, unwrap=None):
+    if isinstance(node, str):
+        node = bs4.BeautifulSoup(node, "html.parser")
     if unwrap is None:
         unwrap = tuple()
     for hr in node.select("hr"):
@@ -147,7 +151,7 @@ def json_serial(obj):
         return obj.strftime("%Y-%m-%d %H:%M")
     if isinstance(obj, HM):
         return str(obj)
-    if isinstance(obj, NamedTuple):
+    if isinstance(obj, tuple) and hasattr(obj, '_fields'):
         return obj._asdict()
 
 
@@ -155,7 +159,7 @@ def json_hook(d):
     for (k, v) in d.items():
         if isinstance(v, str):
             if re.match(r"^[\-+]?\d+:\d+(:\d+)?$", v):
-                d[k] = HM(v)
+                d[k] = HM.build(v)
             elif re.match(r"^\d+-\d+-\d+$", v):
                 d[k] = date(*map(int, v.split("-")))
             elif re.match(r"^\d+-\d+-\d+ \d+:\d+$", v):

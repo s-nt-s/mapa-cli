@@ -1,15 +1,15 @@
 import re
+from glob import glob
+from os.path import basename, expanduser, isfile, join
+from typing import Dict, List, NamedTuple, Tuple, Union
 
-from os.path import isfile, join, expanduser, basename
+import requests
 
-from .web import get_query, Web
 from .autdriver import AutDriver
+from .cache import Cache
 from .filemanager import CNF, FileManager
 from .util import get_text, to_num
-from .cache import Cache
-from glob import glob
-import requests
-from typing import NamedTuple, Dict, List, Union, Tuple
+from .web import Web, get_query
 
 re_sp = re.compile(r"\s+")
 
@@ -73,14 +73,18 @@ def query_nom(href):
     return q
 
 
-def get_int_match(txt, *regx):
+def get_int_match(txt, *regx, top=None):
     for r in regx:
         if isinstance(r, re.Pattern):
             c = r.search(txt)
         else:
             c = re.search(r, txt, flags=re.MULTILINE | re.IGNORECASE)
         if isinstance(c, re.Match):
-            return to_num(c.group(1))
+            v = to_num(c.group(1))
+            if v is None:
+                continue
+            if top is None or v<=top:
+                return v
 
 
 class FuncionException(Exception):
@@ -128,17 +132,13 @@ class Funciona:
                 ),
                 irpf=get_int_match(
                     txt,
+                    re.compile(r"DATOS\s+DEL\s+I\.R\.P\.F\..*?RETENCION\n.*?(\d[\d\.]+)\n", flags=re.DOTALL),
                     r"BASE\s+SUJETA\s+A\s+RETENCION\s+DEL\s+IRPF.*?(\d[\d\.,]+)\s*$",
                     r"(\d[\d\.,]+)\n\s*4\.\s+BASE\s+SUJETA\s+A\s+RETENCION\s+DEL\s+IRPF",
-                    r"I\.R\.P\.F\..*?([\d\.,]+)\s*$"
+                    r"I\.R\.P\.F\..*?([\d\.,]+)\s*$",
+                    top=60
                 )
             )
-            m = re.compile(
-                r"DATOS\s+DEL\s+I\.R\.P\.F\..*?RETENCION\n.*?(\d[\d\.]+)\n",
-                flags=re.DOTALL
-            ).search(txt)
-            if m:
-                nom = nom.merge(irpf=float(m.group(1)))
             if nom.bruto < nom.neto:
                 aux = map(to_num, re.findall(r"\b\d[\d\.\,]+\b", txt))
                 aux = [b for b in aux if nom.neto < b < (nom.neto*1.5)]

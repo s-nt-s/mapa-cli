@@ -1,37 +1,37 @@
 import re
-from typing import Dict
-from .trama import Trama
-from .funciona import Funciona, Nomina
 from datetime import date, datetime, timedelta
+import time
+from io import StringIO
+from typing import Dict, List, Set, Tuple
+
+from dateutil.relativedelta import relativedelta
+
+from .filemanager import CNF
+from .funciona import Funciona, Nomina
 from .gesper import Gesper
 from .mapa import Mapa
-from .filemanager import CNF
-from .hm import HM
-from .util import to_strint, DAYNAME, MONTHNAME, parse_dia, notnull, tmap
-from io import StringIO
-from munch import Munch
-from dateutil.relativedelta import relativedelta
-from typing import List, Set
+from .tp.hm import HM
+from .trama import Trama
+from .util import DAYNAME, MONTHNAME, notnull, parse_dia, tmap, to_strint
 
 re_rtrim = re.compile(r"^\s*\n")
 re_sp = re.compile(r"\s+")
 
-PRNT = Munch(
-    func=print,
-    line=""
-)
+PRNT_line = ""
+PRNT_func = print
 
 
 def print(*args, **kwargs):
+    global PRNT_line
     # Previene imprimir dos lineas vacias seguidas
     io_line = StringIO()
-    PRNT.func(*args, file=io_line, flush=True, **kwargs)
+    PRNT_func(*args, file=io_line, flush=True, **kwargs)
     line = io_line.getvalue()
     line = line.strip()
-    if tmap(len, (line, PRNT.line)) == (0, 0):
+    if tmap(len, (line, PRNT_line)) == (0, 0):
         return
-    PRNT.line = line
-    PRNT.func(*args, **kwargs)
+    PRNT_line = line
+    PRNT_func(*args, **kwargs)
 
 
 def print_dict(kv: Dict, prefix=""):
@@ -52,94 +52,93 @@ def print_dict(kv: Dict, prefix=""):
 
 class Printer:
     def __init__(self):
-        PRNT.line = ""
+        global PRNT_line
+        PRNT_line = ""
 
     def horas_semana(self):
         t = Trama()
         cal = t.get_semana()
 
-        quedan = cal.jornadas - cal.fichado
-        idx_trabajando = None
-        if cal.sal_ahora is not None and cal.index is not None:
-            idx_trabajando = cal.index
+        quedan = cal.jornadas - cal.fichados
 
         if cal.jornadas > 0:
             print("Semana:", cal.teorico.div(cal.jornadas), "*", cal.jornadas, "=", cal.teorico)
         else:
             print("Semana:", cal.teorico)
         print("")
-        for index, dia in enumerate(cal.dias):
+        for dia in cal.dias:
             hms = list(dia.marcajes)
+            if dia.permiso and len(hms) == 0 and dia.teorico.minutos > 0 and dia.teorico.minutos == dia.total.minutos:
+                print("%2d:" % dia.fecha.day, "___ PERMISO ___", dia.total)
+                quedan = quedan - 1
+                continue
             if not hms:
                 continue
             print("%2d:" % dia.fecha.day, end=" ")
-            if idx_trabajando == index:
+            if dia == cal.jornada_en_curso:
                 hms.append("--_--")
             str_hms = ["{} - {}".format(hms[i], (hms + ["--_--"])[i + 1]) for i in range(0, len(hms), 2)]
             str_hms = " + ".join(str_hms)
-            if idx_trabajando == index:
-                print("%s = %s" % (str_hms, cal.sal_ahora.hoy_total), "▲")
+            if dia == cal.jornada_en_curso:
+                print("%s = %s" % (str_hms, cal.ahora.ahora), "▲")
             else:
                 print("%s = %s" % (str_hms, dia.total))
         print("")
-        if cal.fichado > 1:
-            print("Media:", cal.total.div(cal.fichado), "*", cal.fichado, "=", cal.total)
-            if idx_trabajando is not None:
-                print("Media:", cal.sal_ahora.total.div(cal.fichado + 1), "*", cal.fichado + 1, "=",
-                      cal.sal_ahora.total)
+        if cal.fichados > 1:
+            print("Media:", cal.total.div(cal.fichados), "*", cal.fichados, "=", cal.total)
+            if cal.jornada_en_curso is not None:
+                print("Media:", cal.ahora.total.div(cal.fichados + 1), "*", cal.fichados + 1, "=",
+                      cal.ahora.total)
 
         sld, dqn = cal.saldo, quedan
-        if idx_trabajando is not None:
-            sld, dqn = cal.sal_ahora.saldo, quedan - 1
-        if (quedan - (int(idx_trabajando is not None))) > 0:
+        if cal.jornada_en_curso is not None:
+            sld, dqn = cal.ahora.saldo, quedan - 1
+        if (quedan - (int(cal.jornada_en_curso is not None))) > 0:
             sgn = sld.minutos > 0
             us_sld = HM(abs(sld.minutos))
             line = ["Falta:", us_sld.div(dqn), "*", dqn, "=", us_sld]
             if sgn > 0:
                 line[0] = "Queda:"
-            if idx_trabajando is not None:
+            if cal.jornada_en_curso is not None:
                 line.append("▲" if sgn else "▼")
             print(*line)
 
         print("")
         wf_sld = sld - cal.futuro
         sgn = wf_sld.minutos > 0
-        if idx_trabajando is not None:
+        if cal.jornada_en_curso is not None:
             print("Desfase:", wf_sld, "▲" if sgn else "▼")
         else:
             print("Desfase:", wf_sld)
 
-        if cal.index is None:
-            return
-
-        if idx_trabajando is not None:
+        if cal.jornada_en_curso is not None:
             print("")
             if quedan < 2 and wf_sld.minutos > 0:
                 print("¡¡SAL AHORA!!")
                 return
             if wf_sld.minutos <= 0:
-                print("Sal a las", cal.sal_ahora.ahora - wf_sld)
+                ahora = HM.build(time.strftime("%H:%M"))
+                print("Sal a las", ahora - wf_sld)
                 return
 
         if cal.futuro.minutos == 0:
             return
 
-        man = cal.dias[cal.index + 1]
-        if man.teorico.minutos == 0:
+        if cal.tomorrow is None or cal.tomorrow.teorico.minutos == 0:
             return
 
-        outhm = HM("14:30")
-        if man.teorico < HM("07:30"):
-            outhm = HM("14:00")
-        if (wf_sld.minutos > 0 and cal.sal_ahora is None) or (
-                cal.sal_ahora is not None and cal.sal_ahora.ahora.minutos > outhm.minutos):
+        outhm = HM.build("14:30")
+        if cal.tomorrow.teorico < HM.build("07:30"):
+            outhm = HM.build("14:00")
+        if (wf_sld.minutos > 0 and cal.ahora is None) or (
+                cal.ahora is not None and cal.ahora.ahora.minutos > outhm.minutos):
             print("")
-            man = man.teorico - wf_sld
-            if cal.sal_ahora:
+            man = cal.tomorrow.teorico - wf_sld
+            if cal.ahora:
                 print("Sal ahora y mañana haz", man)
             else:
                 print("Mañana haz", man)
-            print(" 07:00 -", HM("07:00") + man)
+            print(" 07:00 -", HM.build("07:00") + man)
             print("", outhm - man, "-", outhm)
 
     def horas_mes(self):
@@ -170,18 +169,28 @@ class Printer:
         print("")
         print("Media: %s * %s = %s" % (total.div(len(dias)), len(dias), total))
         print("Desfase:", total-teorico)
-        
+
 
     def nominas(self, sueldo='neto'):
         f = Funciona()
         nominas: List[Nomina] = (f.get_nominas() or [])
         nominas = [n for n in nominas if n.get(sueldo) is not None]
         n_ym = sorted(set((n.year, n.mes) for n in nominas))
-        for n in CNF.get("_nominas", []):
-            if n.get(sueldo) is None:
+        for n in CNF.tmp_nominas:
+            if sueldo not in ('bruto', 'neto'):
+                continue
+            if sueldo == 'bruto' and n.bruto is None:
+                continue
+            if sueldo == 'neto' and n.neto is None:
                 continue
             if (n.year, n.mes) not in n_ym:
-                nominas.append(Nomina.build(**n))
+                nominas.append(Nomina(
+                    mes=n.mes,
+                    year=n.year,
+                    irpf=n.irpf,
+                    bruto=n.bruto,
+                    neto=n.neto
+                ))
         nominas = sorted(nominas, key=lambda n: (n.year, n.mes, -nominas.index(n)))
         years = sorted(set(n.year for n in nominas))
         for y in years:
@@ -248,30 +257,35 @@ class Printer:
                 inf = Trama().get_informe(lst_dt - relativedelta(months=c), lst_dt)
                 per_hour = cant / ((inf.teorico - inf.vacaciones).minutos / 60)
                 if c == 12 and sueldo == 'bruto':
-                    sldhr = Munch(sueldo=cant, hora=per_hour)
+                    sldhr = dict(sueldo=cant, hora=per_hour)
                 per_hour = "({}€/h)".format(to_strint(per_hour))
             cant = to_strint(cant / c)
             print("{}: {:>5}€".format(ln, cant), per_hour)
         if sldhr and sueldo == 'bruto':
             print("")
-            print("Sueldo anual: " + to_strint(sldhr.sueldo))
-            if sldhr.hora:
+            print("Sueldo anual: " + to_strint(sldhr['sueldo']))
+            if sldhr['hora']:
                 cotizar = 6.35
                 print("Si trabajaras 8h/día con 22 días de vacaciones y cotizando {}%:".format(cotizar))
-                print("Sueldo anual: " + to_strint((260 - 22) * 8 * sldhr.hora * (100 + cotizar) / 100))
+                print("Sueldo anual: " + to_strint((260 - 22) * 8 * sldhr['hora'] * (100 + cotizar) / 100))
 
     def irpf(self):
         f = Funciona()
         nominas: List[Nomina] = (f.get_nominas() or [])
-        nominas = [n for n in nominas if n.get('irpf') is not None]
+        nominas = [n for n in nominas if n.irpf is not None]
         n_ym = sorted(set((n.year, n.mes) for n in nominas))
-        for n in CNF.get("_nominas", []):
-            if n.get('irpf') is None:
+        for n in CNF.tmp_nominas:
+            if n.irpf is None:
                 continue
             if (n.year, n.mes) not in n_ym:
-                nominas.append(Nomina.build(**n))
+                nominas.append(Nomina(
+                    mes=n.mes,
+                    year=n.year,
+                    irpf=n.irpf,
+                    bruto=n.bruto
+                ))
         nominas = sorted(nominas, key=lambda n: (n.year, n.mes, -nominas.index(n)))
-        agg_nomias = {}
+        agg_nomias: Dict[Tuple[int, int], Set[float]] = {}
         for n in nominas:
             k = (n.year, n.mes)
             agg_nomias[k] = agg_nomias.get(k, set()).union({n.irpf, })
@@ -288,7 +302,7 @@ class Printer:
         for i, d in enumerate(dates):
             if (i==0 or (dates[i-1].year, dates[i-1].month)!=(d.year, d.month)):
                 print("====", f"{d:%Y-%m}", MONTHNAME[d.month-1], "====")
-            print(parse_dia(d)+ f" {d:%d}")
+            print(parse_dia(d)+ f" {d:%d}", d.nombre)
 
     def expediente(self):
         exps = Gesper().get_expediente()
@@ -297,7 +311,7 @@ class Printer:
         for inx, e in enumerate(exps):
             if inx == 0 or e.fecha.year != exps[inx - 1].fecha.year:
                 print("===", e.fecha.year, "===")
-            line = frmt.format(**dict(e))
+            line = frmt.format(**e._asdict())
             if e.fecha.day < 10:
                 line = " " + line
             print(line)
@@ -372,15 +386,15 @@ class Printer:
                 year = i.fecha.year
                 print("===", year, "===")
             print("%s: %s" % (parse_dia(i.fecha), i.fecha.strftime('%d/%m')), end=" ")
-            if i.get('dias') not in (None, 1):
+            if i.dias not in (None, 1):
                 print("(+%s)" % i.dias, end=" ")
             txt = [
-                i.get('tipo'),
-                i.get('observaciones'),
-                i.get('mensaje'),
-                i.get('permiso')
+                i.tipo,
+                i.observaciones,
+                i.mensaje,
+                i.permiso
             ]
-            if i.get("year") not in (None, year):
+            if i.year not in (None, year):
                 txt.append("({})".format(i.year))
             if txt[0] == 'Eliminar fichaje':
                 txt[0] = str(i.inicio)+" "+txt[0]
@@ -388,7 +402,7 @@ class Printer:
                 txt[0] = str(i.inicio) + " Olvido de fichaje"
             txt = " - ".join(t for t in txt if t is not None and t.strip() not in ("", "Solicitud"))
             txt = re_sp.sub(" ", txt).strip()
-            if i.get("estado") not in (None, "", "Admitida Cerrada", "Admitido Cerrado"):
+            if i.estado not in (None, "", "Admitida Cerrada", "Admitido Cerrado"):
                 txt = (txt + " ({})".format(i.estado)).strip()
             print(txt)
 
@@ -447,11 +461,11 @@ class Printer:
         for index, i in enumerate(Mapa().get_ofertas()):
             if index > 0:
                 print("")
-            print("===", i.tipo, "===")
+            print("===", i.txt, "===")
             print(i.url)
             print("")
-            for o in i.ofertas:
-                print("*", o.titulo)
+            for o in i.children:
+                print("*", o.txt)
 
     def cuadrante(self):
         cuadrante = Trama().get_cuadrante()

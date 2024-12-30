@@ -1,18 +1,63 @@
 import json
 import logging
+import pickle
+from dataclasses import asdict, is_dataclass
+from datetime import date, datetime
 from os import W_OK, access, makedirs
 from os.path import dirname, realpath
 from pathlib import Path
 from tempfile import gettempdir
-from munch import Munch
 from typing import Union
-import pdftotext
-import pickle
 
-import pandas as pd
+import pdftotext
 import yaml
 
+from . import tp as tp
+
 logger = logging.getLogger(__name__)
+
+
+class CustomEncoder(json.JSONEncoder):
+
+    def default(self, o):
+        new_obj = CustomEncoder.parse(o)
+        if new_obj is None:
+            return super().default(o)
+        return new_obj
+
+    @classmethod
+    def __has_func(cls, o, func):
+        return callable(getattr(o, func, None))
+
+    @classmethod
+    def parse(cls, o):
+        if cls.__has_func(o, "_to_json"):
+            return o._to_json()
+        if isinstance(o, (datetime, date)):
+            return o.__str__()
+        if isinstance(o, tuple) and hasattr(o, '_fields'):
+            return o._asdict()
+        if is_dataclass(o):
+            return asdict(o)
+
+    @classmethod
+    def prepare(cls, o):
+        new_obj = cls.parse(o)
+        if new_obj is not None:
+            o = new_obj
+        if isinstance(o, dict):
+            return {k: cls.prepare(v) for k, v in o.items()}
+        if isinstance(o, set):
+            try:
+                o = tuple(sorted(o))
+            except TypeError:
+                pass
+        if isinstance(o, (list, tuple)):
+            return list(map(cls.prepare, o))
+        return o
+
+    def encode(self, o):
+        return super().encode(CustomEncoder.prepare(o))
 
 
 class FileManager:
@@ -135,10 +180,10 @@ class FileManager:
         ext = ext.lstrip(".")
         ext = ext.lower()
         return {
-            "xlsx": "xls",
             "js": "json",
             "yml": "yaml",
-            "sql": "txt"
+            "sql": "txt",
+            "ics": "txt"
         }.get(ext, ext)
 
     def exist(self, file: Union[Path, str]):
@@ -190,11 +235,9 @@ class FileManager:
             return json.load(f, *args, **kwargs)
 
     def _dump_json(self, file: Path, obj, *args, indent=2, **kwargs):
+        obj = CustomEncoder.prepare(obj)
         with open(file, "w") as f:
-            json.dump(obj, f, *args, indent=indent, **kwargs)
-
-    def _load_csv(self, file: Path, *args, **kwargs):
-        return pd.read_csv(file, *args, **kwargs)
+            json.dump(obj, f, *args, indent=indent, cls=CustomEncoder, **kwargs)
 
     def _dump_csv(self, file: Path, obj, *args, **kwargs):
         obj.to_csv(file, *args, **kwargs)
@@ -205,9 +248,6 @@ class FileManager:
             if len(data) == 1:
                 data = data[0]
             return data
-
-    def _load_xls(self, file: Path, *args, **kwargs):
-        return pd.read_excel(file, *args, **kwargs)
 
     def _load_txt(self, file: Path, *args, **kwargs):
         with open(file, "r") as f:
@@ -238,7 +278,7 @@ class FileManager:
             pickle.dump(obj, f)
 
 
-CNF = Munch.fromDict(FileManager.get().load("config.yml"))
+CNF = tp.builder(tp.Config)(FileManager.get().load("config.yml"))
 
 # Mejoras dinámicas en la documentación
 FileManager.resolve_path.__doc__ = FileManager._resolve_path.__doc__
