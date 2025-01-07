@@ -1,4 +1,5 @@
 from typing import NamedTuple, Tuple, Union
+from datetime import date
 
 
 class UserPass(NamedTuple):
@@ -34,4 +35,5 @@ class Config(NamedTuple):
     informe_horas: str
     xmpp: Xmpp
     sede: str
+    festivos: Tuple[date] = tuple()
     tmp_nominas: Tuple[FakeNomina, ...] = tuple()

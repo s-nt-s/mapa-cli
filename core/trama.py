@@ -12,7 +12,7 @@ import bs4
 from . import ics, tp
 from .autdriver import AutDriver
 from .cache import Cache, TupleCache
-from .filemanager import FileManager
+from .filemanager import FileManager, CNF
 from .gesper import FCH_FIN as gesper_FCH_FIN
 from .gesper import Gesper
 from .util import get_months, get_text, get_times, tmap, ttext
@@ -27,6 +27,14 @@ logger = logging.getLogger(__name__)
 
 
 class Festivo(date):
+    @classmethod
+    def build(cls, d: Union[date, datetime, str, Tuple[int, int, int]]):
+        if isinstance(d, str):
+            d = tuple(map(int, re.match(r"^(\d+)-(\d+)-(\d+).*", d).groups()))
+        if isinstance(d, tuple):
+            return cls(d[0], d[1], d[2])
+        return cls(d.year, d.month, d.day)
+
     @property
     def nombre(self):
         wd = self.weekday()
@@ -593,7 +601,7 @@ class Trama:
         return r
 
     def get_festivos(self, max_iter=-1):
-        r: Set[Festivo] = set()
+        r: Set[Festivo] = set(map(Festivo.build, CNF.festivos))
         today=date.today()
         top = today.year + 2
         w: Web = self._get_cal_session()
