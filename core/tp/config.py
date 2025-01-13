@@ -28,12 +28,12 @@ class Config(NamedTuple):
     mapa: UserPass
     gesper: UserPass
     autentica: UserPass
-    proxy: str
     nominas: str
     expediente: str
     retribuciones: str
     informe_horas: str
     xmpp: Xmpp
     sede: str
+    proxy: str = None
     festivos: Tuple[date] = tuple()
     tmp_nominas: Tuple[FakeNomina, ...] = tuple()
