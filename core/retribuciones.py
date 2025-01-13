@@ -17,6 +17,7 @@ from .web import Web
 urllib3.disable_warnings()
 
 re_cellnb = re.compile(r'\s([\d\.,]+)\s')
+re_sp = re.compile(r"\s+")
 
 
 class RtCache(Cache):
@@ -54,6 +55,10 @@ def parseTb(table) -> Tuple[Tuple[Union[str, int, float], ...]]:
     return tuple(rows)
 
 
+class YearError(ValueError):
+    pass
+
+
 class Retribuciones:
 
     @cache
@@ -63,21 +68,23 @@ class Retribuciones:
         w.get(
             "https://www.sepg.pap.hacienda.gob.es/sitios/sepg/es-ES/CostesPersonal/EstadisticasInformes/Paginas/RetribucionesPersonalFuncionario.aspx")
         for a in w.soup.select("a[href]"):
-            txt = a.get_text().strip()
+            txt = re_sp.sub(" ", a.get_text()).strip()
             if txt.startswith("Retribuciones del personal funcionario") or txt.startswith("Retribuciones personal funcionario"):
-                yr = [int(i) for i in txt.split() if i.isdigit()]
+                yr = tuple(map(int, re.findall(r"\d+", txt)))
                 if yr and yr[0] > 2000:
                     url = a.attrs["href"]
                     yr = int(yr[0])
                     if yr not in retribucion:
                         retribucion[yr] = url
+        print(retribucion.keys())
         return retribucion
 
     def get(self):
         year = date.today().year
-        data = self._get(year)
-        if data:
-            return data
+        try:
+            return self._get(year)
+        except YearError:
+            pass
         rts = self.get_docs()
         if len(rts) == 0:
             return {}
@@ -87,7 +94,7 @@ class Retribuciones:
     def _get(self, year):
         rts = self.get_docs()
         if len(rts) == 0 or year not in rts:
-            return {}
+            raise YearError(f"No hay retribuciones para {year}")
         link = rts[year]
         absn = join(CNF.retribuciones, str(year) + ".pdf")
         if not isfile(absn):
