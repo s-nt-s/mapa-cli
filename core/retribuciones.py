@@ -76,7 +76,6 @@ class Retribuciones:
                     yr = int(yr[0])
                     if yr not in retribucion:
                         retribucion[yr] = url
-        print(retribucion.keys())
         return retribucion
 
     def get(self):
