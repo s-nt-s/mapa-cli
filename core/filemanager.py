@@ -279,6 +279,8 @@ class FileManager:
 
 
 CNF = tp.builder(tp.Config)(FileManager.get().load("config.yml"))
+if CNF.firefox:
+    CNF = CNF._replace(firefox=str(FileManager.get().resolve_path(CNF.firefox)))
 
 # Mejoras dinámicas en la documentación
 FileManager.resolve_path.__doc__ = FileManager._resolve_path.__doc__

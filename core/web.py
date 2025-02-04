@@ -17,6 +17,7 @@ from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.firefox.options import Options as FFoptions
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.remote.webdriver import WebDriver
 
 re_sp = re.compile(r"\s+")
 re_emb = re.compile(r"^image/[^;]+;base64,.*", re.IGNORECASE)
@@ -200,12 +201,13 @@ if is_s5h:
 
 
 class Driver:
-    def __init__(self, visible=None, wait=5, useragent=None, browser=None):
+    def __init__(self, visible=None, wait=5, useragent=None, firefox_profile=None, browser=None):
         self._driver = None
         self.visible = visible or (os.environ.get("DRIVER_VISIBLE") == "1")
         self._wait = wait
         self.useragent = useragent
         self.browser = browser
+        self.firefox_profile = firefox_profile
 
     def __enter__(self, *args, **kwargs):
         return self
@@ -216,7 +218,7 @@ class Driver:
     def _create_firefox(self):
         options = FFoptions()
         options.headless = not self.visible
-        profile = webdriver.FirefoxProfile()
+        profile = webdriver.FirefoxProfile(self.firefox_profile)
         if self.useragent:
             profile.set_preference("general.useragent.override", self.useragent)
         for k, v in FF_DEFAULT_PROFILE.items():
@@ -338,8 +340,7 @@ class Driver:
             seconds = self._wait
         if id.startswith("//"):
             my_by = By.XPATH
-        if id.startswith("."):
-            # id = id[1:]
+        if id[0] in ('.', '#'):
             my_by = By.CSS_SELECTOR
         wait = WebDriverWait(self._driver, seconds)
         if presence:
@@ -420,3 +421,23 @@ class Driver:
         w = Web()
         self.pass_cookies(w.s)
         return w
+
+    def execute_script(self, *args, **kwargs):
+        return self.driver.execute_script(*args, **kwargs)
+
+    def waitjs(self, js: str, val=True, seconds=None):
+        if seconds is None:
+            seconds = self._wait
+        js = js.strip()
+
+        if not js.startswith("return "):
+            js = 'return '+js
+
+        def do_js(w: WebDriver):
+            rt = w.execute_script(js)
+            if callable(val):
+                return val(rt)
+            return rt == val
+
+        wait = WebDriverWait(self._driver, seconds)
+        wait.until(do_js)

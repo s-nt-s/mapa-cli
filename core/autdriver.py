@@ -70,6 +70,7 @@ class AutDriver(Driver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._in_autentica = False
+        self.firefox_profile = CNF.firefox
 
     @property
     def in_autentica(self):
@@ -91,7 +92,8 @@ class AutDriver(Driver):
         time.sleep(2)
         self.__raise_if_find(AutenticaDown, lambda d: is_error_box(d, re_autentica_down))
         if self.get_soup().select_one("#username") is None:
-            self.click("//a")
+            self.execute_script('document.querySelector("#btnTypeAuthentication[value=\'lvlOne\'],#loginAutentica a")?.click()')
+            time.sleep(2)
         try:
             self.val("username", CNF.autentica.user, seconds=5)
             self.val("password", CNF.autentica.pssw, seconds=5)

@@ -35,5 +35,6 @@ class Config(NamedTuple):
     xmpp: Xmpp
     sede: str
     proxy: str = None
+    firefox: str = None
     festivos: Tuple[date] = tuple()
     tmp_nominas: Tuple[FakeNomina, ...] = tuple()
