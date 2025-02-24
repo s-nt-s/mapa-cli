@@ -78,6 +78,8 @@ class TupleCache(Cache):
 
     def read(self, file, *args, **kwargs):
         data = super().read(file, *args, **kwargs)
+        if data is None:
+            return None
         if isinstance(data, dict):
             return self.builder(data)
         return tuple((self.builder(d) for d in data))

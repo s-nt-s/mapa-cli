@@ -111,7 +111,7 @@ class Funciona:
             if not isfile(expanduser(nom.file)):
                 rq = w.s.get(nom.url)
                 if "text/html" in rq.headers["content-type"]:
-                    error = get_text(w.soup.select_one("div.box-bbr"))
+                    error = get_text(w.soup.select_one("div.box-bbr")) if w.soup else None
                     if error is None:
                         error = "No es un pdf"
                     return nom.merge(error=error)
