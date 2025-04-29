@@ -192,7 +192,7 @@ FF_DEFAULT_PROFILE = {
     "browser.tabs.drawInTitlebar": True,
     "browser.uidensity": 1,
     "dom.webdriver.enabled": False,
-    'network.proxy.type': 1,
+    #'network.proxy.type': 1,
 }
 if is_s5h:
     FF_DEFAULT_PROFILE['network.proxy.socks'] = proxy_ip

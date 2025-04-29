@@ -86,6 +86,13 @@ class AutDriver(Driver):
     def in_autentica(self, b: bool):
         self._in_autentica = b
 
+    def waitReady(self):
+        self.waitjs(" && ".join([
+            'window.document.readyState === "complete"',
+            'document.querySelector("img[src$=\'ajax-loader.gif\']") == null',
+            'document.querySelector("#username,#password,#submitAutentica,#grabar,#modal-btn-si,#btnTypeAuthentication,p") != null',
+        ]), seconds=30)
+
     def autentica_login(self):
         if self.in_autentica:
             return
@@ -93,7 +100,8 @@ class AutDriver(Driver):
         self.__raise_if_find(AutenticaDown, lambda d: is_error_box(d, re_autentica_down))
         if self.get_soup().select_one("#username") is None:
             self.execute_script('document.querySelector("#btnTypeAuthentication[value=\'lvlOne\'],#loginAutentica a")?.click()')
-            time.sleep(2)
+            time.sleep(5)
+        self.waitReady()
         try:
             self.val("username", CNF.autentica.user, seconds=5)
             self.val("password", CNF.autentica.pssw, seconds=5)
