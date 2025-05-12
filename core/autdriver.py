@@ -91,6 +91,7 @@ class AutDriver(Driver):
             'window.document.readyState === "complete"',
             'document.querySelector("img[src$=\'ajax-loader.gif\']") == null',
             'document.querySelector("#username,#password,#submitAutentica,#grabar,#modal-btn-si,#btnTypeAuthentication,p") != null',
+            '(()=>{const b=document.getElementById("btnTypeAuthentication"); if (b==null) return true; b.click(); return false;})()'
         ]), seconds=30)
 
     def autentica_login(self):
