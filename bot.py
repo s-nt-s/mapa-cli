@@ -36,6 +36,7 @@ class ConnectionLost(Exception):
 class BaseBot(slixmpp.ClientXMPP):
     def __init__(self):
         super().__init__(CNF.xmpp.user, CNF.xmpp.pssw)
+        self.use_ipv6 = False
 
     def run(self, loop=True):
         while True:
