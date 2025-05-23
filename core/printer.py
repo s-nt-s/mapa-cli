@@ -170,6 +170,45 @@ class Printer:
         print("Media: %s * %s = %s" % (total.div(len(dias)), len(dias), total))
         print("Desfase:", total-teorico)
 
+    def horas_year(self):
+        t = Trama()
+        hoy = date.today()
+        mes = date.today()
+        mes = mes.replace(day=1, month=1)
+        dias = [d for d in t.get_dias(mes, hoy) if d.total.minutos > 0]
+        if len(dias) == 0:
+            print("No hay marcajes")
+            return
+        total = HM(0)
+        teorico = HM(0)
+
+        width_month = 27
+        month_bak = None
+        for dia in dias:
+            month = MONTHNAME[dia.fecha.month -1]
+            if month != month_bak:
+                month_line = "= " + MONTHNAME[dia.fecha.month -1]+ " ="
+                while len(month_line)<width_month:
+                    month_line = f"={month_line}" + ("=" if (width_month-len(month_line))%2==0 else "")
+                print(month_line)
+            month_bak = month
+            fch = f"{parse_dia(dia.fecha)} {dia.fecha.day:2d}"
+            if len(dia.marcajes) == 0 and dia.obs:
+                line = f"{fch}: {dia.total} = {dia.obs}"
+            elif len(dia.marcajes) == 0:
+                line = f"{fch}: {dia.total} = __:__ - __:__"
+            else:
+                line = f"{fch}: {dia.total} = {dia.marcajes[0]} - {dia.marcajes[-1]}"
+            if len(dia.marcajes) > 3:
+                line += " (" + ", ".join(map(str, dia.marcajes[1:-1])) + ")"
+            if len(dia.marcajes) > 0 and dia.obs:
+                line += " (" + dia.obs + ")"
+            print(line)
+            total += dia.total
+            teorico += dia.teorico
+        print("")
+        print("Media: %s * %s = %s" % (total.div(len(dias)), len(dias), total))
+        print("Desfase:", total-teorico)
 
     def nominas(self, sueldo='neto'):
         f = Funciona()

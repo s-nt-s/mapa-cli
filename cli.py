@@ -20,6 +20,7 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument('--horas', action='store_true',
                    help="Muestra el control horario para la semana en curso")
 group.add_argument('--mes', action='store_true', help="Muestra el control horario para el mes en curso")
+group.add_argument('--año', action='store_true', help="Muestra el control horario para el año en curso", dest='year')
 group.add_argument('--vacaciones', action='store_true',
                    help="Muestra los días de vacaciones que te quedan")
 group.add_argument('--lapso', action='store_true',
@@ -48,7 +49,7 @@ group.add_argument('--cuadrante', action='store_true',
 group.add_argument('--contactos', action='store_true', help="Contactos de interés")
 group.add_argument('--busca', nargs="+", type=str, help="Busca en el directorio de personal")
 
-ARG_OPTIONS: Tuple[str] = tuple(re.findall(r"--([a-z]+)", parser.format_help()))
+ARG_OPTIONS: Tuple[str] = tuple(re.findall(r"--([a-zñ]+)", parser.format_help()))
 
 
 def myunidecode(s: str):
@@ -65,6 +66,8 @@ def main(arg, *args, **kwargs):
         prt.horas_semana(*args, **kwargs)
     if arg.mes:
         prt.horas_mes(*args, **kwargs)
+    if arg.year:
+        prt.horas_year(*args, **kwargs)
     if arg.nominas:
         prt.nominas(*args, sueldo='neto', **kwargs)
     if arg.bruto:
