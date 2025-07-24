@@ -148,36 +148,6 @@ class Printer:
             print(" 07:00 -", HM.build("07:00") + man)
             print("", outhm - man, "-", outhm)
 
-
-    def __horas_mes(self):
-        t = Trama()
-        hoy = date.today()
-        mes = date.today()
-        mes = mes.replace(day=1)
-        dias = [d for d in t.get_dias(mes, hoy) if d.total.minutos > 0]
-        if len(dias) == 0:
-            print("No hay marcajes")
-            return
-        total = HM(0)
-        teorico = HM(0)
-        for dia in dias:
-            if len(dia.marcajes) == 0 and dia.obs:
-                line = "%s %2d: %s = %s" % (parse_dia(dia.fecha), dia.fecha.day, dia.total, dia.obs)
-            elif len(dia.marcajes) == 0:
-                line = "%s %2d: %s = __:__ - __:__" % (parse_dia(dia.fecha), dia.total, dia.fecha.day)
-            else:
-                line = "%s %2d: %s = %s - %s" % (parse_dia(dia.fecha), dia.fecha.day, dia.total, dia.marcajes[0], dia.marcajes[-1])
-            if len(dia.marcajes) > 3:
-                line += " (" + ", ".join(map(str, dia.marcajes[1:-1])) + ")"
-            if len(dia.marcajes) > 0 and dia.obs:
-                line += " (" + dia.obs + ")"
-            print(line)
-            total += dia.total
-            teorico += dia.teorico
-        print("")
-        print("Media: %s * %s = %s" % (total.div(len(dias)), len(dias), total))
-        print("Desfase:", total-teorico)
-
     def horas_year(self):
         t = Trama()
         hoy = date.today()
