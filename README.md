@@ -20,30 +20,29 @@ $ sudo ln -s $(realpath cli.py) /usr/local/bin/mapa-cli
 ## Linea de comandos
 
 ```console
-$ mapa-cli
-usage: mapa-cli
-                [-h | -m | -v | -l | -f | --menu | -n | -b | -e | --puesto | --novedades | --ofertas | --servicios | --contactos | --busca BUSCA [BUSCA ...]]
+$ python3 cli.py --help
+usage: cli.py [-h]
+              [--horas | --mes | --año | --vacaciones | --lapso | --festivos | --menu | --nominas | --bruto | --irpf | --expediente | --puesto | --novedades | --ofertas | --cuadrante | --contactos | --busca BUSCA [BUSCA ...]]
 
 Comando para los servicios de intranet.mapa.es
 
 optional arguments:
-  -h, --horas           Muestra el control horario para la semana en curso
-  -m, --mes             Muestra el control horario para el mes en curso
-  -v, --vacaciones      Muestra los días de vacaciones que te quedan
-  -l, --lapso           Muestra permisos registrados en lapso
-  -f, --festivos        Muestra los festivos hasta enero del año que viene
+  -h, --help            show this help message and exit
+  --horas               Muestra el control horario para la semana en curso
+  --mes                 Muestra el control horario para el mes en curso
+  --año                 Muestra el control horario para el año en curso
+  --vacaciones          Muestra los días de vacaciones que te quedan
+  --lapso               Muestra permisos registrados en lapso
+  --festivos            Muestra los festivos hasta enero del año que viene
   --menu                Muestra el menú de la sede definida en config.yml
-  -n, --nominas         Descarga las nominas en el directorio definido en
-                        config.yml y muestra las cantidades netas
-  -b, --bruto           Lo mismo que --nominas pero mostrando las cantidades
-                        en bruto
-  -e, --expediente      Descarga el expediente personal en el directorio
-                        definido en config.yml
+  --nominas             Descarga las nóminas en el directorio definido en config.yml y muestra las cantidades netas
+  --bruto               Lo mismo que --nominas pero mostrando las cantidades en bruto
+  --irpf                Muestra la evolución del irpf
+  --expediente          Descarga el expediente personal en el directorio definido en config.yml
   --puesto              Muestra información sobre el puesto ocupado
-  --novedades           Muestra las novedades de intranet.mapa.es (con
-                        antigüedad máxima de 30 días)
+  --novedades           Muestra las novedades de intranet.mapa.es (con antigüedad máxima de 30 días)
   --ofertas             Muestra ofertas para los empleados de MAPA
-  --servicios           Servicios prestados
+  --cuadrante           Muestra el cuadrante de personal
   --contactos           Contactos de interés
   --busca BUSCA [BUSCA ...]
                         Busca en el directorio de personal
