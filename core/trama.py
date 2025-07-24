@@ -3,6 +3,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from functools import cached_property
 from os.path import isfile
 from typing import Dict, List, NamedTuple, Set, Tuple, Union
@@ -288,6 +289,12 @@ class Trama:
         if ini.weekday() > 0:
             ini = ini - timedelta(days=ini.weekday())
         fin = ini + timedelta(days=6)
+        return self.get_calendario(ini, fin)
+
+    def get_mes(self):
+        logger.debug("get_mes()")
+        ini = date.today().replace(day=1)
+        fin = ini + relativedelta(months=1) - timedelta(days=1)
         return self.get_calendario(ini, fin)
 
     @TupleCache(

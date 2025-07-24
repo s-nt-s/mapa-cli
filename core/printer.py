@@ -11,7 +11,7 @@ from .funciona import Funciona, Nomina
 from .gesper import Gesper
 from .mapa import Mapa
 from .tp.hm import HM
-from .trama import Trama
+from .trama import Trama, Calendario
 from .util import DAYNAME, MONTHNAME, notnull, parse_dia, tmap, to_strint
 
 re_rtrim = re.compile(r"^\s*\n")
@@ -58,23 +58,30 @@ class Printer:
     def horas_semana(self):
         t = Trama()
         cal = t.get_semana()
+        self.__print_cal(cal, label="Semana")
 
+    def horas_mes(self):
+        t = Trama()
+        cal = t.get_mes()
+        self.__print_cal(cal, label="Mes")
+
+    def __print_cal(self, cal: Calendario, label: str):
         quedan = cal.jornadas - cal.fichados
 
         if cal.jornadas > 0:
-            print("Semana:", cal.teorico.div(cal.jornadas), "*", cal.jornadas, "=", cal.teorico)
+            print(f"{label}:", cal.teorico.div(cal.jornadas), "*", cal.jornadas, "=", cal.teorico)
         else:
-            print("Semana:", cal.teorico)
+            print(f"{label}:", cal.teorico)
         print("")
         for dia in cal.dias:
             hms = list(dia.marcajes)
             if dia.permiso and len(hms) == 0 and dia.teorico.minutos > 0 and dia.teorico.minutos == dia.total.minutos:
-                print("%2d:" % dia.fecha.day, "___ PERMISO ___", dia.total)
+                print(parse_dia(dia.fecha), "%2d:" % dia.fecha.day, "___ PERMISO ___", dia.total)
                 quedan = quedan - 1
                 continue
             if not hms:
                 continue
-            print("%2d:" % dia.fecha.day, end=" ")
+            print(parse_dia(dia.fecha), "%2d:" % dia.fecha.day, end=" ")
             if dia == cal.jornada_en_curso:
                 hms.append("--_--")
             str_hms = ["{} - {}".format(hms[i], (hms + ["--_--"])[i + 1]) for i in range(0, len(hms), 2)]
@@ -141,7 +148,8 @@ class Printer:
             print(" 07:00 -", HM.build("07:00") + man)
             print("", outhm - man, "-", outhm)
 
-    def horas_mes(self):
+
+    def __horas_mes(self):
         t = Trama()
         hoy = date.today()
         mes = date.today()
