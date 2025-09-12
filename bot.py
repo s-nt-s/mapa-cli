@@ -36,12 +36,15 @@ logging.basicConfig(level=CNF.xmpp.LOG, format='%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 
 def full_ls():
-    files: list[str] = []
+    files: set[str] = set()
     for d in map(expanduser, (CNF.nominas, CNF.expediente, CNF.retribuciones, CNF.informe_horas)):
         for f in listdir(d):
             f = join(d, f)
             if isfile(f):
-                files.append(f)
+                files.add(f)
+    return tuple(sorted(files))
+
+def get_root_and_rel(files: tuple[str, ...]):
     root = commonpath(files)
     files = [relpath(f, root) for f in files]
     return root, tuple(files)
@@ -103,11 +106,15 @@ class ApiBot(BaseBot):
     def message(self, msg: Message):
         if msg['type'] in ('chat', 'normal') and msg['from'].bare == CNF.xmpp.me:
             text = msg['body'].strip().lower()
+            files = full_ls()
             rlp = self.command(msg, text)
             if rlp:
                 logger.debug(text)
                 msg.reply("```\n"+rlp+"\n```").send()
                 logger.debug(rlp)
+            new_files = set(full_ls()).difference(files)
+            if new_files:
+                create_task(self.send_file(msg, *sorted(new_files)))
 
     def command(self, msg: Message, text: str):
         if not text:
@@ -120,7 +127,7 @@ class ApiBot(BaseBot):
                 return reply
         except AutenticaException as e:
             return str(e)
-        root, files = full_ls()
+        root, files = get_root_and_rel(full_ls())
         if text == "ls":
             return "\n".join(files)
         ok_files = []
@@ -133,21 +140,21 @@ class ApiBot(BaseBot):
             create_task(self.send_file(msg, join(root, ok_files[0])))
             return
         return "\n".join(ok_files)
-        #for d in (CNF.nominas, CNF.expediente, CNF.retribuciones, CNF.informe_horas):
 
-    async def send_file(self, msg: Message, file: str):
-        content_type, _ = guess_type(file)
-        if content_type is None:
-            content_type = 'application/octet-stream'  # fallback genérico
+    async def send_file(self, msg: Message, *files: str):
         plg: XEP_0363 = self['xep_0363']
-        url = await plg.upload_file(
-            filename=file,
-            content_type=content_type
-        )
-        reply = msg.reply(url)
-        reply['oob']['url'] = url
-        reply['oob']['desc'] = basename(file)
-        reply.send()
+        for file in files:
+            content_type, _ = guess_type(file)
+            if content_type is None:
+                content_type = 'application/octet-stream'
+            url = await plg.upload_file(
+                filename=file,
+                content_type=content_type
+            )
+            reply = msg.reply(url)
+            reply['oob']['url'] = url
+            reply['oob']['desc'] = basename(file)
+            reply.send()
     
 
 class SendBot(BaseBot):
