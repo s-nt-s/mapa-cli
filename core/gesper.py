@@ -110,8 +110,8 @@ def parse_festivo(nombre: str):
 
 class Gesper(Web):
 
-    def __init__(self, *args, **kargv):
-        super().__init__(*args, **kargv)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         for url in ("https://intranet.mapa.es/", "https://intranet.mapa.es/app/gesper/",
                     "https://intranet.mapa.es/app/gesper/Default.aspx"):
             self.get(url)

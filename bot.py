@@ -9,11 +9,18 @@ from datetime import date, timedelta
 from textwrap import dedent
 
 import slixmpp
+from slixmpp.stanza import Message
+from slixmpp.plugins.xep_0363 import XEP_0363
 
 from cli import str_main
 from core.autdriver import AutenticaException
 from core.filemanager import CNF, FileManager
 from core.timeout import timeout
+from os import listdir
+from os.path import isfile, join, expanduser, commonpath, relpath, basename
+from core.tunnel import SSHTunnel, HostPort
+from asyncio import create_task
+from mimetypes import guess_type
 
 parser = argparse.ArgumentParser(
     description='Arranca un bot xmpp para interactuar con mapa-cli')
@@ -28,6 +35,17 @@ parser.add_argument(
 logging.basicConfig(level=CNF.xmpp.LOG, format='%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 
+def full_ls():
+    files: list[str] = []
+    for d in map(expanduser, (CNF.nominas, CNF.expediente, CNF.retribuciones, CNF.informe_horas)):
+        for f in listdir(d):
+            f = join(d, f)
+            if isfile(f):
+                files.append(f)
+    root = commonpath(files)
+    files = [relpath(f, root) for f in files]
+    return root, tuple(files)
+
 
 class ConnectionLost(Exception):
     pass
@@ -38,22 +56,25 @@ class BaseBot(slixmpp.ClientXMPP):
         super().__init__(CNF.xmpp.user, CNF.xmpp.pssw)
         self.use_ipv6 = False
 
-    def run(self, loop=True):
+    def __run(self, loop: bool, host: str, port: int):
         while True:
-            if CNF.xmpp.address:
-                logger.info("Connecting %s to %s:%s", CNF.xmpp.user, *CNF.xmpp.address)
-                self.connect(address=CNF.xmpp.address)
+            if host and port:
+                logger.info(f"Connecting {CNF.xmpp.user} via {host}:{port}")
+                self.connect(address=(host, port))
             else:
-                logger.info("Connecting %s", CNF.xmpp.user)
+                logger.info(f"Connecting {CNF.xmpp.user}")
                 self.connect()
             logger.info("Bot started.")
             self.process()
             if not loop:
                 return
             time.sleep(5)
+   
+    def run(self, loop=True):
+        self.__run(loop, None, None)
 
-    def connection_lost(self, *args, **kargv):
-        super().connection_lost(*args, **kargv)
+    def connection_lost(self, *args, **kwargs):
+        super().connection_lost(*args, **kwargs)
         self.disconnect()
 
 
@@ -66,6 +87,9 @@ class ApiBot(BaseBot):
         self.register_plugin('xep_0004') # Data Forms
         self.register_plugin('xep_0060') # PubSub
         self.register_plugin('xep_0199') # XMPP Ping
+        self.register_plugin('xep_0363') # HTTP File Upload
+        self.register_plugin('xep_0066') # Out of Band Data (OOB)
+
         self.add_event_handler("session_start", self.start)
         self.add_event_handler("message", self.message)
         if amistoso:
@@ -76,28 +100,58 @@ class ApiBot(BaseBot):
         self.send_presence()
         self.get_roster()
 
-    def message(self, msg):
+    def message(self, msg: Message):
         if msg['type'] in ('chat', 'normal') and msg['from'].bare == CNF.xmpp.me:
             text = msg['body'].strip().lower()
-            rlp = self.command(text)
+            rlp = self.command(msg, text)
             if rlp:
                 logger.debug(text)
                 msg.reply("```\n"+rlp+"\n```").send()
                 logger.debug(rlp)
 
-    def command(self, text):
+    def command(self, msg: Message, text: str):
         if not text:
             return None
         if text == "ping":
             return "pong"
         try:
-            return str_main(*text.split())
+            reply = str_main(*text.split())
+            if isinstance(reply, str) and reply:
+                return reply
         except AutenticaException as e:
             return str(e)
+        root, files = full_ls()
+        if text == "ls":
+            return "\n".join(files)
+        ok_files = []
+        for f in files:
+            if text in f:
+                ok_files.append(f)
+        if len(ok_files) == 0:
+            return
+        if len(ok_files)==1:
+            create_task(self.send_file(msg, join(root, ok_files[0])))
+            return
+        return "\n".join(ok_files)
+        #for d in (CNF.nominas, CNF.expediente, CNF.retribuciones, CNF.informe_horas):
 
+    async def send_file(self, msg: Message, file: str):
+        content_type, _ = guess_type(file)
+        if content_type is None:
+            content_type = 'application/octet-stream'  # fallback genérico
+        plg: XEP_0363 = self['xep_0363']
+        url = await plg.upload_file(
+            filename=file,
+            content_type=content_type
+        )
+        reply = msg.reply(url)
+        reply['oob']['url'] = url
+        reply['oob']['desc'] = basename(file)
+        reply.send()
+    
 
 class SendBot(BaseBot):
-    def __init__(self, msg, *args, **karg):
+    def __init__(self, msg, *args, **kwargs):
         super().__init__()
         self.msg = msg
         self.add_event_handler("session_start", self.start)

@@ -8,6 +8,7 @@ from os.path import dirname, realpath
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Union
+from core.tunnel import SSHTunnel
 
 import pdftotext
 import yaml
@@ -281,6 +282,12 @@ class FileManager:
 CNF = tp.builder(tp.Config)(FileManager.get().load("config.yml"))
 if CNF.firefox:
     CNF = CNF._replace(firefox=str(FileManager.get().resolve_path(CNF.firefox)))
+if CNF.tunnel and CNF.tunnel.remote:
+    SSHTunnel.init(
+        *CNF.tunnel.remote,
+        ssh_alias=CNF.tunnel.ssh_alias,
+        ssh_config=CNF.tunnel.ssh_config
+    )
 
 # Mejoras dinámicas en la documentación
 FileManager.resolve_path.__doc__ = FileManager._resolve_path.__doc__

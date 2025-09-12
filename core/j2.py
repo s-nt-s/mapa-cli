@@ -100,13 +100,13 @@ class Jnj2():
             fh.write(bytes(html, 'UTF-8'))
         return html
 
-    def create_script(self, destino: str, indent=2, replace=False, **kargv):
+    def create_script(self, destino: str, indent=2, replace=False, **kwargs):
         destino = self.destino + destino
         if not replace and os.path.isfile(destino):
             return
         separators = (',', ':') if indent is None else None
         with open(destino, "w") as f:
-            for i, (k, v) in enumerate(kargv.items()):
+            for i, (k, v) in enumerate(kwargs.items()):
                 if i > 0:
                     f.write(";\n")
                 f.write("var "+k+" = ")
