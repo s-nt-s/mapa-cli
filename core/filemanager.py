@@ -286,7 +286,8 @@ if CNF.tunnel and CNF.tunnel.remote:
     SSHTunnel.init(
         *CNF.tunnel.remote,
         ssh_alias=CNF.tunnel.ssh_alias,
-        ssh_config=CNF.tunnel.ssh_config
+        ssh_config=CNF.tunnel.ssh_config,
+        ssh_private_key_password=CNF.tunnel.ssh_private_key_password
     )
 
 # Mejoras dinámicas en la documentación
