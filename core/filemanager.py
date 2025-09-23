@@ -181,7 +181,7 @@ class FileManager:
         ext = ext.lstrip(".")
         ext = ext.lower()
         return {
-            "js": "json",
+            "js": "txt",
             "yml": "yaml",
             "sql": "txt",
             "ics": "txt"

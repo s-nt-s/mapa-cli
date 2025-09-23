@@ -23,6 +23,8 @@ re_sp = re.compile(r"\s+")
 JS_DIAS = "data/trama/cal/{:%Y-%m-%d}.json"
 RT_URL = "https://trama.administracionelectronica.gob.es/portal/"
 FCH_INI = date(2022, 5, 29)
+ICS_FESTIVOS = "data/festivos.ics"
+ICS_CUADRANTE = "data/cuadrante.ics"
 
 logger = logging.getLogger(__name__)
 
@@ -605,6 +607,19 @@ class Trama:
                     cuadrante[name].append(cur.replace(day=int(day)))
 
         r = {k: tuple(v) for k, v in cuadrante.items() if v}
+        events: List[ics.IcsEvent] = []
+        for k, vs in r.items():
+            for f in vs:
+                events.append(ics.IcsEvent(
+                    uid=f"cuadrante_{k}_{f}",
+                    dtstamp=f,
+                    dtstart=f,
+                    dtend=f,
+                    categories="Cuadrante",
+                    summary=k,
+                    description=None
+                ))
+        ics.IcsEvent.dump(ICS_CUADRANTE, *events)
         return r
 
     def get_festivos(self, max_iter=-1):
@@ -640,7 +655,7 @@ class Trama:
             b = w.soup.select_one("#avanzaAnyo")
             data[b.attrs["name"]] = b.attrs['value']
             w.get(action, **data)
-        fest = tuple(sorted([f for f in r if f>=today and f.year<top]))
+        fest = tuple(sorted(r))
         events: List[ics.IcsEvent] = []
         for f in fest:
             events.append(ics.IcsEvent(
@@ -652,7 +667,8 @@ class Trama:
                 summary=f.nombre,
                 description=None
             ))
-        ics.IcsEvent.dump("data/festivos.ics", *events)
+        ics.IcsEvent.dump(ICS_FESTIVOS, *events)
+        fest = tuple(sorted([f for f in fest if f>=today and f.year<top]))
         return fest
 
 if __name__ == "__main__":

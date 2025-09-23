@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from bs4 import Tag
 from selenium.common.exceptions import TimeoutException
 
-from .filemanager import CNF
+from .filemanager import CNF, FileManager
 from .web import Driver
 
 NEED_AUTENTICA = (
@@ -87,12 +87,7 @@ class AutDriver(Driver):
         self._in_autentica = b
 
     def waitReady(self):
-        self.waitjs(" && ".join([
-            'window.document.readyState === "complete"',
-            'document.querySelector("img[src$=\'ajax-loader.gif\']") == null',
-            'document.querySelector("#username,#password,#submitAutentica,#grabar,#modal-btn-si,#btnTypeAuthentication,p") != null',
-            '(()=>{const b=document.getElementById("btnTypeAuthentication"); if (b==null) return true; b.click(); return false;})()'
-        ]), seconds=30)
+        self.waitjs(FileManager.get().load("js/autentica_ready.js"), seconds=30)
 
     def autentica_login(self):
         if self.in_autentica:
@@ -100,7 +95,7 @@ class AutDriver(Driver):
         time.sleep(2)
         self.__raise_if_find(AutenticaDown, lambda d: is_error_box(d, re_autentica_down))
         if self.get_soup().select_one("#username") is None:
-            self.execute_script('document.querySelector("#btnTypeAuthentication[value=\'lvlOne\'],#loginAutentica a")?.click()')
+            self.execute_script(FileManager.get().load("js/autentica.js"))
             time.sleep(5)
         self.waitReady()
         try:

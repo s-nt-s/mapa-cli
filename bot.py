@@ -18,9 +18,10 @@ from core.filemanager import CNF, FileManager
 from core.timeout import timeout
 from os import listdir
 from os.path import isfile, join, expanduser, commonpath, relpath, basename
-from core.tunnel import SSHTunnel, HostPort
 from asyncio import create_task
 from mimetypes import guess_type
+from core.trama import ICS_FESTIVOS, ICS_CUADRANTE
+from pathlib import Path
 
 parser = argparse.ArgumentParser(
     description='Arranca un bot xmpp para interactuar con mapa-cli')
@@ -115,6 +116,10 @@ class ApiBot(BaseBot):
             new_files = set(full_ls()).difference(files)
             if new_files:
                 create_task(self.send_file(msg, *sorted(new_files)))
+            elif text == "festivos":
+                create_task(self.send_file(msg, FileManager.get().resolve_path(ICS_FESTIVOS)))
+            elif text == "cuadrante":
+                create_task(self.send_file(msg, FileManager.get().resolve_path(ICS_CUADRANTE)))
 
     def command(self, msg: Message, text: str):
         if not text:
@@ -144,6 +149,10 @@ class ApiBot(BaseBot):
     async def send_file(self, msg: Message, *files: str):
         plg: XEP_0363 = self['xep_0363']
         for file in files:
+            if isinstance(file, Path):
+                file = str(file)
+            if not isfile(file):
+                continue
             content_type, _ = guess_type(file)
             if content_type is None:
                 content_type = 'application/octet-stream'
