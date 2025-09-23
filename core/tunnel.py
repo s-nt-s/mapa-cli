@@ -8,13 +8,15 @@ import logging
 
 logger = logging.getLogger()
 
-LOCAL_HOST='127.0.0.1'
+LOCAL_HOST = '127.0.0.1'
 
 
 def get_ips(host: str):
-    infos = _original_getaddrinfo(host, None)
+    try:
+        infos = _original_getaddrinfo(host, None)
+    except socket.gaierror:
+        return tuple()
     return tuple(sorted({info[4][0] for info in infos}))
-        
 
 
 class SSHTunnel():
@@ -29,14 +31,20 @@ class SSHTunnel():
 
     @classmethod
     def init(
-            cls,
-            *remotes: HostPort,
-            ssh_alias: str,
-            ssh_config: str = "~/.ssh/config"
-        ):
+        cls,
+        *remotes: HostPort,
+        ssh_alias: str,
+        ssh_config: str = "~/.ssh/config",
+        ssh_private_key_password: str = None
+    ):
         for remote in remotes:
             if remote not in cls.INSTANCES:
-                obj = cls(ssh_alias=ssh_alias, remote=remote, ssh_config=ssh_config)
+                obj = cls(
+                    ssh_alias=ssh_alias,
+                    remote=remote,
+                    ssh_config=ssh_config,
+                    ssh_private_key_password=ssh_private_key_password
+                )
                 cls.INSTANCES[remote] = obj
                 for ip in get_ips(remote.host):
                     cls.INSTANCES[HostPort(
@@ -48,7 +56,8 @@ class SSHTunnel():
         self,
         ssh_alias: str,
         remote: HostPort,
-        ssh_config: str = "~/.ssh/config"
+        ssh_config: str = "~/.ssh/config",
+        ssh_private_key_password: str = None
     ):
         if remote in self.__class__.INSTANCES:
             raise ValueError(f"Ya hay un tunnel para {remote}")
@@ -65,6 +74,7 @@ class SSHTunnel():
             self.__jump_by.port,
             ssh_username=conf['user'],
             ssh_pkey=conf['identityfile'][0],
+            ssh_private_key_password=ssh_private_key_password,
             allow_agent=True,
             remote_bind_address=(self.__remote.host, self.__remote.port),
             local_bind_address=(LOCAL_HOST, 0)
@@ -80,11 +90,11 @@ class SSHTunnel():
             self.__tunnel.start()
             return True
         return False
-            
+
     def start(self):
         if self.__start():
             logger.info(f"{self.__remote} = {self.local}")
-        
+
     @property
     def local(self):
         if not self.__tunnel.is_active:
@@ -112,6 +122,7 @@ class SSHTunnel():
 
 _original_connect = socket.socket.connect
 _original_getaddrinfo = socket.getaddrinfo
+
 
 def _patched_connect(self, address):
     remote = HostPort(

@@ -27,6 +27,7 @@ class Tunnel(NamedTuple):
     ssh_alias: str
     remote: Tuple[HostPort, ...]
     ssh_config: str = "~/.ssh/config"
+    ssh_private_key_password: str = None
 
 
 class FakeNomina(NamedTuple):
