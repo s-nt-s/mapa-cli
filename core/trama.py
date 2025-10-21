@@ -103,7 +103,7 @@ class Calendario:
             object.__setattr__(self, k, sumHM((getattr(d, k) for d in self.dias)))
         today = date.today()
         object.__setattr__(self, "futuro", sumHM(d.saldo for d in self.dias if d.fecha > today))
-        object.__setattr__(self, "fichados", sum(int(len(d.marcajes) > 0) for d in self.dias))
+        object.__setattr__(self, "fichados", sum(int(len(d.marcajes) > 0 or (d.teorico.minutos > 0 and d.permiso)) for d in self.dias))
         object.__setattr__(self, "jornadas", sum(int(d.teorico.minutos > 0) for d in self.dias))
         if self.jornada_en_curso is not None:
             # Hasta que salgamos no deberíamos contar este día

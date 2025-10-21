@@ -77,7 +77,6 @@ class Printer:
             hms = list(dia.marcajes)
             if dia.permiso and len(hms) == 0 and dia.teorico.minutos > 0 and dia.teorico.minutos == dia.total.minutos:
                 print(parse_dia(dia.fecha), "%2d:" % dia.fecha.day, "___ PERMISO ___", dia.total)
-                quedan = quedan - 1
                 continue
             if not hms:
                 continue
