@@ -271,10 +271,12 @@ class Printer:
             per_hour = ""
             if show_he:
                 inf = Trama().get_informe(lst_dt - relativedelta(months=c), lst_dt)
-                per_hour = cant / ((inf.teorico - inf.vacaciones).minutos / 60)
-                if c == 12 and sueldo == 'bruto':
-                    sldhr = dict(sueldo=cant, hora=per_hour)
-                per_hour = "({}€/h)".format(to_strint(per_hour))
+                hours = ((inf.teorico - inf.vacaciones).minutos / 60)
+                if hours:
+                    per_hour = cant / hours
+                    if c == 12 and sueldo == 'bruto':
+                        sldhr = dict(sueldo=cant, hora=per_hour)
+                    per_hour = "({}€/h)".format(to_strint(per_hour))
             cant = to_strint(cant / c)
             print("{}: {:>5}€".format(ln, cant), per_hour)
         if sldhr and sueldo == 'bruto':
