@@ -47,9 +47,9 @@ class Festivo(date):
         if dm == (1, 6):
             return "Epifanía"
         if self.month == 4:
-            if wd == 3 and self.day == 17:
+            if wd == 3:
                 return "Jueves santo"
-            if wd == 4 and self.day == 18:
+            if wd == 4:
                 return "Viernes santo"
         if dm == (5, 1):
             return "Día del trabajo"
@@ -61,10 +61,14 @@ class Festivo(date):
             return "Santiago Apóstol"
         if dm == (8, 15):
             return "Asunción de la virgen"
+        if dm == (10, 12):
+            return "Fiesta Nacional"
+        if dm == (11, 2):
+            return "Todos los santos"
         if dm in ((11, 9), (11, 10)):
             return "Almudena"
         if self.month == 12:
-            if self.day == 6:
+            if self.day in (6, 7):
                 return "Constitución española"
             if self.day == 8:
                 return "Inmaculada concepción"
