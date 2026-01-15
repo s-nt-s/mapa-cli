@@ -75,7 +75,11 @@ class IcsEvent:
         lines = ["BEGIN:VEVENT", "STATUS:CONFIRMED"]
         for k, v in asdict(self).items():
             if v is not None:
-                lines.append(f"{k.upper()}:{v}")
+                k = k.upper()
+                if k in ('DTSTART', 'DTEND') and len(v) == 8:
+                    lines.append(f"{k};VALUE=DATE:{v}")
+                    continue
+                lines.append(f"{k}:{v}")
         lines.append("END:VEVENT")
         return "\n".join(lines)
 

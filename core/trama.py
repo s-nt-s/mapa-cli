@@ -659,14 +659,19 @@ class Trama:
             b = w.soup.select_one("#avanzaAnyo")
             data[b.attrs["name"]] = b.attrs['value']
             w.get(action, **data)
-        fest = tuple(sorted(r))
+        fest = sorted(r)
+        if len(fest) == 0:
+            return tuple()
+        mx = max(fest)
+        if (mx.month, mx.day) == (12, 31) and mx.weekday() < 4:
+            fest.append(mx + timedelta(days=1)) 
         events: List[ics.IcsEvent] = []
         for f in fest:
             events.append(ics.IcsEvent(
                 uid="festivo_"+str(f),
                 dtstamp=f,
                 dtstart=f,
-                dtend=f,
+                dtend=f + timedelta(days=1),
                 categories="Festivo",
                 summary=f.nombre,
                 description=None
