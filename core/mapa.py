@@ -262,7 +262,12 @@ class Mapa(Web):
         links: Set[Tuple[str, str]] = set()
         self.get("https://intranet.mapa.es/empleado-publico/ofertas-comerciales-para-los-empleados")
         for a in self.soup.select("div.content div.box-cafe a[href]"):
-            links.add((get_text(a), a.attrs["href"]))
+            url = a.attrs["href"]
+            if url in (
+                "https://intranet.mapa.es/empleado-publico/ofertas-comerciales-para-los-empleados/Premios-excelencia",
+            ):
+                continue
+            links.add((get_text(a), url))
         r: List[tp.TreeUrl] = []
         for tipo, url in sorted(links):
             url = url.replace(":443/", "/")
