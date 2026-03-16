@@ -1,0 +1,120 @@
+{
+  "year": 2026,
+  "fuente": "https://www.sepg.pap.hacienda.gob.es/sitios/sepg/es-ES/CostesPersonal/EstadisticasInformes/Documents/A%c3%91O%202026/Retribuciones%20del%20personal%20funcionario%202026.%20Real%20Decreto-ley%2014%202025%2c%20de%202%20de%20diciembre..pdf",
+  "A1": {
+    "base": {
+      "sueldo": 16646.88,
+      "trienio": 640.68
+    },
+    "junio": {
+      "sueldo": 856.05,
+      "trienio": 32.96
+    },
+    "diciembre": {
+      "sueldo": 856.05,
+      "trienio": 32.96
+    }
+  },
+  "A2": {
+    "base": {
+      "sueldo": 14394.24,
+      "trienio": 522.48
+    },
+    "junio": {
+      "sueldo": 874.83,
+      "trienio": 31.74
+    },
+    "diciembre": {
+      "sueldo": 874.83,
+      "trienio": 31.74
+    }
+  },
+  "B": {
+    "base": {
+      "sueldo": 12582.6,
+      "trienio": 458.4
+    },
+    "junio": {
+      "sueldo": 906.26,
+      "trienio": 33.03
+    },
+    "diciembre": {
+      "sueldo": 906.26,
+      "trienio": 33.03
+    }
+  },
+  "C1": {
+    "base": {
+      "sueldo": 10807.56,
+      "trienio": 395.52
+    },
+    "junio": {
+      "sueldo": 778.42,
+      "trienio": 28.45
+    },
+    "diciembre": {
+      "sueldo": 778.42,
+      "trienio": 28.45
+    }
+  },
+  "C2": {
+    "base": {
+      "sueldo": 8994.96,
+      "trienio": 269.28
+    },
+    "junio": {
+      "sueldo": 742.75,
+      "trienio": 22.2
+    },
+    "diciembre": {
+      "sueldo": 742.75,
+      "trienio": 22.2
+    }
+  },
+  "E": {
+    "base": {
+      "sueldo": 8232.84,
+      "trienio": 202.8
+    },
+    "junio": {
+      "sueldo": 686.07,
+      "trienio": 16.9
+    },
+    "diciembre": {
+      "sueldo": 686.07,
+      "trienio": 16.9
+    }
+  },
+  "niveles": {
+    "30": 16964.78,
+    "29": 15216.46,
+    "28": 14577.08,
+    "27": 13936.58,
+    "26": 12227.32,
+    "25": 10848.04,
+    "24": 10207.96,
+    "23": 9568.72,
+    "22": 8928.22,
+    "21": 8289.54,
+    "20": 7700.14,
+    "19": 7307.16,
+    "18": 6914.04,
+    "17": 6520.5,
+    "16": 6128.22,
+    "15": 5734.26,
+    "14": 5341.98,
+    "13": 4948.16,
+    "12": 4554.9,
+    "11": 4161.36,
+    "10": 3768.8,
+    "9": 3572.38,
+    "8": 3375.26,
+    "7": 3178.98,
+    "6": 2982.28,
+    "5": 2785.58,
+    "4": 2490.88,
+    "3": 2196.74,
+    "2": 1901.76,
+    "1": 1607.34
+  }
+}
