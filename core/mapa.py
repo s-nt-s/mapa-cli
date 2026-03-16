@@ -261,15 +261,15 @@ class Mapa(Web):
     def get_ofertas(self):
         links: Set[Tuple[str, str]] = set()
         self.get("https://intranet.mapa.es/empleado-publico/ofertas-comerciales-para-los-empleados")
-        for a in self.soup.select("ul.fotos-polaroid a[href]"):
-            links.add((a.attrs["title"].strip(), a.attrs["href"]))
+        for a in self.soup.select("div.content div.box-cafe a[href]"):
+            links.add((get_text(a), a.attrs["href"]))
         r: List[tp.TreeUrl] = []
         for tipo, url in sorted(links):
             url = url.replace(":443/", "/")
             self.get(url)
             children: List[tp.TreeUrl] = []
-            for o in self.soup.select("div.oferta-detalle"):
-                tt = get_text(o.select_one("h3"))
+            for o in self.soup.select("div.box-ocio"):
+                tt = get_text(o.select_one("div.title-ocio"))
                 if tt.upper() == tt:
                     tt = tt.capitalize()
                 if "." in tt and len(tt.split()) == 1:
