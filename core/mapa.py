@@ -9,7 +9,7 @@ from . import tp
 from .filemanager import CNF
 from .user import User
 from .util import (get_text, html_to_md, json_serial, mk_re, nextone, strptime,
-                   ttext)
+                   ttext, parse_mes)
 from .web import Web
 
 re_sp = re.compile(r"\s+")
@@ -123,6 +123,8 @@ class Mapa(Web):
 
     def get_novedades(self):
         def get_url_and_html(url:str, node: bs4.Tag) -> str:
+            if node is None:
+                return url, None
             flag = False
             for n in node.select("span.novedad-lista-documentos"):
                 flag = True
@@ -179,12 +181,19 @@ class Mapa(Web):
             return url, str(node)
 
         items: List[tp.Novedad] = []
-        self.get("https://intranet.mapa.es/comunicaciones-internas/novedades/default.aspx")
-        for li in self.soup.select("ul.listado-novedades li"):
-            tt = li.find("h3")
-            dt = get_text(li.select_one("span.novedad-fecha"))
-            dt = datetime.strptime(dt, "%d/%m/%Y %H:%M:%S")
-            titu = tt.get_text().strip()
+        self.get("https://intranet.mapa.es/comunicaciones-internas/novedades")
+        for li in self.soup.select("div.content div.content-box"):
+            tt = li.select_one("div.title-new a")
+            dt = get_text(li.select_one("div.date"))
+            m = re.match(r"^(\d+) de (\S+) (\d+)\D+(\d+):(\d+).*$", dt)
+            dt = datetime(
+                int(m.group(3)),
+                parse_mes(m.group(2)),
+                int(m.group(1)),
+                int(m.group(4)),
+                int(m.group(5)),
+            )
+            titu = get_text(tt)
             titu = re.sub(r"\s*[\–\-]\s*", " - ", titu)
             titu = re.sub(r"^(MAPA - MITERD|MITERD - MAPA)", "MAPA-MITERD", titu)
             titu = re.sub(r"^(MAPA - MITECO|MITECO - MAPA)", "MAPA-MITECO", titu)
@@ -195,17 +204,17 @@ class Mapa(Web):
                 titu = cod[1]
             if titu == titu.upper():
                 titu = titu.capitalize()
-            url = tt.find("a").attrs["href"]
+            url = tt.attrs["href"]
 
             self.get(url)
-            node = self.soup.select_one("div.novedad-descripcion")
+            node = self.soup.select_one("div.description-new")
             url, html = get_url_and_html(url, node)
 
             item = tp.Novedad(
                 fecha=dt,
                 titulo=clean_text(titu),
                 url=url,
-                descripcion=get_text(li.select_one("div.novedad-descripcion")),
+                descripcion=get_text(node),
                 tipo="N",
                 html=html
             )
@@ -214,7 +223,7 @@ class Mapa(Web):
                     r"\s*(Más información|Ver declaración)\s*\.?$", "", item.descripcion))
             items.append(item)
 
-        self.get("https://intranet.mapa.es/comunicaciones-internas/tablon-de-anuncios/default.aspx")
+        self.get("https://intranet.mapa.es/comunicaciones-internas/tablon-de-anuncios")
         for li in self.soup.select("li.anuncio"):
             dt = li.select_one("span.fechacontenido")
             dt.extract()
