@@ -2,7 +2,6 @@ from smtplib import SMTP
 from email.message import EmailMessage
 from os.path import basename
 from core.filemanager import CNF
-from core.tunnel import SSHTunnel, HostPort
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from os.path import expanduser, isdir, realpath
