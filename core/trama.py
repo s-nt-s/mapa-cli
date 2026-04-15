@@ -241,6 +241,10 @@ class Trama:
                 if isinstance(prs, str):
                     obs = ((obs or "") + " "+prs).strip()
 
+                if tto == "07:30:00" and fec >= date(2026, 4, 16):
+                    # https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-8287
+                    tto = "07:00:00"
+
                 i = tp.Fichaje(
                     fecha=fec,
                     marcajes=mar,
