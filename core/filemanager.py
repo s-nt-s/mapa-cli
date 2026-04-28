@@ -201,6 +201,8 @@ class FileManager:
         Para que haya soporte para esa extension ha de existir una funcion load_extension
         """
         file = self.resolve_path(file)
+        if not file.is_file():
+            return None
 
         ext = self.normalize_ext(file.suffix)
 

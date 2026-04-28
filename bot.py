@@ -59,28 +59,30 @@ class BaseBot(slixmpp.ClientXMPP):
     def __init__(self):
         super().__init__(CNF.xmpp.user, CNF.xmpp.pssw)
         self.use_ipv6 = False
+        self.auto_reconnect = True
+        self.reconnect_max_delay = 300
+        self.reconnect_delay = 5
 
-    def __run(self, loop: bool, host: str, port: int):
-        while True:
-            if host and port:
-                logger.info(f"Connecting {CNF.xmpp.user} via {host}:{port}")
-                self.connect(address=(host, port))
-            else:
-                logger.info(f"Connecting {CNF.xmpp.user}")
-                self.connect()
-            logger.info("Bot started.")
-            self.process()
-            if not loop:
-                return
-            time.sleep(5)
-   
-    def run(self, loop=True):
-        self.__run(loop, None, None)
-
-    def connection_lost(self, *args, **kwargs):
-        super().connection_lost(*args, **kwargs)
-        self.disconnect()
-
+    def __run(self, forever: bool):
+        try:
+            self.connect()
+            self.process(forever=forever)
+        except KeyboardInterrupt:
+            self.disconnect()
+            
+    def run(self, seconds: int):
+        if not isinstance(seconds, int) or seconds <= 0:
+            self.__run(forever=True)
+            return True
+        with timeout(seconds=10):
+            try:
+                self.__run(forever=False)
+                return True
+            except TimeoutError:
+                pass
+        return False
+        
+        
 
 class ApiBot(BaseBot):
 
@@ -180,13 +182,6 @@ class SendBot(BaseBot):
                           mtype='chat')
         self.disconnect()
 
-    def run(self):
-        with timeout(seconds=10):
-            try:
-                super().run(loop=False)
-            except TimeoutError:
-                pass
-
 
 if __name__ == '__main__':
     arg = parser.parse_args()
@@ -208,7 +203,7 @@ if __name__ == '__main__':
         if msg:
             if old is None or old != msg:
                 bot = SendBot(msg)
-                bot.run()
+                bot.run(seconds=10)
             FileManager.get().dump(f, msg)
         sys.exit()
     xmpp = ApiBot(amistoso=arg.amistoso)
