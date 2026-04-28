@@ -70,7 +70,7 @@ class BaseBot(slixmpp.ClientXMPP):
         except KeyboardInterrupt:
             self.disconnect()
             
-    def run(self, seconds: int):
+    def run(self, seconds: int = None):
         if not isinstance(seconds, int) or seconds <= 0:
             self.__run(forever=True)
             return True
