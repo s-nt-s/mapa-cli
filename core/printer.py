@@ -90,12 +90,16 @@ class Printer:
             else:
                 print("%s = %s" % (str_hms, dia.total))
         print("")
-        mul_format = "%2d" if label == "Mes" else "%s"
+        frmt_mul = "%s"
+        frmt_tot = "%s"
+        if label == "Mes":
+            frmt_mul = "%2d"
+            frmt_tot = "%6s"
         if cal.fichados > 1:
-            print("Media:", cal.total.div(cal.fichados), "*", mul_format % cal.fichados, "=", cal.total)
+            print("Media:", cal.total.div(cal.fichados), "*", frmt_mul % cal.fichados, "=", frmt_tot % str(cal.total))
             if cal.jornada_en_curso is not None:
-                print("Media:", cal.ahora.total.div(cal.fichados + 1), "*", mul_format % (cal.fichados + 1), "=",
-                      cal.ahora.total)
+                print("Media:", cal.ahora.total.div(cal.fichados + 1), "*", frmt_mul % (cal.fichados + 1), "=",
+                      frmt_tot % str(cal.ahora.total))
 
         sld, dqn = cal.saldo, quedan
         if cal.jornada_en_curso is not None:
@@ -103,7 +107,7 @@ class Printer:
         if (quedan - (int(cal.jornada_en_curso is not None))) > 0:
             sgn = sld.minutos > 0
             us_sld = HM(abs(sld.minutos))
-            line = ["Falta:", us_sld.div(dqn), "*", mul_format % dqn, "=", us_sld]
+            line = ["Falta:", us_sld.div(dqn), "*", frmt_mul % dqn, "=", frmt_tot % str(us_sld)]
             if sgn > 0:
                 line[0] = "Queda:"
             if cal.jornada_en_curso is not None:
