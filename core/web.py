@@ -89,6 +89,10 @@ class SkipRetryException(Exception):
     pass
 
 
+class ElementNotFound(Exception):
+    pass
+
+
 def iterhref(soup):
     """Recorre los atriburos href o src de los tags"""
     for n in soup.findAll(["img", "form", "a", "iframe", "frame", "link", "script"]):
@@ -138,8 +142,10 @@ class Web:
     def prepare_submit(self, slc, silent_in_fail=False, **kwargs):
         data = {}
         self.form = self.soup.select_one(slc)
-        if silent_in_fail and self.form is None:
-            return None, None
+        if self.form is None:
+            if silent_in_fail:
+                return None, None
+            raise ElementNotFound(f"{slc} {self.url}")
         for i in self.form.select("input[name]"):
             name = i.attrs["name"]
             data[name] = i.attrs.get("value")

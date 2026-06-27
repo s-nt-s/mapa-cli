@@ -13,7 +13,7 @@ from .cache import TupleCache
 from .filemanager import CNF, FileManager
 from .retribuciones import Retribuciones
 from .util import json_hook, parse_mes, to_num, ttext
-from .web import Web
+from .web import Web, ElementNotFound
 
 re_sp = re.compile(r"\s+")
 re_pr = re.compile(r"\([^\(\)]+\)")
@@ -115,7 +115,12 @@ class Gesper(Web):
         for url in ("https://intranet.mapa.es/", "https://intranet.mapa.es/app/gesper/",
                     "https://intranet.mapa.es/app/gesper/Default.aspx"):
             self.get(url)
-        self.submit("#Form1", TxtDNI=CNF.gesper.user, TxtClave=CNF.gesper.pssw)
+        self.__enable = True
+        try:
+            self.submit("#Form1", TxtDNI=CNF.gesper.user, TxtClave=CNF.gesper.pssw)
+        except ElementNotFound as e:
+            #logger.critical(str(e))
+            self.__enable = False
 
     def get_expediente(self):
         def _find_a(tr: bs4.Tag):
